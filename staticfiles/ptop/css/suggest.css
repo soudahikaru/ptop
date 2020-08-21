@@ -1,0 +1,17 @@
+ul.dropdown {
+    display: none;
+    list-style-type: none;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    background-color: #ddd;
+}
+
+ul.dropdown li {
+    margin: 3px;
+    cursor: pointer;
+}
+
+ul.dropdown li:hover {
+    opacity: 0.5;
+}

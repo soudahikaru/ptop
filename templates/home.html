@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+
+  <div class="container">
+   <h1>Particle Therapy Operation Program (仮称)</h1>
+  </div>
+
+  <div class="container">
+    <h5 class="card-header">トラブル簡易検索</h5>
+    <div class="card">
+      <form action="{% url 'ptop:eventlist' %}">
+        <input name="query" value="{{ request.GET.query }}" type="text">
+        <button type="submit">検索</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="container">
+    <h5 class="card-header">トラブル入力</h5>
+    <div class="card">
+      <a href="{% url 'ptop:create_event' %}" class="btn btn-primary">新規入力</a>
+    </div>
+    <h5 class="card-header">最近のトラブル</h5>
+    <div class="card">
+    <table border>
+    {% for item in object_list %}
+       <tr>
+        <td>{{item.start_time|date:"Y/m/d H:i"}}</td><td>{{item.device.device_id}}</td><td><b>{{item.title|truncatechars:30}}</b></td>
+        <td><a href="{% url 'ptop:event' item.pk %}" class="btn btn-primary">詳細</a>
+         <a href="{% url 'ptop:event' item.pk %}" class="btn btn-secondary">再発</a></td>
+       </tr>
+    {% endfor %}
+    </table>
+    <div class="card">
+      <a href="{% url 'ptop:unapproved_event_list' %}" class="btn btn-primary">未承認イベントの分類・承認</a>
+    </div>
+    </div>
+
+    <h5 class="card-header">よくあるトラブル</h5>
+    <div class="card">
+    </div>
+
+  </div>
+
+  <div class="container">
+    <h5 class="card-header">現在の運転状況</h5>
+    <div class="card">
+    </div>
+  </div>
+
+
+{% endblock content %}

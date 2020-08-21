@@ -1,0 +1,15 @@
+{% if widget.value.0 %}
+    {% for group, options, index in widget.optgroups %}{% for option in options %}{% if option.selected %}
+        <input type="hidden" name="{{ widget.name }}" value="{{ option.value }}" id="{{ widget.name }}-value">
+        <input type="text" value="{{ option.label }}" id="{{ widget.name }}-input" data-target="{{ widget.name }}"
+               autocomplete="off" {% include "django/forms/widgets/attrs.html" %}>
+    {% endif %}
+    {% endfor %}
+    {% endfor %}
+{% else %}
+    <input type="hidden" name="{{ widget.name }}" id="{{ widget.name }}-value">
+    <input type="text" id="{{ widget.name }}-input" data-target="{{ widget.name }}"
+           autocomplete="off" {% include "django/forms/widgets/attrs.html" %}>
+{% endif %}
+
+<ul id="{{ widget.name }}-list" class="dropdown"></ul>

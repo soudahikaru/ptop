@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+  <div class="container">
+    <div class="card">
+      <h5 class="card-header">{{object.title}}</h5>
+      <div class="card-body">
+      <p class="card-text">Device ID: {{object.device.device_id}}</p>
+      <p class="card-text">事象: {{object.description}}</p>
+      <p class="card-text">原因: {{object.cause}}</p>
+      <p class="card-text">発生時刻: {{object.start_time|date:"Y/m/d H:i"}}</p>
+      <p class="card-text">復旧時刻: {{object.end_time|date:"Y/m/d H:i"}}</p>
+      <p class="card-text">装置故障時間: {{object.downtime}} 分</p>
+      <p class="card-text">治療遅延時間: {{object.delaytime}} 分</p>
+      <p class="card-text">対応者: {{object.handling_operators.all}}</p>
+      <p class="card-text">入力者: {{object.input_operator}}</p>
+      <p class="card-text">承認者: {{object.approval_operator}}</p>
+      <p class="card-text">報告した物理士: {{object.reported_physicist}}</p>
+    <a href="{% url 'ptop:eventlist' %}" class="btn btn-primary">戻る</a>
+    </div>
+  </div>
+{% endblock content %}

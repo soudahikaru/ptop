@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+
+  <div class="container">
+    <div class="card">
+      <form action="" method="get">
+        <input name="query" value="{{ request.GET.query }}" type="text">
+        <button type="submit">検索する</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <a href="{% url 'ptop:create_event' %}" class="btn btn-primary">新規作成</a>
+    </div>
+  </div>
+
+  <div class="container">
+    {% for item in object_list %}
+    <div class="card">
+      <h5 class="card-header">{{item.title}}</h5>
+      <div class="card-body">
+        <p class="card-text">{{item.start_time|date:"Y/m/d H:i"}}</p>
+        <p class="card-text">{{item.device_id}}</p>
+        <p class="card-text">{{item.description|truncatechars:30}}</p>
+        <a href="{% url 'ptop:event' item.pk %}" class="btn btn-primary">詳細</a>
+      </div>
+    </div>
+    {% endfor %}
+
+    <a href="{% url 'ptop:home' %}" class="btn btn-primary">戻る</a>
+  </div>
+
+{% endblock content %}
