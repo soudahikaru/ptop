@@ -20,7 +20,10 @@ class GroupCreateForm(forms.ModelForm):
 		label='デバイス', queryset=Device.objects, required=False,
 		widget=SuggestWidget(attrs={'data-url': reverse_lazy('ptop:api_devices_get')})
 	)
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.fields['path'].widget.attrs['readonly'] = 'readonly'
 
 	class Meta:
 		model = TroubleGroup
-		fields = ('title', 'device', 'description', 'cause')
+		fields = ('title', 'device', 'description', 'cause', 'causetype', 'common_action','permanent_action', 'errors','handling_status','vender_status', 'first_datetime', 'reminder_datetime', 'is_common_trouble','criticality_score', 'frequency_score', 'difficulty_score', 'path', 'classify_operator')

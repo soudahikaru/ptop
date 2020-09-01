@@ -49,6 +49,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 		(2, 'ベテラン')
 	)
 
+
 	# Userモデルの基本項目。
 	username = models.CharField(max_length=30, unique=True)
 	last_name = models.CharField(max_length=150, blank=True)
@@ -131,10 +132,56 @@ class Error(models.Model):
 		return self.error_code
 
 class TroubleGroup(models.Model):
+
+	CAUSETYPES = (
+		('CT_ACC', '偶発故障'),
+		('CT_DET', '経年劣化'),
+		('CT_OPE', 'オペミス'),
+		('CT_INI', '初期不良'),
+		('CT_DES', '設計不良'),
+		('CT_MAN', '製作不良')
+	)
+
+	VENDOR_STATUS = (
+		('VS_NON', '連絡不要'),
+		('VS_YET', '未連絡'),
+		('VS_RWA', '連絡済み回答待ち'),
+		('VS_RPL', '連絡済み対処予定'),
+		('VS_RPL', '連絡済み様子見'),
+		('VS_FIN', '対処完了')
+	)
+
+	HANDLING_STATUS = (
+		('HS_IGN', '放置可能'),
+		('HS_YET', '未対策'),
+		('HS_SEE', '様子見'),
+		('HS_WAT', '重点監視'),
+		('HS_AVO', '運用回避'),
+		('HS_VEN', 'メーカー依頼中'),
+		('HS_FIN', '解決済')
+	)
+
 	title = models.CharField('トラブル分類名称', max_length=200)
+	classify_id =  models.CharField('分類ID',max_length=50,null=True,blank=True)
 	device = models.ForeignKey(Device, verbose_name='デバイスID', blank=True, null=True, on_delete=models.SET_NULL)
 	description = models.TextField('内容', null=True)
 	cause = models.TextField('原因',null=True,blank=True)
+	first_datetime = models.DateTimeField('初発日時',null=True,blank=True)
+	common_action = models.TextField('主要な対処法',null=True,blank=True)
+	causetype = models.CharField('原因の類型',choices=CAUSETYPES, max_length=20,null=True,blank=True)
+	errors = models.ManyToManyField(Error, verbose_name='エラーメッセージ',null=True,blank=True)
+	classify_operator =  models.ForeignKey(User, verbose_name='分類作成者', null=True, blank=True, on_delete=models.SET_NULL,related_name='%(class)s_classified')
+	handling_status = models.CharField('対処状況',choices=HANDLING_STATUS, max_length=20,null=True,blank=True)
+	vender_status = models.CharField('メーカー連絡状況',choices=VENDOR_STATUS, max_length=20,null=True,blank=True)
+	reminder_datetime = models.DateField('振り返り予定日',null=True,blank=True)
+	permanent_action = models.TextField('恒久対策の内容',null=True,blank=True)
+	is_common_trouble = models.BooleanField('よくあるトラブルフラグ',default=False)
+	criticality_score = models.IntegerField('FMEA致命度スコア',null=True,blank=True)
+	frequency_score = models.IntegerField('FMEA発生頻度スコア',null=True,blank=True)
+	difficulty_score = models.IntegerField('FMEA対応難度スコア',null=True,blank=True)
+	path = models.CharField('分類ツリー経路',max_length=50,null=True,blank=True)
+	num_created_child = models.IntegerField('子Groupの数',default=0)
+
 	def __str__(self):
 		return self.title
 

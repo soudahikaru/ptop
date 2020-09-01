@@ -27,6 +27,7 @@ urlpatterns = [
     path('event/<int:pk>/', TroubleEventDetail.as_view(), name='event'),
     path('eventlist/', TroubleEventList.as_view(), name='eventlist'),
     path('create_event/', EventCreateView.as_view(), name='create_event'),
+    path('child_group_create/<int:pk>/', views.ChildGroupCreateView.as_view(), name='child_group_create'),
     path('group_create_from_event/<int:pk>/', GroupCreateFromEventView.as_view(), name='group_create_from_event'),
     path('unapproved_event_list/', UnapprovedEventListView.as_view(), name='unapproved_event_list'),
     path('event_classify/<int:pk>/', views.event_classify, name='event_classify'),

@@ -63,6 +63,7 @@
             <p class="card-text">原因: {{group.cause}}</p>
 
             <p><a href="{% url 'ptop:event_classify_execute' %}?event_pk={{event.pk}}&group_pk={{group.pk}}" class="btn btn-primary">割り当て実行</a></p>
+            <p><a href="{% url 'ptop:child_group_create' group.pk %}" class="btn btn-primary">サブグループ作成</a></p>
 
           </div>
         </div>

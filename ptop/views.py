@@ -68,7 +68,27 @@ class GroupCreateFromEventView(CreateView):
 			'title':event.title,
 			'device':event.device,
 			'description':event.description,
-			'cause':event.cause }
+			'cause':event.cause,
+			'first_datetime':event.start_time,
+			'common_action':event.temporary_action}
+			 )
+		return context
+
+class ChildGroupCreateView(CreateView):
+	template_name = 'group_create.html'
+	model = TroubleGroup
+	form_class = GroupCreateForm
+	success_url = reverse_lazy('ptop:home')
+
+	def get_context_data(self, **kwargs):
+		context = super().get_context_data(**kwargs)
+		parent_group = get_object_or_404(TroubleGroup, pk=self.kwargs.get('pk'))
+		context['form'] = GroupCreateForm( initial = { 
+			'title':parent_group.title + '(sub)',
+			'description':parent_group.description,
+			'cause':parent_group.cause,
+			'common_action':parent_group.common_action,
+			'path':parent_group.path}
 			 )
 		return context
 		
