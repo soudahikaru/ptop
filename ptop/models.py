@@ -131,6 +131,16 @@ class Error(models.Model):
 	def __str__(self):
 		return self.error_code
 
+class Attachment(models.Model):
+	title = models.CharField('ファイル名', max_length=200,null=True)
+	description = models.CharField('説明', max_length=200,null=True)
+	file = models.FileField(upload_to='attachments/',null=True)
+	uploaded_datetime = models.DateTimeField('ファイル',null=True)
+
+	def __str__(self):
+		return self.title
+
+
 class TroubleGroup(models.Model):
 
 	CAUSETYPES = (
@@ -172,15 +182,16 @@ class TroubleGroup(models.Model):
 	errors = models.ManyToManyField(Error, verbose_name='エラーメッセージ',null=True,blank=True)
 	classify_operator =  models.ForeignKey(User, verbose_name='分類作成者', null=True, blank=True, on_delete=models.SET_NULL,related_name='%(class)s_classified')
 	handling_status = models.CharField('対処状況',choices=HANDLING_STATUS, max_length=20,null=True,blank=True)
-	vender_status = models.CharField('メーカー連絡状況',choices=VENDOR_STATUS, max_length=20,null=True,blank=True)
+	vendor_status = models.CharField('メーカー連絡状況',choices=VENDOR_STATUS, max_length=20,null=True,blank=True)
 	reminder_datetime = models.DateField('振り返り予定日',null=True,blank=True)
 	permanent_action = models.TextField('恒久対策の内容',null=True,blank=True)
-	is_common_trouble = models.BooleanField('よくあるトラブルフラグ',default=False)
+	is_common_trouble = models.BooleanField('よくあるトラブルフラグ',default=False,null=True,blank=True)
 	criticality_score = models.IntegerField('FMEA致命度スコア',null=True,blank=True)
 	frequency_score = models.IntegerField('FMEA発生頻度スコア',null=True,blank=True)
 	difficulty_score = models.IntegerField('FMEA対応難度スコア',null=True,blank=True)
 	path = models.CharField('分類ツリー経路',max_length=50,null=True,blank=True)
 	num_created_child = models.IntegerField('子Groupの数',default=0)
+	attachments = models.ManyToManyField(Attachment, verbose_name='添付ファイル',blank=True)
 
 	def __str__(self):
 		return self.title
@@ -192,7 +203,7 @@ class TroubleEvent(models.Model):
 #	deviceid = models.CharField('device id',max_length=100,null=True,blank=True)
 	device = models.ForeignKey(Device, verbose_name='デバイス',null=True,blank=True,on_delete=models.SET_NULL)
 	description = models.TextField('内容', null=True)
-	cause = models.TextField('原因',null=True,blank=True)
+	cause = models.TextField('原因と状況',null=True,blank=True)
 	temporary_action = models.TextField('応急処置内容',null=True,blank=True)
 #	error_message = models.CharField('エラーメッセージ',max_length=100, blank=True)
 	errors = models.ManyToManyField(Error, verbose_name='エラーメッセージ',null=True,blank=True)
@@ -205,6 +216,7 @@ class TroubleEvent(models.Model):
 	handling_operators = models.ManyToManyField(User, verbose_name='対応者', limit_choices_to=Q(groups__name='Operator')&Q(is_active=True))
 	approval_operator = models.ForeignKey(User, verbose_name='承認者', null=True, blank=True, on_delete=models.SET_NULL,related_name='%(class)s_approved')
 	reported_physicist = models.ForeignKey(User, verbose_name='報告した物理士', limit_choices_to=Q(groups__name='Physicist')&Q(is_active=True), null=True, blank=True, on_delete=models.SET_NULL,related_name='%(class)s_reported')
+	attachments = models.ManyToManyField(Attachment, verbose_name='添付ファイル',blank=True)
 	def __str__(self):
 		return self.title
 

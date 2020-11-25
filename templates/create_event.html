@@ -4,6 +4,7 @@
 {% block header %}
 {% load static %}
 <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+
 {% endblock header %}
 
 
@@ -13,12 +14,39 @@
 
     <form action="" method="POST">
       {% csrf_token %}
-      {{form.as_p}}
+      <table border>
+      {{form.as_table}}
+
+
+      </table>
+
+      <button type="button" class="btn btn-primary js-upload-photos">
+        <span class="glyphicon glyphicon-cloud-upload"></span> Upload photos
+      </button>
+      <div>
+      <input id="fileupload" type="file" name="file" multiple
+      style="display: none;"
+      data-url="{% url 'ptop:create_event'%}"
+      data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+      </div>
+
       <input type="submit" value="作成する">
       {{form.media}}
     </form>
     
+    
   </div>
 </div>
+
+<script src="{% static 'ptop/js/jquery-3.1.1.min.js' %}"></script>
+<script src="{% static 'ptop/js/bootstrap.min.js' %}"></script>
+{# JQUERY FILE UPLOAD SCRIPTS #}
+<script src="{% static 'ptop/js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
+<script src="{% static 'ptop/js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
+<script src="{% static 'ptop/js/jquery-file-upload/jquery.fileupload.js' %}"></script>
+
+{# PHOTOS PAGE SCRIPTS #}
+<script src="{% static 'ptop/js/basic-upload.js' %}"></script>
+
 
 {% endblock content %}

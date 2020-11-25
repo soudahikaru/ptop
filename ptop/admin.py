@@ -1,5 +1,6 @@
 from .models import TroubleEvent
 from .models import TroubleGroup
+from .models import Attachment
 from .models import Operator
 from .models import User
 from .models import Device
@@ -48,6 +49,7 @@ class ErrorAdmin(ImportExportModelAdmin):
 
 # Register your models here.
 admin.site.register(User,AdminUserAdmin)
+admin.site.register(Attachment)
 admin.site.register(TroubleGroup)
 admin.site.register(TroubleEvent)
 admin.site.register(Device,DeviceAdmin)

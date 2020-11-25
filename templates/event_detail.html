@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+  <div class="container">
+    <div class="card">
+      <h5 class="card-header">{{object.title}}</h5>
+      <div class="card-body">
+      <table border>
+      <tr><td>Event ID</td><td>{{object.id}}</td></tr>
+      <tr><td>トラブル類型</td><td>{% if object.group %}<a href="{%url 'ptop:group_detail' object.group.pk%}">{{object.group.title|default:"未選択"}}</a>{% else %}未選択{% endif %}</td></tr>
+      <tr><td>Device ID</td><td>{{object.device.device_id}}</td></tr>
+      <tr><td>事象</td><td>{{object.description}}</td></tr>
+      <tr><td>エラーメッセージ</td><td>{% for error in object.errors.all %}
+{{ error.error_code }}{% if forloop.last %}{% else %},{% endif %}
+{% endfor %}</td></tr>
+      <tr><td>原因</td><td>{{object.cause}}</td></tr>
+      <tr><td>応急処置内容</td><td>{{object.temporary_action}}</td></tr>
+      <tr><td>発生時刻</td><td>{{object.start_time|date:"Y/m/d H:i"}}</td></tr>
+      <tr><td>復旧時刻</td><td>{{object.end_time|date:"Y/m/d H:i"}}</td></tr>
+      <tr><td>装置故障時間</td><td>{{object.downtime}} 分</td></tr>
+      <tr><td>治療遅延時間</td><td>{{object.delaytime}} 分</td></tr>
+      <tr><td>対応者</td><td>{% for operator in object.handling_operators.all %}
+    {{ operator }}{% if forloop.last %}{% else %},{% endif %}    
+{% endfor %}</td></tr>
+      <tr><td>入力者</td><td>{{object.input_operator}}</td></tr>
+      <tr><td>承認者</td><td>{{object.approval_operator}}</td></tr>
+      <tr><td>報告した物理士</td><td>{{object.reported_physicist}}</td></tr>
+      <tr><td>添付ファイル</td><td>{% for attachment in object.attachments.all %}
+<a href="{{attachment.file.url}}">{{ attachment.title }}</a>{% if forloop.last %}{% else %},{% endif %}
+{% endfor %}</td></tr>
+      </table>
+    <a href="{% url 'ptop:eventlist' %}" class="btn btn-primary">戻る</a>
+    </div>
+  </div>
+{% endblock content %}

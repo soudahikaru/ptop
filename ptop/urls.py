@@ -20,13 +20,19 @@ from .views import UnapprovedEventListView, EventClassifyView
 from .views import GroupCreateFromEventView, EventClassifyView
 from .views import api_devices_get
 from  ptop import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 app_name = 'ptop'
 
 urlpatterns = [
     path('event/<int:pk>/', TroubleEventDetail.as_view(), name='event'),
+    path('event_detail/<int:pk>/', views.EventDetailView.as_view(), name='event_detail'),
+    path('recurrent_event_create_from_event/<int:pk>/', views.RecurrentEventCreateFromEventView.as_view(), name='recurrent_event_create_from_event'),
     path('eventlist/', TroubleEventList.as_view(), name='eventlist'),
+    path('advanced_search/', views.AdvancedSearchView.as_view(), name='advanced_search'),
     path('create_event/', EventCreateView.as_view(), name='create_event'),
+    path('group_detail/<int:pk>/', views.GroupDetailView.as_view(), name='group_detail'),
     path('child_group_create/<int:pk>/', views.ChildGroupCreateView.as_view(), name='child_group_create'),
     path('group_create_from_event/<int:pk>/', GroupCreateFromEventView.as_view(), name='group_create_from_event'),
     path('unapproved_event_list/', UnapprovedEventListView.as_view(), name='unapproved_event_list'),
@@ -35,5 +41,6 @@ urlpatterns = [
     path('error_autocomplete/', views.ErrorAutoComplete.as_view(), name='error_autocomplete'),
     path('device_autocomplete/', views.DeviceAutoComplete.as_view(), name='device_autocomplete'),
     path('api/devices/get/', api_devices_get, name='api_devices_get'),
-    path('', Home.as_view(), name='home')
+    path('', Home.as_view(), name='home'),
 ]
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

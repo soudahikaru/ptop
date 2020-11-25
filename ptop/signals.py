@@ -8,8 +8,23 @@ from .models import User
 @receiver(post_save, sender=TroubleGroup)
 def trouble_group_pre_save_receiver(sender, instance, *args, **kwargs):
 	if not instance.path:
+		# classify idを設定
+		q = TroubleGroup.objects.filter(path__iregex=r'^/\d+/$')
+		if q.first() is not None:
+			print(q)
+			print(q.order_by('-id'))
+			max_root = q.order_by('-id')[0]
+			num_root = int(max_root.classify_id)+1
+		else:
+			num_root = 1
+			
+		instance.classify_id = '%d' % num_root
+
+		#pathを設定
+		instance.path = r'/' + str(instance.pk) + r'/'
 #		print(instance.path)
 		instance.save()
+		return
 
 	finalpath = r'/' + str(instance.pk) + r'/'
 	if not instance.path.endswith(finalpath):
