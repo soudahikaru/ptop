@@ -10,14 +10,16 @@
   </div>
 
   <div class="container">
-    <h5 class="card-header">トラブル簡易検索</h5>
+    <h5 class="card-header">トラブル検索</h5>
     <div class="card">
       <form action="{% url 'ptop:eventlist' %}">
-        <input name="query" value="{{ request.GET.query }}" type="text">
-        <button type="submit">検索</button>
+        トラブル事象 簡易検索 <input name="query" value="{{ request.GET.query }}" type="text">
+        <button type="submit" class="btn btn-primary">検索</button>
       </form>
     </div>
-      <a href="{% url 'ptop:advanced_search' %}" class="btn btn-primary">詳細検索</a>
+    <p>
+      トラブル類型 <a href="{% url 'ptop:advanced_search' %}" class="btn btn-primary">詳細検索</a>
+    </p>
   </div>
 
   <div class="container">
@@ -28,9 +30,13 @@
     <h5 class="card-header">最近のトラブル</h5>
     <div class="card">
     <table border>
-    {% for item in object_list %}
-       <tr>
-        <td>{{item.start_time|date:"Y/m/d H:i"}}</td><td>{{item.device.device_id}}</td><td><b>{{item.title|truncatechars:30}}</b></td>
+      <tr><th>発生日時</th><th>題名</th><th>デバイスID</th><th>故障時間</th></tr>
+      {% for item in object_list %}
+      <tr>
+        <td>{{item.start_time|date:"Y/m/d H:i"}}</td>
+        <td><b>{{item.title|truncatechars:30}}</b></td>
+        <td>{{item.device.device_id}}</td>
+        <td>{{item.downtime}}</td>
         <td><a href="{% url 'ptop:event_detail' item.pk %}" class="btn btn-primary">詳細</a>
          <a href="{% url 'ptop:recurrent_event_create_from_event' item.pk %}" class="btn btn-secondary">再発</a></td>
        </tr>
@@ -45,12 +51,6 @@
     <div class="card">
     </div>
 
-  </div>
-
-  <div class="container">
-    <h5 class="card-header">現在の運転状況</h5>
-    <div class="card">
-    </div>
   </div>
 
 

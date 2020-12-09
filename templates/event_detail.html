@@ -32,7 +32,8 @@
 <a href="{{attachment.file.url}}">{{ attachment.title }}</a>{% if forloop.last %}{% else %},{% endif %}
 {% endfor %}</td></tr>
       </table>
-    <a href="{% url 'ptop:eventlist' %}" class="btn btn-primary">戻る</a>
+      <a href="{% url 'ptop:update_event' object.pk %}" class="btn btn-primary">編集</a>
+      <a href="{% url 'ptop:eventlist' %}" class="btn btn-primary">戻る</a>
     </div>
   </div>
 {% endblock content %}

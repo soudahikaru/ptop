@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+<div class="container">
+  <h2>オペレーション切り替え</h2>
+</div>
+<div class="container">
+  <div class="row">
+    <div class="card">
+      <h5 class="card-header">現在のオペレーション</h5>
+      <div class="card-body">
+        <table border>
+          <tr><td>オペレーションの種類</td><td>{{current_operation.operation_type}}</td></tr>
+          <tr><td>開始日時</td><td>{{current_operation.start_time|date:"Y-m-d(D) H:i"}}</td></tr>
+        </table>
+      </div>
+
+      <h5 class="card-header">オペレーション切り替え</h5>
+      <div class="card-body">
+        <form action="{% url 'ptop:change_operation_execute' %}" method="POST">
+          {% csrf_token %}
+          <table border>
+          {{change_form.as_table}}
+          </table>
+          <input type="submit" value="切り替え実行" class="btn btn-primary">
+          <a href="{% url 'ptop:home' %}" class="btn btn-secondary">戻る</a>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+
+</div>
+
+{% endblock content %}

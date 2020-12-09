@@ -11,13 +11,23 @@
     <title>Particle Therapy Operation Program</title>
   </head>
   <body>
-{% if user.is_authenticated %}
-<p>{{ user }}でログイン中(<a href="{% url 'logout' %}">ログアウト</a>)</p>
-{% else %}
-<p>ログインしていません(<a href="{% url 'login' %}">ログイン</a>)</p>
-{% endif %}
-  {% block header %}
+    <div style="background-color:cyan;">
+      <table style="width: 100%;">
+        <tr>
+          <td style="width: 33%;text-align: left;"></td>
+          <td style="width: 33%;text-align: center;">運転状況: {{ current_operation.operation_type.name }} ({{current_operation.start_time|date:'Y-m-d G:i'}}-) <a href="{% url 'ptop:change_operation' %}" class="btn btn-primary btn-sm">変更</a></td>
+          <td style="width: 33%;text-align: right;">
+      {% if user.is_authenticated %}
+      {{ user }}でログイン中 <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm">ログアウト</a>
+      {% else %}
+      ログインしていません <a href="{% url 'login' %}" class="btn btn-primary btn-sm">ログイン</a>
+      {% endif %}
+          </td>
+        </tr>
+      </table>
+    </div>
 
+    {% block header %}
   {% endblock header %}
 
   {% block content %}
@@ -29,5 +39,9 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+
+  {% block javascript%}
+  {% endblock javascript%}
+  
   </body>
 </html>
