@@ -20,6 +20,9 @@ from .models import CommentType
 from .models import CauseType
 from .models import VendorStatusType
 from .models import HandlingStatusType
+from .models import Section
+from .models import SuperSection
+from .models import DeviceType
 
 #@admin.register(User)
 
@@ -132,6 +135,43 @@ class HandlingStatusTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = HandlingStatusTypeResource
 
+class SectionResource(resources.ModelResource):
+    """ Resource for Operation Type """
+    class Meta:
+        """ Resource for Operation Type model Meta"""
+        model = Section
+        skip_unchanged = True
+        report_skipped = False
+
+class SectionAdmin(ImportExportModelAdmin):
+    """ Admin for Operation Type """
+    resource_class = SectionResource
+
+class SuperSectionResource(resources.ModelResource):
+    """ Resource for Operation Type """
+    class Meta:
+        """ Resource for Operation Type model Meta"""
+        model = SuperSection
+        skip_unchanged = True
+        report_skipped = False
+
+class SuperSectionAdmin(ImportExportModelAdmin):
+    """ Admin for Operation Type """
+    resource_class = SuperSectionResource
+
+class DeviceTypeResource(resources.ModelResource):
+    """ Resource for Operation Type """
+    class Meta:
+        """ Resource for Operation Type model Meta"""
+        model = DeviceType
+        skip_unchanged = True
+        report_skipped = False
+
+class DeviceTypeAdmin(ImportExportModelAdmin):
+    """ Admin for Operation Type """
+    resource_class = DeviceTypeResource
+
+
 # Register your models here.
 admin.site.register(User, AdminUserAdmin)
 admin.site.register(Attachment)
@@ -147,3 +187,6 @@ admin.site.register(OperationType, OperationTypeAdmin)
 admin.site.register(OperationMetaType, OperationMetaTypeAdmin)
 admin.site.register(Comment)
 admin.site.register(CommentType, CommentTypeAdmin)
+admin.site.register(Section, SectionAdmin)
+admin.site.register(SuperSection, SuperSectionAdmin)
+admin.site.register(DeviceType, DeviceTypeAdmin)
