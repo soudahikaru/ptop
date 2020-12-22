@@ -17,6 +17,9 @@ from .models import OperationType
 from .models import OperationMetaType
 from .models import Comment
 from .models import CommentType
+from .models import CauseType
+from .models import VendorStatusType
+from .models import HandlingStatusType
 
 #@admin.register(User)
 
@@ -40,7 +43,6 @@ class DeviceResource(resources.ModelResource):
         model = Device
         skip_unchanged = True
         report_skipped = False
-        import_id_fields = ('device_id', 'name')
 
 class DeviceAdmin(ImportExportModelAdmin):
     """ Admin for Device model """
@@ -53,7 +55,6 @@ class ErrorResource(resources.ModelResource):
         model = Error
         skip_unchanged = True
         report_skipped = False
-        import_id_fields = ('error_code', 'error_description')
 
 class ErrorAdmin(ImportExportModelAdmin):
     """ Admin for Error model """
@@ -66,7 +67,6 @@ class OperationTypeResource(resources.ModelResource):
         model = OperationType
         skip_unchanged = True
         report_skipped = False
-        import_id_fields = ('name', 'meta_type')
 
 class OperationTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
@@ -79,7 +79,6 @@ class OperationMetaTypeResource(resources.ModelResource):
         model = OperationMetaType
         skip_unchanged = True
         report_skipped = False
-        import_id_fields = ('name')
 
 class OperationMetaTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
@@ -92,12 +91,46 @@ class CommentTypeResource(resources.ModelResource):
         model = CommentType
         skip_unchanged = True
         report_skipped = False
-        import_id_fields = ('name')
 
 class CommentTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = OperationTypeResource
 
+class CauseTypeResource(resources.ModelResource):
+    """ Resource for Operation Type """
+    class Meta:
+        """ Resource for Operation Type model Meta"""
+        model = CauseType
+        skip_unchanged = True
+        report_skipped = False
+
+class CauseTypeAdmin(ImportExportModelAdmin):
+    """ Admin for Operation Type """
+    resource_class = CauseTypeResource
+
+class VendorStatusTypeResource(resources.ModelResource):
+    """ Resource for Operation Type """
+    class Meta:
+        """ Resource for Operation Type model Meta"""
+        model = VendorStatusType
+        skip_unchanged = True
+        report_skipped = False
+
+class VendorStatusTypeAdmin(ImportExportModelAdmin):
+    """ Admin for Operation Type """
+    resource_class = VendorStatusTypeResource
+
+class HandlingStatusTypeResource(resources.ModelResource):
+    """ Resource for Operation Type """
+    class Meta:
+        """ Resource for Operation Type model Meta"""
+        model = HandlingStatusType
+        skip_unchanged = True
+        report_skipped = False
+
+class HandlingStatusTypeAdmin(ImportExportModelAdmin):
+    """ Admin for Operation Type """
+    resource_class = HandlingStatusTypeResource
 
 # Register your models here.
 admin.site.register(User, AdminUserAdmin)
@@ -106,6 +139,9 @@ admin.site.register(TroubleGroup)
 admin.site.register(TroubleEvent)
 admin.site.register(Device, DeviceAdmin)
 admin.site.register(Error, ErrorAdmin)
+admin.site.register(CauseType, CauseTypeAdmin)
+admin.site.register(VendorStatusType, VendorStatusTypeAdmin)
+admin.site.register(HandlingStatusType, HandlingStatusTypeAdmin)
 admin.site.register(Operation)
 admin.site.register(OperationType, OperationTypeAdmin)
 admin.site.register(OperationMetaType, OperationMetaTypeAdmin)

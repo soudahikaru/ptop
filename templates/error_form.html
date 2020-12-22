@@ -1,0 +1,10 @@
+{% block content %}
+    <h1>Error新規入力</h1>
+    <form action="" method="POST">
+        <table>
+        {{ form.as_table }}
+        </table>
+        {%  csrf_token %}
+        <button type="submit">作成</button>
+    </form>
+{% endblock %}

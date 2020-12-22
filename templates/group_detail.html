@@ -11,14 +11,14 @@
       <table border>
       <tr><td>分類ID</td><td>{{object.classify_id}}</td></tr>
       <tr><td>Device ID</td><td>{{object.device.device_id}}</td></tr>
-      <tr><td>事象</td><td>{{object.description}}</td></tr>
+      <tr><td>事象</td><td>{{object.description | linebreaksbr }}</td></tr>
       <tr><td>エラーメッセージ</td><td>{% for error in object.errors.all %}
 {{ error.error_code }}{% if forloop.last %}{% else %},{% endif %}
 {% endfor %}</td></tr>
-      <tr><td>原因</td><td>{{object.cause}}</td></tr>
-      <tr><td>原因分類</td><td>{{object.causetype}}</td></tr>
+      <tr><td>原因</td><td>{{object.cause | linebreaksbr }}</td></tr>
+      <tr><td>原因分類</td><td>{{object.causetype | linebreaksbr }}</td></tr>
       <tr><td>初発日時</td><td>{{object.first_datetime|date:"Y/m/d H:i"}}</td></tr>
-      <tr><td>主な処置内容</td><td>{{object.common_action}}</td></tr>
+      <tr><td>主な処置内容</td><td>{{object.common_action | linebreaksbr }}</td></tr>
       <tr><td>分類作成者</td><td>{{object.classify_operator}}</td></tr>
       <tr><td>対処状況</td><td>{{object.handling_status}}</td></tr>
       <tr><td>メーカー連絡状況</td><td>{{object.vendor_status}}</td></tr>
@@ -28,6 +28,10 @@
       <tr><td>FMEA致命度スコア</td><td>{{object.criticality_score}}</td></tr>
       <tr><td>FMEA発生頻度スコア</td><td>{{object.frequency_score}}</td></tr>
       <tr><td>FMEA対処難度スコア</td><td>{{object.difficulty_score}}</td></tr>
+      <tr><td>添付ファイル</td><td>{% for attachment in object.attachments.all %}
+            <a href="{{attachment.file.url}}">{{ attachment.title }}</a>{% if forloop.last %}{% else %},{% endif %}
+            {% endfor %}</td></tr>
+            
       </table>
 
       <p>
@@ -41,7 +45,8 @@
 {% endfor %}
       </table>
 
-    <a href="{% url 'ptop:home' %}" class="btn btn-primary">戻る</a>
+    <a href="{% url 'ptop:update_group' object.pk %}" class="btn btn-primary">編集</a>
+    <a href="{% url 'ptop:group_list' %}" class="btn btn-primary">戻る</a>
     </div>
   </div>
 {% endblock content %}

@@ -12,6 +12,7 @@ from .models import TroubleEvent, Device, Error
 from .models import TroubleGroup
 from .models import Attachment
 from .models import Operation, OperationType, OperationMetaType
+from .models import CauseType, VendorStatusType, HandlingStatusType
 from .widgets import SuggestWidget
 
 class AttachmentForm(forms.ModelForm):
@@ -57,12 +58,12 @@ class AdvancedSearchForm(forms.Form):
             options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}
             ).end_of('期間'), required=False)
 #	print(tuple_noselect+TroubleGroup.VENDOR_STATUS)
-    causetype = forms.ChoiceField(
-        label='原因類型', choices=tuple_noselect+TroubleGroup.CAUSETYPES, required=False)
-    vendor_status = forms.ChoiceField(
-        label='メーカー対応状況', choices=tuple_noselect+TroubleGroup.VENDOR_STATUS, required=False)
-    handling_status = forms.ChoiceField(
-        label='対処状況', choices=tuple_noselect+TroubleGroup.HANDLING_STATUS, required=False)
+    causetype = forms.ModelChoiceField(
+        CauseType.objects.all(), label='原因類型', required=False, empty_label='指定しない')
+    vendor_status = forms.ModelChoiceField(
+        VendorStatusType.objects.all(), label='メーカー対応状況', required=False, empty_label='指定しない')
+    handling_status = forms.ModelChoiceField(
+        HandlingStatusType.objects.all(), label='メーカー対応状況', required=False, empty_label='指定しない')
 
 class EventCreateForm(forms.ModelForm):
     """TroubleEventの新規作成Form"""
@@ -107,7 +108,13 @@ class EventCreateForm(forms.ModelForm):
         help_text='エラーメッセージを部分一致検索します。空白部をクリックまたはTab→キー入力で複数選択可能。',
         required=False)
     attachments = forms.ModelMultipleChoiceField(
-        Attachment.objects.all(), label='添付ファイル', required=False)
+        Attachment.objects.all(), label='添付ファイル', required=False,
+        help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます'
+        )
+#    attachments = forms.ModelMultipleChoiceField(
+#        Attachment.objects.all(), label='添付ファイル', required=False,
+#        widget=forms.SelectMultiple(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+#        )
 
 #	def __init__(self, *args, **kwargs):
 #		super(EventCreateForm, self).__init__(*args, **kwargs)
@@ -130,9 +137,32 @@ class EventCreateForm(forms.ModelForm):
             'input_operator', 'handling_operators', 'reported_physicist', 'attachments')
 
 class GroupCreateForm(forms.ModelForm):
+    title = forms.CharField(
+        widget=forms.TextInput(attrs={'size':80}), label='トラブル類型題名', required=True)
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='内容', required=True)
+    trigger = forms.CharField(
+        widget=forms.Textarea(attrs={'rows':2, 'cols':80}), label='発生の契機となる操作', required=False)
+    cause = forms.CharField(
+        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='原因', required=False)
+    common_action = forms.CharField(
+        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='主要な対処法', required=False)
+    permanent_action = forms.CharField(
+        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='恒久対策', required=False)
+
     device = forms.ModelChoiceField(
-        label='デバイス', queryset=Device.objects, required=False,
-        widget=SuggestWidget(attrs={'data-url': reverse_lazy('ptop:api_devices_get')}))
+        Device.objects.all(), label='デバイスID',
+        widget=autocomplete.ModelSelect2(url='ptop:device_autocomplete'),
+        help_text='デバイスIDを部分一致検索します。', required=True)
+    errors = forms.ModelMultipleChoiceField(
+        Error.objects.all(), label='エラーメッセージ',
+        widget=autocomplete.ModelSelect2Multiple(url='ptop:error_autocomplete'),
+        help_text='エラーメッセージを部分一致検索します。空白部をクリックまたはTab→キー入力で複数選択可能。',
+        required=False)
+    attachments = forms.ModelMultipleChoiceField(
+        Attachment.objects.all(), label='添付ファイル', required=False,
+        help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます'
+        )
     is_common_trouble = forms.BooleanField(
         help_text='チェックするとトップページのよくあるトラブルに登録され、再発事象の入力が簡単になります',
         required=False)
@@ -144,12 +174,12 @@ class GroupCreateForm(forms.ModelForm):
     class Meta:
         model = TroubleGroup
         fields = (
-            'title', 'device', 'description', 'cause', 'causetype',
+            'title', 'device', 'description', 'trigger', 'cause', 'causetype',
             'common_action', 'permanent_action', 'errors',
             'handling_status', 'vendor_status',
             'first_datetime', 'reminder_datetime', 'is_common_trouble',
             'criticality_score', 'frequency_score', 'difficulty_score',
-            'path', 'classify_operator')
+            'path', 'classify_operator', 'attachments')
 
 class ChangeOperationForm(forms.Form):
     operation_type = forms.ModelChoiceField(queryset=OperationType.objects.all(), label='次のオペレーション')

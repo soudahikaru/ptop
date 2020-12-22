@@ -69,6 +69,60 @@ class ErrorAutoComplete(autocomplete.Select2QuerySetView):
             qs = qs.filter(error_code__icontains=self.q)
         return qs
 
+class TroubleGroupListView(ListView):
+    """TroubleGroupList画面"""
+    template_name = 'group_list.html'
+    model = TroubleGroup
+    paginate_by = 10
+
+    def get_queryset(self):
+        q_word = self.request.GET.get('query')
+        if q_word:
+            object_list = TroubleGroup.objects.filter(
+                Q(title__icontains=q_word) | Q(description__icontains=q_word)
+            )
+        else:
+            object_list = TroubleGroup.objects.all().order_by('id').reverse()
+        return object_list
+
+class DeviceCreate(CreateView):
+    """新規Deviceの作成"""
+    model = Device
+    template_name = 'device_form.html'
+    fields = '__all__'
+    success_url = reverse_lazy('ptop:home')
+
+class PopupDeviceCreate(DeviceCreate):
+    """ポップアップでのDevice作成"""
+
+    def form_valid(self, form):
+        device = form.save()
+        context = {
+            'object_name': device.device_id,
+            'object_pk': device.pk,
+            'function_name': 'add_device'
+        }
+        return render(self.request, 'close.html', context)
+
+class ErrorCreate(CreateView):
+    """新規Errorの作成"""
+    model = Error
+    template_name = 'error_form.html'
+    fields = '__all__'
+    success_url = reverse_lazy('ptop:home')
+
+class PopupErrorCreate(ErrorCreate):
+    """ポップアップでのError作成"""
+
+    def form_valid(self, form):
+        error = form.save()
+        context = {
+            'object_name': error.error_code,
+            'object_pk': error.pk,
+            'function_name': 'add_error'
+        }
+        return render(self.request, 'close.html', context)
+
 class GroupDetailView(DetailView):
     """TroubleGroup詳細画面"""
     template_name = 'group_detail.html'
@@ -95,6 +149,7 @@ class TroubleEventList(ListView):
     """TroubleEventList画面"""
     template_name = 'eventlist.html'
     model = TroubleEvent
+    paginate_by = 10
 
     def get_queryset(self):
         q_word = self.request.GET.get('query')
@@ -103,35 +158,131 @@ class TroubleEventList(ListView):
                 Q(title__icontains=q_word) | Q(description__icontains=q_word)
             )
         else:
-            object_list = TroubleEvent.objects.all()
+            object_list = TroubleEvent.objects.all().order_by('id').reverse()
         return object_list
 
-class GroupCreateFromEventView(CreateView):
-    """Event情報から新しいGroupを作る画面"""
-    template_name = 'group_create.html'
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['q'] = self.request.GET.get('query', '')
+        return ctx
+
+class GroupBaseMixin(object):
+    """各種Group作成/更新画面のベースとなる処理"""
+    template_name = 'create_group.html'
     model = TroubleGroup
     form_class = GroupCreateForm
-    success_url = reverse_lazy('ptop:home')
+
+#    def get_object(self, queryset=None):
+#    # get the existing object or created a new one
+#        obj, created = TroubleGroup.objects.get_or_create(pk=self.kwargs['pk'])
+#        print(obj)
+#        return obj
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:group_detail', kwargs={'pk': self.object.id})
+#    success_url = reverse_lazy('ptop:eventlist')
+
+    def post(self, request, *args, **kwargs):
+        if self.request.FILES:
+            print(self.request.FILES)
+            form = AttachmentForm(self.request.POST, self.request.FILES)
+            if form.is_valid():
+                attachment_form = form.instance
+                attachment = Attachment.objects.create(
+                    title=attachment_form.file.name,
+                    file=attachment_form.file,
+                    description='',
+                    uploaded_datetime=datetime.now()
+                    )
+                data = {
+                    'is_valid': True,
+                    'pk': attachment.pk,
+                    'title': attachment.title,
+                    }
+                print(data)
+            else:
+                data = {'is_valid': False}
+            return JsonResponse(data)
+        elif 'from_event' in self.request.path:
+            event_pk = self.kwargs.get('pk')
+            print('event_pk=', event_pk)
+            if event_pk:
+                event = TroubleEvent.objects.get(pk=event_pk)
+                print(event)
+                form = self.form_class(request.POST)
+                if form.is_valid():
+                    obj = form.save()
+                    event.group = obj
+                    print('group_pk=', obj.pk)
+                    print('event.group', event.group)
+                    event.save()
+#            return redirect('ptop:group_detail', pk=obj.pk)
+            return redirect('ptop:unapproved_event_list')
+            
+        else:
+            return super().post(request, *args, **kwargs)
+#            form = self.form_class(request.POST)
+#            if form.is_valid():
+#                obj = form.save(commit=False)
+#                print(obj)
+#                obj.save()
+#                return redirect('ptop:group_detail', pk=self.kwargs['pk'])
+#            else:
+#                return render(request, 'create_group.html', {'form': form})
+
+class EventBaseMixin(object):
+    """各種Event作成/更新画面のベースとなる処理"""
+    template_name = 'create_event.html'
+    model = TroubleEvent
+    form_class = EventCreateForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:event_detail', kwargs={'pk': self.object.id})
+
+    def post(self, request, *args, **kwargs):
+        if self.request.FILES:
+            print(self.request.FILES)
+            form = AttachmentForm(self.request.POST, self.request.FILES)
+            if form.is_valid():
+                attachment_form = form.instance
+                attachment = Attachment.objects.create(
+                    title=attachment_form.file.name,
+                    file=attachment_form.file,
+                    description='',
+                    uploaded_datetime=datetime.now()
+                    )
+                data = {
+                    'is_valid': True,
+                    'pk': attachment.pk,
+                    'title': attachment.title,
+                    }
+                print(data)
+            else:
+                data = {'is_valid': False}
+            return JsonResponse(data)
+        else:
+            return super().post(request, *args, **kwargs)
+
+class GroupCreateFromEventView(GroupBaseMixin, CreateView):
+    """Event情報から新しいGroupを作る画面"""
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         event = get_object_or_404(TroubleEvent, pk=self.kwargs.get('pk'))
+        context['base_event'] = self.kwargs.get('pk')
         context['form'] = GroupCreateForm(initial={
             'title':event.title,
             'device':event.device,
             'description':event.description,
             'cause':event.cause,
             'first_datetime':event.start_time,
-            'common_action':event.temporary_action
+            'common_action':event.temporary_action,
+            'classify_operator':self.request.user,
         })
         return context
 
-class ChildGroupCreateView(CreateView):
+class ChildGroupCreateView(GroupBaseMixin, CreateView):
     """あるGroupから子Groupを作る画面"""
-    template_name = 'group_create.html'
-    model = TroubleGroup
-    form_class = GroupCreateForm
-    success_url = reverse_lazy('ptop:home')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -141,16 +292,16 @@ class ChildGroupCreateView(CreateView):
             'description':parent_group.description,
             'cause':parent_group.cause,
             'common_action':parent_group.common_action,
-            'path':parent_group.path
+            'path':parent_group.path,
+            'classify_operator':self.request.user,
             })
         return context
 
-class RecurrentEventCreateFromEventView(CreateView):
+class RecurrentEventCreateFromEventView(EventBaseMixin, CreateView):
     """Eventから再発Eventを入力する画面"""
     template_name = 'create_event.html'
     model = TroubleEvent
     form_class = EventCreateForm
-    success_url = reverse_lazy('ptop:home')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -189,13 +340,11 @@ class RecurrentEventCreateFromGroupView(CreateView):
             })
         return context
 
-class EventCreateView(CreateView):
+class EventCreateView(EventBaseMixin, CreateView):
     """Event新規入力画面"""
     template_name = 'create_event.html'
     model = TroubleEvent
     form_class = EventCreateForm
-    success_url = reverse_lazy('ptop:home')
-    attachment_files = []
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -204,43 +353,22 @@ class EventCreateView(CreateView):
             })
         return context
 
-    def post(self, request, *args, **kwargs):
-        if self.request.FILES:
-            print(self.request.FILES)
-            form = AttachmentForm(self.request.POST, self.request.FILES)
-            if form.is_valid():
-                attachment_form = form.instance
-                attachment = Attachment.objects.create(
-                    title=attachment_form.file.name,
-                    file=attachment_form.file,
-                    description='',
-                    uploaded_datetime=datetime.now()
-                    )
-                data = {
-                    'is_valid': True,
-                    'pk': attachment.pk,
-                    'title': attachment.title,
-                    }
-                print(data)
-            else:
-                data = {'is_valid': False}
-            return JsonResponse(data)
-        else:
-            print(self.attachment_files)
-            form = self.form_class(request.POST)
-            if form.is_valid():
-                obj = form.save()
-                print(obj)
-                return redirect('ptop:event_detail', pk=obj.pk)
-            else:
-                return render(request, 'create_event.html', {'form': form})
 
-class EventUpdateView(UpdateView):
+class EventUpdateView(EventBaseMixin, UpdateView):
     """Event編集画面"""
     model = TroubleEvent
     form_class = EventCreateForm
     template_name = 'create_event.html'
-    success_url = reverse_lazy('ptop:home')
+
+class GroupUpdateView(GroupBaseMixin, UpdateView):
+    """Group編集画面"""
+    model = TroubleGroup
+    form_class = GroupCreateForm
+    template_name = 'create_group.html'
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:group_detail', kwargs={'pk': self.object.id})
+#    success_url = reverse_lazy('ptop:eventlist')
 
 class AdvancedSearchView(ListView):
     """Group詳細検索画面"""

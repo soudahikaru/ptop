@@ -17,8 +17,15 @@
         <button type="submit" class="btn btn-primary">検索</button>
       </form>
     </div>
+    <div class="card">
+      <form action="{% url 'ptop:group_list' %}">
+        トラブル類型 簡易検索 <input name="query" value="{{ request.GET.query }}" type="text">
+        <button type="submit" class="btn btn-primary">検索</button> 
+        <a href="{% url 'ptop:advanced_search' %}" class="btn btn-primary">詳細検索</a>
+
+      </form>
+    </div>
     <p>
-      トラブル類型 <a href="{% url 'ptop:advanced_search' %}" class="btn btn-primary">詳細検索</a>
     </p>
   </div>
 
@@ -30,15 +37,20 @@
     <h5 class="card-header">最近のトラブル</h5>
     <div class="card">
     <table border>
-      <tr><th>発生日時</th><th>題名</th><th>デバイスID</th><th>故障時間</th></tr>
+      <tr><th>発生日時</th><th>題名</th><th>デバイスID</th><th>故障時間</th><th>トラブル類型</th></tr>
       {% for item in object_list %}
       <tr>
         <td>{{item.start_time|date:"Y/m/d H:i"}}</td>
         <td><b>{{item.title|truncatechars:30}}</b></td>
         <td>{{item.device.device_id}}</td>
         <td>{{item.downtime}}</td>
+        <td>{% if item.group is not None %}
+          <a href="{% url 'ptop:group_detail' item.group.pk %}">{{item.group.title|truncatechars:10}}</a>
+          {% else %} 
+          {% endif %}
+        </td>
         <td><a href="{% url 'ptop:event_detail' item.pk %}" class="btn btn-primary">詳細</a>
-         <a href="{% url 'ptop:recurrent_event_create_from_event' item.pk %}" class="btn btn-secondary">再発</a></td>
+        <a href="{% url 'ptop:recurrent_event_create_from_event' item.pk %}" class="btn btn-warning">再発</a></td>
        </tr>
     {% endfor %}
     </table>

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+
+  <div class="container">
+    <h4>トラブル類型一覧</h4>
+
+    <div class="container">
+      <div class="card">
+        <form action="" method="get">
+          <input name="query" value="{{ request.GET.query }}" type="text">
+          <button type="submit">絞り込み</button>
+        </form>
+      </div>
+    </div>
+
+    <table border>
+      <tr><th>内部ID</th><th>初発日時</th><th>題名</th><th>デバイスID</th><th>故障時間</th></tr>
+      {% for item in object_list %}
+      <tr>
+        <td>{{item.pk}}</td>
+        <td>{{item.first_datetime|date:"Y/m/d H:i"}}</td>
+        <td><b>{{item.title|truncatechars:30}}</b></td>
+        <td>{{item.device.device_id}}</td>
+        <td><a href="{% url 'ptop:group_detail' item.pk %}" class="btn btn-primary">詳細</a>
+       </tr>
+    {% endfor %}
+    </table>
+
+    <div class="mt-3">
+      {% include 'pagination.html' %}
+    </div>
+
+    <a href="{% url 'ptop:home' %}" class="btn btn-primary">戻る</a>
+  </div>
+
+  </div>
+
+{% endblock content %}

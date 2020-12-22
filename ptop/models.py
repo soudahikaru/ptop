@@ -126,16 +126,45 @@ class Operator(models.Model):
     def __str__(self):
         return self.name
 
+class SuperSection(models.Model):
+    """上位Sectionモデル。装置の各機器を管理する。"""
+    name = models.CharField('名称', max_length=100)
+
+    def __str__(self):
+        return self.name
+
+class Section(models.Model):
+    """Sectionモデル。装置の設置領域を管理する。"""
+    name = models.CharField('名称', max_length=100)
+    super_section = models.ForeignKey(
+        SuperSection, verbose_name='上位セクション', null=True, blank=True,
+        on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return self.name
+
+class DeviceType(models.Model):
+    """DeviceTypeモデル。Deviceの種類を管理する。"""
+    name = models.CharField('名称', max_length=100)
+    def __str__(self):
+        return self.name
+
 class Device(models.Model):
     """Deviceモデル。装置の各機器を管理する。"""
-    device_id = models.CharField('デバイスID', max_length=30)
+    device_id = models.CharField('デバイスID', max_length=30, unique=True)
     name = models.CharField('デバイス名称', max_length=100)
+    section = models.ForeignKey(
+        Section, verbose_name='装置セクション', null=True, blank=True,
+        on_delete=models.SET_NULL)
+    device_type = models.ForeignKey(
+        DeviceType, verbose_name='デバイス種類', null=True, blank=True,
+        on_delete=models.SET_NULL)
     def __str__(self):
         return self.device_id
 
 class Error(models.Model):
     """Errorモデル。エラーコードとエラーの説明を管理する。"""
-    error_code = models.CharField('エラーコード', max_length=100)
+    error_code = models.CharField('エラーコード', max_length=100, unique=True)
     error_description = models.CharField('エラー説明', max_length=200, null=True, blank=True)
     def __str__(self):
         return self.error_code
@@ -162,6 +191,24 @@ class OperationType(models.Model):
     name = models.CharField('運転タイプ名称', max_length=100)
     meta_type = models.ForeignKey(
         OperationMetaType, verbose_name='メタ運転タイプ', null=True, on_delete=models.SET_NULL)
+    def __str__(self):
+        return self.name
+
+class CauseType(models.Model):
+    """TroubleGroupの原因のType。経年劣化、偶発故障など。"""
+    name = models.CharField('原因タイプ名称', max_length=100)
+    def __str__(self):
+        return self.name
+
+class VendorStatusType(models.Model):
+    """TroubleGroupのメーカー報告状況のType。未連絡、連絡済みなど。"""
+    name = models.CharField('メーカー報告状況名称', max_length=100)
+    def __str__(self):
+        return self.name
+
+class HandlingStatusType(models.Model):
+    """TroubleGroupの対応状況のType。様子見、修理予定など。"""
+    name = models.CharField('対応状況名称', max_length=100)
     def __str__(self):
         return self.name
 
@@ -222,15 +269,21 @@ class TroubleGroup(models.Model):
     cause = models.TextField('原因', null=True, blank=True)
     first_datetime = models.DateTimeField('初発日時', null=True, blank=True)
     common_action = models.TextField('主要な対処法', null=True, blank=True)
-    causetype = models.CharField('原因の類型', choices=CAUSETYPES, max_length=20, null=True, blank=True)
+#    causetype = models.CharField('原因の類型', choices=CAUSETYPES, max_length=20, null=True, blank=True)
+    causetype = models.ForeignKey(
+        CauseType, verbose_name='原因の類型', null=True, blank=True, on_delete=models.SET_NULL)
     errors = models.ManyToManyField(Error, verbose_name='エラーメッセージ', null=True, blank=True)
     classify_operator = models.ForeignKey(
         User, verbose_name='分類作成者', null=True, blank=True,
         on_delete=models.SET_NULL, related_name='%(class)s_classified')
-    handling_status = models.CharField(
-        '対処状況', choices=HANDLING_STATUS, max_length=20, null=True, blank=True)
-    vendor_status = models.CharField(
-        'メーカー連絡状況', choices=VENDOR_STATUS, max_length=20, null=True, blank=True)
+    handling_status = models.ForeignKey(
+        HandlingStatusType, verbose_name='対処状況', null=True, blank=True, on_delete=models.SET_NULL)
+#    handling_status = models.CharField(
+#        '対処状況', choices=HANDLING_STATUS, max_length=20, null=True, blank=True)
+    vendor_status = models.ForeignKey(
+        VendorStatusType, verbose_name='メーカー連絡状況', null=True, blank=True, on_delete=models.SET_NULL)
+#    vendor_status = models.CharField(
+#        'メーカー連絡状況', choices=VENDOR_STATUS, max_length=20, null=True, blank=True)
     reminder_datetime = models.DateField('振り返り予定日', null=True, blank=True)
     permanent_action = models.TextField('恒久対策の内容', null=True, blank=True)
     is_common_trouble = models.BooleanField('よくあるトラブルフラグ', default=False, null=True, blank=True)
@@ -273,7 +326,8 @@ class TroubleEvent(models.Model):
         User, verbose_name='入力者', limit_choices_to=Q(groups__name='Operator')&Q(is_active=True),
         null=True, on_delete=models.SET_NULL, related_name='%(class)s_inputed')
     handling_operators = models.ManyToManyField(
-        User, verbose_name='対応者', limit_choices_to=Q(groups__name='Operator')&Q(is_active=True))
+        User, verbose_name='対応者', limit_choices_to=Q(groups__name='Operator')&Q(is_active=True),
+        blank=True)
     approval_operator = models.ForeignKey(
         User, verbose_name='承認者',
         null=True, blank=True, on_delete=models.SET_NULL, related_name='%(class)s_approved')
@@ -282,7 +336,7 @@ class TroubleEvent(models.Model):
         limit_choices_to=Q(groups__name='Physicist')&Q(is_active=True),
         null=True, blank=True, on_delete=models.SET_NULL, related_name='%(class)s_reported')
     attachments = models.ManyToManyField(Attachment, verbose_name='添付ファイル', blank=True)
-    
+
     def __str__(self):
         return self.title
 
@@ -299,8 +353,10 @@ class Comment(models.Model):
     comment_type = models.ForeignKey(
         CommentType, verbose_name='コメントタイプ',
         null=True, blank=True, on_delete=models.SET_NULL)
+
     user = models.ForeignKey(
         User, verbose_name='入力者', limit_choices_to=Q(is_active=True),
         null=True, on_delete=models.SET_NULL, related_name='%(class)s_inputed')
     posted_time = models.DateTimeField('発生時刻', default=timezone.now)
     attachments = models.ManyToManyField(Attachment, verbose_name='添付ファイル', blank=True)
+
