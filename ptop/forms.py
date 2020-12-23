@@ -108,7 +108,7 @@ class EventCreateForm(forms.ModelForm):
         help_text='エラーメッセージを部分一致検索します。空白部をクリックまたはTab→キー入力で複数選択可能。',
         required=False)
     attachments = forms.ModelMultipleChoiceField(
-        Attachment.objects.all(), label='添付ファイル', required=False,
+        Attachment.objects.filter(id=-1), label='添付ファイル', required=False,
         help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます'
         )
 #    attachments = forms.ModelMultipleChoiceField(
@@ -160,7 +160,7 @@ class GroupCreateForm(forms.ModelForm):
         help_text='エラーメッセージを部分一致検索します。空白部をクリックまたはTab→キー入力で複数選択可能。',
         required=False)
     attachments = forms.ModelMultipleChoiceField(
-        Attachment.objects.all(), label='添付ファイル', required=False,
+        Attachment.objects.filter(id=-1), label='添付ファイル', required=False,
         help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます'
         )
     is_common_trouble = forms.BooleanField(
