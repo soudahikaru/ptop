@@ -9,23 +9,75 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 
     <title>Particle Therapy Operation Program</title>
+
+    <style>
+      .navbar-toggler-icon {font-size: 0.8em;}
+      .navbar-toggler{padding: 2px;}
+      .navbar{min-height: 12px;}
+      body{padding-top: 30px;}
+      .nav-link{padding: 2px;}
+      .nav-link:hover{background-color:azure;}
+    </style>
+      
   </head>
+
   <body>
-    <div style="background-color:cyan;">
-      <table style="width: 100%;">
-        <tr>
-          <td style="width: 33%;text-align: left;"><a href="{% url 'ptop:home' %}">PTOP Home</a></td>
-          <td style="width: 33%;text-align: center;">運転状況: {{ current_operation.operation_type.name }} ({{current_operation.start_time|date:'Y-m-d G:i'}}-) <a href="{% url 'ptop:change_operation' %}" class="btn btn-primary btn-sm">変更</a></td>
-          <td style="width: 33%;text-align: right;">
-      {% if user.is_authenticated %}
-      {{ user }}でログイン中 <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm">ログアウト</a>
-      {% else %}
-      ログインしていません <a href="{% url 'login' %}" class="btn btn-primary btn-sm">ログイン</a>
-      {% endif %}
-          </td>
-        </tr>
-      </table>
-    </div>
+  <!-- ナビゲーションバー -->    
+    <nav class="navbar navbar-light fixed-top py-0" style="background-color: cyan;">
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <ul class="navbar-nav mr-auto">
+        <li><a class="nav-item" href="{% url 'ptop:home' %}">PTOP</a></li>
+      </ul>
+
+      <ul class="navbar-nav justify-content-center mr-auto ml-auto">
+        <li class="nav-item">
+          運転状況: {{ current_operation.operation_type.name }} ({{current_operation.start_time|date:'Y-m-d G:i'}}-) <a href="{% url 'ptop:change_operation' %}" class="btn btn-primary btn-sm">変更</a>
+        </li>
+      </ul>
+
+      <ul class="navbar-nav justify-content-end">
+        <li class="nav-item">
+          {% if user.is_authenticated %}
+        {{ user }}でログイン中 <a href="{% url 'logout' %}" class="btn btn-secondary btn-sm">ログアウト</a>
+        {% else %}
+        ログインしていません <a href="{% url 'login' %}" class="btn btn-primary btn-sm">ログイン</a>
+        {% endif %}
+        </li>
+      </ul>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:home' %}">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:eventlist' %}">トラブル事象一覧</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:group_list' %}">トラブル類型一覧</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:create_event' %}">トラブル事象を新規作成</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:advanced_search' %}">トラブル類型の詳細検索</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:unapproved_event_list' %}">未承認イベントの分類</a>
+          </li>
+        </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:change_operation' %}">オペレーションの切り替え</a>
+          </li>
+        </ul>
+      </div>
+
+    
+    </nav>
 
   {% block header %}
   {% endblock header %}
@@ -36,7 +88,7 @@
  
     <!-- Optional JavaScript -->
     <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 
