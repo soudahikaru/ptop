@@ -7,3 +7,4 @@ myvenv
 .DS_Store
 db.sqlite3
 media/
+settings.py

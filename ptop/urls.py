@@ -22,6 +22,10 @@ from .views import TroubleEventList, TroubleEventDetail, EventCreateView, Home
 from .views import UnapprovedEventListView
 from .views import GroupCreateFromEventView
 from .views import api_devices_get
+from django.contrib import admin
+
+admin.autodiscover()
+admin.site.enable_nav_sidebar = False
 
 app_name = 'ptop'
 

@@ -97,7 +97,7 @@ class CommentTypeResource(resources.ModelResource):
 
 class CommentTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
-    resource_class = OperationTypeResource
+    resource_class = CommentTypeResource
 
 class CauseTypeResource(resources.ModelResource):
     """ Resource for Operation Type """
