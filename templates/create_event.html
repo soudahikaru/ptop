@@ -60,7 +60,6 @@
         {% else %}
         <input class="btn btn-primary" type="submit" value="トラブル事象を作成する">
         {% endif %}
-        {{form.media}}
       </form>
       
     </div>
@@ -78,6 +77,8 @@
 
 {# PHOTOS PAGE SCRIPTS #}
 <script src="{% static 'ptop/js/basic-upload.js' %}"></script>
+
+{{form.media}}
 
 {% endblock content %}
 
