@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+      <h5 class="card-header">{{object.title}}</h5>
+      <div class="card-body">
+        <table border>
+            <tr><td>題名</td><td>{{object.title}}</td></tr>
+            <tr><td>内容</td><td>{{object.description}}</td></tr>
+            <tr><td>作成日</td><td>{{object.posted_time|date:'Y/n/j h:m'}}</td></tr>
+            <tr><td>作成者</td><td>{{object.user}}</td></tr>
+        </table>
+      <a href="{% url 'ptop:home' %}" class="btn btn-secondary">戻る</a>
+    </div>
+  </div>
+{% endblock content %}

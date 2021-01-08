@@ -1,15 +1,25 @@
 """ PTOP view module """
 
+import pytz
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.utils import timezone
 #from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.db.models import Q
+from django.db.models import IntegerField, DurationField, FloatField
+from django.db.models import Sum, F, Func, Count, ExpressionWrapper
+from django.db.models.functions import Cast, TruncDay, TruncMonth, TruncYear, Trunc
 from django.http import JsonResponse
 from django.http import HttpResponseRedirect
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django_pandas.io import read_frame
+import pandas as pd
+import numpy as np
 #from django.shortcuts import get_list_or_404
 from dal import autocomplete
 from .forms import AttachmentForm
@@ -17,10 +27,14 @@ from .forms import EventCreateForm
 from .forms import GroupCreateForm
 from .forms import AdvancedSearchForm
 from .forms import ChangeOperationForm
+from .forms import OperationCreateForm
+from .forms import StatisticsForm
+from .forms import AnnouncementCreateForm
 from .models import Device, Error
 from .models import TroubleEvent, TroubleGroup
 from .models import Attachment
 from .models import Operation
+from .models import Announcement
 
 # Create your views here.
 
@@ -166,7 +180,7 @@ class TroubleEventList(ListView):
         ctx['q'] = self.request.GET.get('query', '')
         return ctx
 
-class GroupBaseMixin(object):
+class GroupBaseMixin(LoginRequiredMixin, object):
     """各種Group作成/更新画面のベースとなる処理"""
     template_name = 'create_group.html'
     model = TroubleGroup
@@ -230,7 +244,7 @@ class GroupBaseMixin(object):
 #            else:
 #                return render(request, 'create_group.html', {'form': form})
 
-class EventBaseMixin(object):
+class EventBaseMixin(LoginRequiredMixin, object):
     """各種Event作成/更新画面のベースとなる処理"""
     template_name = 'create_event.html'
     model = TroubleEvent
@@ -473,6 +487,65 @@ class AdvancedSearchView(ListView):
         object_list = queryset
         return object_list
 
+class OperationListView(ListView):
+    """OperationList画面"""
+    template_name = 'operation_list.html'
+    model = Operation
+    paginate_by = 10
+
+    def get_queryset(self):
+        q_word = self.request.GET.get('query')
+        if q_word:
+            object_list = Operation.objects.filter(
+                Q(start_time__date=datetime.strptime(q_word, '%Y/%m/%d'))
+            ).order_by('start_time').reverse()
+        else:
+            object_list = Operation.objects.all().order_by('start_time').reverse()
+        return object_list
+
+
+class OperationBaseMixin(LoginRequiredMixin, object):
+    """Operationの作成/編集ベース"""
+    template_name = 'create_operation.html'
+    model = Operation
+    success_url = reverse_lazy('ptop:operation_list')
+
+    def post(self, request, *args, **kwargs):
+        start = request.POST['start_time']
+        end = request.POST['end_time']
+        # 1: 既存のOperationの範囲がstart_timeをまたいでいる場合(完全に既存のOpに含まれる場合もここでひっかかる)
+        # 2: 既存のOperationの範囲がend_timeをまたいでいる場合
+        # かつ、そのOperationが自分自身でなく、装置停止でもない場合
+        # には作成を受け付けない
+        print(kwargs.get('pk'))
+        query_set = Operation.objects.filter(
+            ~Q(id__exact=kwargs.get('pk')) 
+                & ~Q(operation_type__name__exact='装置停止')
+                & ((Q(start_time__lt=start) & Q(end_time__gt=start))
+                    |(Q(start_time__lt=end) & Q(end_time__gt=end)))
+            )
+        if query_set.first():
+            print(query_set)
+            return render(
+                request,
+                'create_operation.html',
+                {'form': OperationCreateForm(request.POST), 'overlapped_oparations':query_set}
+                )
+        return super().post(request, *args, **kwargs)
+
+class OperationUpdateView(OperationBaseMixin, UpdateView):
+    """過去のOperationの編集"""
+    template_name = 'create_operation.html'
+    model = Operation
+    form_class = OperationCreateForm
+
+class OperationCreateView(OperationBaseMixin, CreateView):
+    """過去のOperationの作成"""
+    template_name = 'create_operation.html'
+    model = Operation
+    form_class = OperationCreateForm
+
+@login_required
 def change_operation(request):
     """Operation変更画面"""
     current_operation = Operation.objects.order_by('id').last()
@@ -512,12 +585,40 @@ def change_operation_execute(request):
             )
     return HttpResponseRedirect("/change_operation/")
 
+class AnnouncementListView(ListView):
+    """AnnouncementList画面"""
+    template_name = 'announcement_list.html'
+    model = Announcement
+    paginate_by = 10
 
-class EventClassifyView(ListView):
+class AnnouncementDetailView(DetailView):
+    """Announcement詳細画面"""
+    template_name = 'announcement_detail.html'
+    model = Announcement
+
+class AnnouncementCreateView(LoginRequiredMixin, CreateView):
+    """Announcement作成画面"""
+    template_name = 'announcement_create.html'
+    model = Announcement
+    form_class = AnnouncementCreateForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:announcement_detail', kwargs={'pk': self.object.id})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = AnnouncementCreateForm(initial={
+            'user':self.request.user,
+            })
+        return context
+
+
+class EventClassifyView(LoginRequiredMixin, ListView):
     """イベント分類View"""
     template_name = 'event_classify.html'
     model = TroubleEvent
 
+@login_required
 def event_classify(request, pk_):
     """イベント分類画面"""
     event = TroubleEvent.objects.get(pk=pk_)
@@ -555,6 +656,189 @@ def event_classify_execute(request):
     event.save()
     return HttpResponseRedirect("/unapproved_event_list/")
 
+def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
+    print(start_datetime, end_datetime)
+    df = read_frame(query_set, index_col='index')
+    print(df)
+    tz_jp = pytz.timezone('Asia/Tokyo')
+    freq_str = 'D'
+    start_datetime_trunc = start_datetime
+    end_datetime_trunc = end_datetime
+    if interval == 'week':
+        freq_str = 'W'
+        return df
+    elif interval == 'month':
+        freq_str = 'M'
+        start_datetime_trunc = tz_jp.localize(datetime(start_datetime.year, start_datetime.month, 1))
+        end_datetime_trunc = tz_jp.localize(datetime(end_datetime.year, end_datetime.month, 1))
+        return df
+    elif interval == 'year':
+        freq_str = 'Y'
+        return df
+    if not query_set.exists():
+        s = pd.Series([0]*len(df.columns), index=df.columns, name=start_datetime)
+        df = df.append(s)
+        s = pd.Series([0]*len(df.columns), index=df.columns, name=end_datetime)
+        df = df.append(s)
+    else:
+        first_index = df.index.array[0]
+        last_index = df.index.array[-1]
+        print("test")
+        if  first_index != start_datetime_trunc:
+            s = pd.Series([0]*len(df.columns), index=df.columns, name=start_datetime_trunc)
+            df = df.append(s)
+        if last_index != end_datetime_trunc:
+            s = pd.Series([0]*len(df.columns), index=df.columns, name=end_datetime_trunc)
+            df = df.append(s)
+    print(df)
+#    df = df.sort_index().asfreq(freq_str, fill_value=0).fillna(0)
+    df = df.sort_index().asfreq(freq_str, fill_value=0).fillna(0)
+    print(df)
+    return df
+
+def statistics_create_view(request):
+    form = StatisticsForm()
+
+    if request.method == 'POST':
+        form = StatisticsForm(data=request.POST)
+#        print(request.POST.get('df'))
+        start = request.POST['date_s']
+        end = request.POST['date_e']
+        subtotal_frequency = request.POST['subtotal_frequency']
+        if start and end:
+            events = TroubleEvent.objects.filter(
+                Q(start_time__gt=start) & Q(end_time__lte=end)
+                ).order_by('start_time')
+            operations = Operation.objects.filter(
+                ~Q(operation_type__name__iexact='装置停止')
+                & Q(start_time__gt=start) & Q(end_time__lte=end)
+            ).order_by('start_time')
+        else:
+            events = TroubleGroup.objects.all()
+            operations = Operation.objects.all()
+
+        tz_jp = pytz.timezone('Asia/Tokyo')
+        start_datetime = timezone.datetime.strptime(start, '%Y-%m-%d')
+        start_localized = tz_jp.localize(start_datetime)
+        end_datetime = timezone.datetime.strptime(end, '%Y-%m-%d')
+        end_localized = tz_jp.localize(end_datetime)
+        # troubleevent
+        if subtotal_frequency == 'day':
+            statistics_event = events.annotate(index=TruncDay('start_time')) \
+                .values('index') \
+                .annotate(num_event=Count('id')) \
+                .annotate(subtotal_downtime=Sum('downtime')) \
+                .annotate(subtotal_delaytime=Sum('delaytime')) \
+                .order_by('index')
+            df_event = make_dataframe(statistics_event, start_localized, end_localized, 'day')
+
+            #operation
+            statistics_operation = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField()))) \
+                .annotate(index=TruncDay('start_time')) \
+                .values('index') \
+                .annotate(subtotal_operation_time=ExpressionWrapper(Sum('time_diff'), output_field=FloatField())) \
+                .annotate(subtotal_treatment_time=ExpressionWrapper(Sum('time_diff', filter=Q(operation_type__name__iexact='治療')), output_field=FloatField())) \
+                .order_by('index')
+            df_operation = make_dataframe(statistics_operation, start_localized, end_localized, 'day')
+        elif subtotal_frequency == 'month':
+            print(events.annotate(index=TruncMonth('start_time')).values('index'))
+            statistics_event = events.annotate(index=TruncMonth('start_time')) \
+                .values('index') \
+                .annotate(num_event=Count('id')) \
+                .annotate(subtotal_downtime=Sum('downtime')) \
+                .annotate(subtotal_delaytime=Sum('delaytime')) \
+                .order_by('index')
+            df_event = make_dataframe(statistics_event, start_localized, end_localized, 'month')
+
+            #operation
+            statistics_operation = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField()))) \
+                .annotate(index=TruncMonth('start_time')) \
+                .values('index') \
+                .annotate(subtotal_operation_time=ExpressionWrapper(Sum('time_diff'), output_field=FloatField())) \
+                .annotate(subtotal_treatment_time=ExpressionWrapper(Sum('time_diff', filter=Q(operation_type__name__iexact='治療')), output_field=FloatField())) \
+                .order_by('index')
+            df_operation = make_dataframe(statistics_operation, start_localized, end_localized, 'month')
+        else:
+            statistics_event = events.annotate(index=Trunc('start_time',kind=subtotal_frequency)) \
+                .values('index') \
+                .annotate(num_event=Count('id')) \
+                .annotate(subtotal_downtime=Sum('downtime')) \
+                .annotate(subtotal_delaytime=Sum('delaytime')) \
+                .order_by('index')
+            df_event = make_dataframe(statistics_event, start_localized, end_localized, subtotal_frequency)
+
+            #operation
+            statistics_operation = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField()))) \
+                .annotate(index=Trunc('start_time',kind=subtotal_frequency)) \
+                .values('index') \
+                .annotate(subtotal_operation_time=ExpressionWrapper(Sum('time_diff'), output_field=FloatField())) \
+                .annotate(subtotal_treatment_time=ExpressionWrapper(Sum('time_diff', filter=Q(operation_type__name__iexact='治療')), output_field=FloatField())) \
+                .order_by('index')
+            df_operation = make_dataframe(statistics_operation, start_localized, end_localized, subtotal_frequency)
+
+
+        df = pd.merge(df_operation, df_event, left_index=True, right_index=True, how='outer').fillna(0)
+        df['subtotal_operation_time'] = df['subtotal_operation_time'] / 60000000
+        df['subtotal_treatment_time'] = df['subtotal_treatment_time'] / 60000000
+        df['total_availability'] = 1.0 - (df['subtotal_downtime'] / df['subtotal_operation_time'])
+        df['treatment_availability'] = 1.0 - (df['subtotal_delaytime'] / df['subtotal_treatment_time'])
+        print(df['subtotal_operation_time'])
+#        df['operation_time_minute'] = df['subtotal_operation_time'].dt.total_seconds()
+        print(df)
+        total_downtime = events.aggregate(value=Sum('downtime'))
+        operations_annotate = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField())))
+        #print(operations_annotate)
+        total_operation_time = operations_annotate.aggregate(value=Sum('time_diff'))
+        if total_operation_time['value'] is not None:
+            total_availability = 1.0 - float(total_downtime['value'])/float(total_operation_time['value'].total_seconds()/60)
+            total_optime = total_operation_time['value'].total_seconds()/60
+        else:
+            total_availability = np.nan
+            total_optime = 0
+        s_summary = df.sum()
+        s_summary['total_availability']=1.0 - (s_summary['subtotal_downtime'] / s_summary['subtotal_operation_time'])
+        s_summary['treatment_availability'] = 1.0 - (s_summary['subtotal_delaytime'] / s_summary['subtotal_treatment_time'])
+        s_summary.name = '合計'
+        df = df.append(s_summary)
+        if request.POST.get('next', '') == 'CSV出力':
+            response = HttpResponse(content_type='text/csv; charset=cp932')
+            filename = 'stat%s.csv' % (datetime.today().strftime('%Y%m%d-%H%M'))
+            print(filename)
+            response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+            df.to_csv(path_or_buf=response, encoding='utf_8_sig')
+            print(response)
+            return response
+        else:    
+            return render(
+                request,
+                'statistics_create.html',
+                {
+                    'form':form, 
+                    'total_downtime':total_downtime['value'], 
+                    'total_operation_time':total_optime,
+                    'total_availability':total_availability,
+                    'subtotal_frequency':subtotal_frequency,
+                    'df':df,
+                    's_summary':s_summary,
+                }
+                )
+    else:
+        total_downtime = None
+        total_operation_time = None
+        total_availability = None
+        return render(
+            request,
+            'statistics_create.html',
+            {
+                'form':form, 
+                'total_downtime':0, 
+                'total_operation_time':0,
+                'total_availability':0.0,
+            }
+            )
+
+
+
 class UnapprovedEventListView(ListView):
     """未承認イベント一覧画面"""
     model = TroubleEvent
@@ -585,6 +869,8 @@ class Home(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['current_operation'] = Operation.objects.order_by('id').last()
+        context['announce_list'] = Announcement.objects.order_by('posted_time').reverse()[:5]
+        print(context)
         return context
 
     def get_queryset(self):

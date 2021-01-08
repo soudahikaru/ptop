@@ -225,6 +225,7 @@ class Operation(models.Model):
     num_qa_hc1 = models.IntegerField('HC1 QAポート数', null=True, blank=True)
     num_qa_gc2 = models.IntegerField('GC2 QAポート数', null=True, blank=True)
     comment = models.TextField('コメント', null=True, blank=True)
+
     def __str__(self):
         return self.start_time.strftime('%Y%m%m-%H%M%S') + '_' + self.operation_type.name
 
@@ -360,3 +361,14 @@ class Comment(models.Model):
     posted_time = models.DateTimeField('発生時刻', default=timezone.now)
     attachments = models.ManyToManyField(Attachment, verbose_name='添付ファイル', blank=True)
 
+class Announcement(models.Model):
+    """お知らせモデル"""
+    title = models.CharField('題名', max_length=200, null=True)
+    description = models.TextField('内容', null=True)
+    user = models.ForeignKey(
+        User, verbose_name='作成者', limit_choices_to=Q(is_active=True),
+        null=True, on_delete=models.SET_NULL, related_name='%(class)s_inputed')
+    posted_time = models.DateTimeField('作成時刻', auto_now=True)
+
+    def __str__(self):
+        return self.title

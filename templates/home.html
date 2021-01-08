@@ -6,63 +6,76 @@
 {% block content %}
 
   <div class="container">
-   <h1>Particle Therapy Operation Program (仮称)</h1>
+   <h1>Particle Therapy Database of Operation and Maintenance</h1>
   </div>
 
   <div class="container">
-    <h5 class="card-header">トラブル検索</h5>
-    <div class="card">
-      <form action="{% url 'ptop:eventlist' %}">
-        トラブル事象 簡易検索 <input name="query" value="{{ request.GET.query }}" type="text">
-        <button type="submit" class="btn btn-primary">検索</button>
-      </form>
-    </div>
-    <div class="card">
-      <form action="{% url 'ptop:group_list' %}">
-        トラブル類型 簡易検索 <input name="query" value="{{ request.GET.query }}" type="text">
-        <button type="submit" class="btn btn-primary">検索</button> 
-        <a href="{% url 'ptop:advanced_search' %}" class="btn btn-primary">詳細検索</a>
+    <div class="row">
+      <div class="col-sm-6">
+        <div class="card">
+          <h5 class="card-header">トラブル検索</h5>
+          <form action="{% url 'ptop:eventlist' %}">
+            トラブル事象 <input name="query" value="{{ request.GET.query }}" type="text">
+            <button type="submit" class="btn btn-primary">検索</button>
+          </form>
+          <form action="{% url 'ptop:group_list' %}">
+            トラブル類型 <input name="query" value="{{ request.GET.query }}" type="text">
+            <button type="submit" class="btn btn-primary">検索</button> 
+            <a href="{% url 'ptop:advanced_search' %}" class="btn btn-primary">詳細検索</a>
+          </form>
+        </div>
+      </div>
 
-      </form>
+      <div class="col-sm-6">
+        <div class="card">
+          <h5 class="card-header">トラブル入力</h5>
+          <p>
+            <a href="{% url 'ptop:create_event' %}" class="btn btn-primary w-25">新規入力</a>
+            <a href="{% url 'ptop:unapproved_event_list' %}" class="btn btn-info w-25">分類</a>
+          </p>
+        </div>
+      </div>
     </div>
-    <p>
-    </p>
   </div>
 
   <div class="container">
-    <h5 class="card-header">トラブル入力</h5>
-    <div class="card">
-      <a href="{% url 'ptop:create_event' %}" class="btn btn-primary">新規入力</a>
+    <div class="col-sm-12">
+      <div class="card">
+        <h5 class="card-header">お知らせ</h5>
+        <table>
+        {% for item in announce_list %}
+        <tr><td>{{ item.posted_time|date:'Y/n/j'}}</td><td><a href="{% url 'ptop:announcement_detail' item.pk %}">{{ item.title|truncatechars:30 }}</a></td></tr>
+        {% endfor %}
+        </table>
+        <div style="text-align:right"><a href="{% url 'ptop:announcement_list' %}">お知らせ一覧</a></div>
+      </div>
     </div>
-    <h5 class="card-header">最近のトラブル</h5>
-    <div class="card">
-    <table border>
-      <tr><th>発生日時</th><th>題名</th><th>デバイスID</th><th>故障時間</th><th>トラブル類型</th></tr>
-      {% for item in object_list %}
-      <tr>
-        <td>{{item.start_time|date:"Y/m/d H:i"}}</td>
-        <td><b>{{item.title|truncatechars:30}}</b></td>
-        <td>{{item.device.device_id}}</td>
-        <td>{{item.downtime}}</td>
-        <td>{% if item.group is not None %}
-          <a href="{% url 'ptop:group_detail' item.group.pk %}">{{item.group.title|truncatechars:10}}</a>
-          {% else %} 
-          {% endif %}
-        </td>
-        <td><a href="{% url 'ptop:event_detail' item.pk %}" class="btn btn-primary">詳細</a>
-        <a href="{% url 'ptop:recurrent_event_create_from_event' item.pk %}" class="btn btn-warning">再発</a></td>
-       </tr>
-    {% endfor %}
-    </table>
-    <div class="card">
-      <a href="{% url 'ptop:unapproved_event_list' %}" class="btn btn-primary">未承認イベントの分類・承認</a>
-    </div>
-    </div>
+  </div>
 
-    <h5 class="card-header">よくあるトラブル</h5>
-    <div class="card">
+  <div class="container">
+    <div class="col-sm-12">
+      <div class="card">
+        <h5 class="card-header">最近のトラブル</h5>
+        <table border>
+          <tr><th>発生日時</th><th>題名</th><th>デバイスID</th><th>故障時間</th><th>トラブル類型</th></tr>
+          {% for item in object_list %}
+          <tr>
+            <td>{{item.start_time|date:"Y/m/d H:i"}}</td>
+            <td><b>{{item.title|truncatechars:30}}</b></td>
+            <td>{{item.device.device_id}}</td>
+            <td>{{item.downtime}}</td>
+            <td>{% if item.group is not None %}
+              <a href="{% url 'ptop:group_detail' item.group.pk %}">{{item.group.title|truncatechars:10}}</a>
+              {% else %} 
+              {% endif %}
+            </td>
+            <td><a href="{% url 'ptop:event_detail' item.pk %}" class="btn btn-primary">詳細</a>
+            <a href="{% url 'ptop:recurrent_event_create_from_event' item.pk %}" class="btn btn-warning">再発</a></td>
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
     </div>
-
   </div>
 
 

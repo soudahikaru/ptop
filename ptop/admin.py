@@ -23,6 +23,7 @@ from .models import HandlingStatusType
 from .models import Section
 from .models import SuperSection
 from .models import DeviceType
+from .models import Announcement
 
 #@admin.register(User)
 
@@ -175,6 +176,7 @@ class DeviceTypeAdmin(ImportExportModelAdmin):
 # Register your models here.
 admin.site.register(User, AdminUserAdmin)
 admin.site.register(Attachment)
+admin.site.register(Announcement)
 admin.site.register(TroubleGroup)
 admin.site.register(TroubleEvent)
 admin.site.register(Device, DeviceAdmin)

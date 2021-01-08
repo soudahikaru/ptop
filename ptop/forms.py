@@ -10,7 +10,9 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from .models import TroubleEvent, Device, Error
 from .models import TroubleGroup
+from .models import User
 from .models import Attachment
+from .models import Announcement
 from .models import Operation, OperationType, OperationMetaType
 from .models import CauseType, VendorStatusType, HandlingStatusType
 from .widgets import SuggestWidget
@@ -20,6 +22,27 @@ class AttachmentForm(forms.ModelForm):
     class Meta:
         model = Attachment
         fields = ('file',)
+
+class StatisticsForm(forms.Form):
+    """統計算出Form"""
+    date_s = forms.DateField(
+        widget=datetimepicker.DatePickerInput(
+            format='%Y-%m-%d',
+            options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}
+            ).start_of('期間'), required=False)
+    date_e = forms.DateField(
+        widget=datetimepicker.DatePickerInput(
+            format='%Y-%m-%d',
+            options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}
+            ).end_of('期間'), required=False)
+    CHOICE = (
+        ('day', '日'),
+        ('week', '週'),
+        ('month', '月'),
+        ('year', '年'),
+    )
+    subtotal_frequency = forms.ChoiceField(
+        label='小計単位', widget=forms.RadioSelect, choices=CHOICE, initial='day')
 
 class AdvancedSearchForm(forms.Form):
     """TroubleGroupの詳細検索Form"""
@@ -181,8 +204,15 @@ class GroupCreateForm(forms.ModelForm):
             'criticality_score', 'frequency_score', 'difficulty_score',
             'path', 'classify_operator', 'attachments')
 
+class OperationCreateForm(forms.ModelForm):
+    class Meta:
+        model = Operation
+        fields = (
+            'operation_type', 'start_time', 'end_time',
+            'num_treat_hc1', 'num_treat_gc2', 'num_qa_hc1', 'num_qa_gc2', 'comment')
+
 class ChangeOperationForm(forms.Form):
-    operation_type = forms.ModelChoiceField(queryset=OperationType.objects.all(), label='次のオペレーション')
+    operation_type = forms.ModelChoiceField(queryset=OperationType.objects.all().order_by('id'), label='次のオペレーション')
     change_time = forms.DateTimeField(initial=timezone.now, label='切り替え時刻')
 
     num_treat_hc1 = forms.IntegerField(initial=0, label='HC1治療ポート数')
@@ -192,3 +222,18 @@ class ChangeOperationForm(forms.Form):
     comment = forms.CharField(
         widget=forms.Textarea(attrs={'cols':'60', 'rows':'4'}),
         label='コメント', required=False)
+
+class AnnouncementCreateForm(forms.ModelForm):
+    title = forms.CharField(
+        widget=forms.TextInput(attrs={'size':80}), label='題名', required=True)
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='内容', required=True)
+    user = forms.ModelChoiceField(
+        User.objects.all(),
+        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+        label='作成者', help_text='ログインユーザのみ設定可能です。', required=False)
+
+    class Meta:
+        model = Announcement
+        fields = (
+            'title', 'description', 'user')

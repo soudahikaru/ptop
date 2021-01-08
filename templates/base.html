@@ -8,17 +8,19 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 
-    <title>Particle Therapy Operation Program</title>
+    <title>Particle Therapy Database of Operation and Maintenance</title>
 
     <style>
       .navbar-toggler-icon {font-size: 0.8em;}
       .navbar-toggler{padding: 2px;}
       .navbar{min-height: 12px;}
-      body{padding-top: 30px;}
+      body{padding-top: 32px;}
       .nav-link{padding: 2px;}
       .nav-link:hover{background-color:azure;}
+      .container{padding-bottom: 8px;}
     </style>
-      
+    
+    {% load static %}
   </head>
 
   <body>
@@ -29,12 +31,12 @@
       </button>
 
       <ul class="navbar-nav mr-auto">
-        <li><a class="nav-item" href="{% url 'ptop:home' %}">PTOP</a></li>
+        <li><a class="nav-item" href="{% url 'ptop:home' %}"><img src="{% static 'ptop/logo.png' %}" height=32 alt="PT-DOM" /></a></li>
       </ul>
 
       <ul class="navbar-nav justify-content-center mr-auto ml-auto">
         <li class="nav-item">
-          運転状況: {{ current_operation.operation_type.name }} ({{current_operation.start_time|date:'Y-m-d G:i'}}-) <a href="{% url 'ptop:change_operation' %}" class="btn btn-primary btn-sm">変更</a>
+          <a href="{% url 'ptop:operation_list' %}">運転状況</a>: {{ current_operation.operation_type.name }} ({{current_operation.start_time|date:'Y-m-d G:i'}}-) <a href="{% url 'ptop:change_operation' %}" class="btn btn-primary btn-sm">変更</a>
         </li>
       </ul>
 
@@ -69,9 +71,28 @@
             <a class="nav-link" href="{% url 'ptop:unapproved_event_list' %}">未承認イベントの分類</a>
           </li>
         </ul>
+        <div class="dropdown-divider"></div>
         <ul class="navbar-nav">
           <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:operation_list' %}">オペレーション一覧</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link" href="{% url 'ptop:change_operation' %}">オペレーションの切り替え</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:create_operation' %}">過去のオペレーションの入力</a>
+          </li>
+        </ul>
+        <div class="dropdown-divider"></div>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:announcement_list' %}">お知らせ</a>
+          </li>
+        </ul>
+        <div class="dropdown-divider"></div>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:statistics_create' %}">運転統計</a>
           </li>
         </ul>
       </div>

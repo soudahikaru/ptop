@@ -22,7 +22,9 @@
           <p class="card-text">復旧時刻: {{event.end_time|date:"Y/m/d H:i"}}</p>
           <p class="card-text">装置故障時間: {{event.downtime}} 分</p>
           <p class="card-text">治療遅延時間: {{event.delaytime}} 分</p>
-          <p class="card-text">対応者: {{event.handling_operators.all}}</p>
+          <p class="card-text">対応者: {% for operator in event.handling_operators.all %}
+            {{ operator }}{% if forloop.last %}{% else %},{% endif %}    
+        {% endfor %}</p>
           <p class="card-text">入力者: {{event.input_operator}}</p>
           <p class="card-text">承認者: {{event.approval_operator}}</p>
         </div>

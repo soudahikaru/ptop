@@ -8,10 +8,9 @@
 
 {% if next %}
     {% if user.is_authenticated %}
-    <p>Your account doesn't have access to this page. To proceed,
-    please login with an account that has access.</p>
+    <p>トラブル事象承認はチーフオペレータユーザーのみに許可されています。</p>
     {% else %}
-    <p>Please login to see this page.</p>
+    <p>データ作成／編集はログインユーザーのみに許可されています。ログインしてください。</p>
     {% endif %}
 {% endif %}
 

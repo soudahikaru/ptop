@@ -8,3 +8,4 @@ myvenv
 db.sqlite3
 media/
 settings.py
+staticfiles/
