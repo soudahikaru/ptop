@@ -114,7 +114,7 @@
             console.log(data.result.pk)
             $option = $('<option>')
               .val(data.result.pk)
-              .text(data.result.title)
+              .text(encodeURIComponent(data.result.title))
               .prop('selected', true);
             $("#id_attachments").append($option);
   //          $("#id_attachments").val(list);
