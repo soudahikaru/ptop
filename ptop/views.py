@@ -759,10 +759,12 @@ def statistics_create_view(request):
         #print(operations_annotate)
 #        total_operation_time = operations_annotate.aggregate(value=Sum('operation_time'))
         s_summary = df.sum()
-        s_summary['total_availability']=1.0 - (s_summary['subtotal_downtime'] / s_summary['subtotal_operation_time'])
+        print(s_summary)
+        s_summary['total_availability'] = 1.0 - (s_summary['subtotal_downtime'] / s_summary['subtotal_operation_time'])
         s_summary['treatment_availability'] = 1.0 - (s_summary['subtotal_delaytime'] / s_summary['subtotal_treatment_time'])
         s_summary.name = '合計'
         df = df.append(s_summary)
+        print(df)
         if request.POST.get('next', '') == 'CSV出力':
             response = HttpResponse(content_type='text/csv; charset=cp932')
             filename = 'stat%s.csv' % (datetime.today().strftime('%Y%m%d-%H%M'))
