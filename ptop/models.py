@@ -368,7 +368,7 @@ class Announcement(models.Model):
     user = models.ForeignKey(
         User, verbose_name='作成者', limit_choices_to=Q(is_active=True),
         null=True, on_delete=models.SET_NULL, related_name='%(class)s_inputed')
-    posted_time = models.DateTimeField('作成時刻', auto_now=True)
+    posted_time = models.DateTimeField('作成時刻', auto_now_add=True)
 
     def __str__(self):
         return self.title
