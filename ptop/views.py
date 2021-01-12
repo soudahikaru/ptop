@@ -760,8 +760,8 @@ def statistics_create_view(request):
 #        total_operation_time = operations_annotate.aggregate(value=Sum('operation_time'))
         s_summary = df.sum()
         print(s_summary)
-        s_summary['total_availability'] = 1.0 - (s_summary['subtotal_downtime'] / s_summary['subtotal_operation_time'])
-        s_summary['treatment_availability'] = 1.0 - (s_summary['subtotal_delaytime'] / s_summary['subtotal_treatment_time'])
+        s_summary['total_availability'] = 1.0 - (df['subtotal_downtime'].divide(df['subtotal_operation_time']))
+        s_summary['treatment_availability'] = 1.0 - (df['subtotal_delaytime'].divide(df['subtotal_treatment_time']))
         s_summary.name = '合計'
         df = df.append(s_summary)
         print(df)
