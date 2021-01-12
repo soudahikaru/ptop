@@ -749,8 +749,8 @@ def statistics_create_view(request):
         df = pd.merge(df_operation, df_event, left_index=True, right_index=True, how='outer').fillna(0)
 #        df['subtotal_operation_time'] = df['subtotal_operation_time'] / 60000000
 #        df['subtotal_treatment_time'] = df['subtotal_treatment_time'] / 60000000
-        df['total_availability'] = 1.0 - (df['subtotal_downtime'] / df['subtotal_operation_time'])
-        df['treatment_availability'] = 1.0 - (df['subtotal_delaytime'] / df['subtotal_treatment_time'])
+        df['total_availability'] = 1.0 - (df['subtotal_downtime'].divide(df['subtotal_operation_time']))
+        df['treatment_availability'] = 1.0 - (df['subtotal_delaytime'].divide(df['subtotal_treatment_time']))
         print(df['subtotal_operation_time'])
 #        df['operation_time_minute'] = df['subtotal_operation_time'].dt.total_seconds()
         print(df)
