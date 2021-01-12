@@ -12,7 +12,7 @@ from django.urls import reverse_lazy
 from django.db.models import Q
 from django.db.models import IntegerField, DurationField, FloatField
 from django.db.models import Sum, F, Func, Count, ExpressionWrapper
-from django.db.models.functions import Cast, TruncDay, TruncMonth, TruncYear, Trunc
+from django.db.models.functions import Cast, TruncDay, TruncMonth, TruncYear, Trunc, Extract
 from django.http import JsonResponse
 from django.http import HttpResponseRedirect
 from django.http import HttpResponse
@@ -742,7 +742,7 @@ def statistics_create_view(request):
         statistics_operation = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField()))) \
             .annotate(index=Trunc('start_time', kind=subtotal_frequency)) \
             .values('index') \
-            .annotate(subtotal_operation_time=ExpressionWrapper(Sum('time_diff'), output_field=FloatField())) \
+            .annotate(subtotal_operation_time=ExpressionWrapper(Extract(Sum('time_diff'), 'epoch'), output_field=FloatField())) \
             .annotate(subtotal_treatment_time=ExpressionWrapper(Sum('time_diff', filter=Q(operation_type__name__iexact='治療')), output_field=FloatField())) \
             .order_by('index')
         df_operation = make_dataframe(statistics_operation, start_localized, end_localized, subtotal_frequency)
