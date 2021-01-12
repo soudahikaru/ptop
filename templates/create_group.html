@@ -3,8 +3,7 @@
 {% block header %}
 
 {% load static %}
-<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
-{% load bootstrap4 %}{% bootstrap_css %}{% bootstrap_javascript jquery='full' %}
+{% load bootstrap4 %}{% bootstrap_css %}
 
 <style>
 .input-inline { display: inline-block; width: 150px; }
@@ -79,6 +78,8 @@
 
 {# PHOTOS PAGE SCRIPTS #}
 <script src="{% static 'ptop/js/basic-upload.js' %}"></script>
+
+{{form.media}}
 
 {% endblock content %}
 
