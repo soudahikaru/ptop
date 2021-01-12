@@ -177,7 +177,7 @@ class Attachment(models.Model):
     uploaded_datetime = models.DateTimeField('ファイル', null=True)
 
     def __str__(self):
-        return self.title
+        return unicode(self.Title, 'utf-8')
 
 class OperationMetaType(models.Model):
     """Operationのメタ型。OperationTypeをさらに集約する。"""
