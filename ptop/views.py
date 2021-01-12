@@ -749,21 +749,22 @@ def statistics_create_view(request):
         df = pd.merge(df_operation, df_event, left_index=True, right_index=True, how='outer').fillna(0)
 #        df['subtotal_operation_time'] = df['subtotal_operation_time'] / 60000000
 #        df['subtotal_treatment_time'] = df['subtotal_treatment_time'] / 60000000
+        s_summary = df.sum()
+        s_summary.name = '合計'
+        print(s_summary)
+        df = df.append(s_summary)
+
         df['total_availability'] = 1.0 - (df['subtotal_downtime'].divide(df['subtotal_operation_time']))
         df['treatment_availability'] = 1.0 - (df['subtotal_delaytime'].divide(df['subtotal_treatment_time']))
-        print(df['subtotal_operation_time'])
+#        print(df['subtotal_operation_time'])
 #        df['operation_time_minute'] = df['subtotal_operation_time'].dt.total_seconds()
-        print(df)
+#        print(df)
   #      total_downtime = events.aggregate(value=Sum('downtime'))
  #       operations_annotate = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField())))
         #print(operations_annotate)
 #        total_operation_time = operations_annotate.aggregate(value=Sum('operation_time'))
-        s_summary = df.sum()
-        print(s_summary)
-        s_summary['total_availability'] = 1.0 - (s_summary['subtotal_downtime'].divide(s_summary['subtotal_operation_time']))
-        s_summary['treatment_availability'] = 1.0 - (s_summary['subtotal_delaytime'].divide(s_summary['subtotal_treatment_time']))
-        s_summary.name = '合計'
-        df = df.append(s_summary)
+#        s_summary['total_availability'] = 1.0 - (s_summary['subtotal_downtime'].divide(s_summary['subtotal_operation_time']))
+#        s_summary['treatment_availability'] = 1.0 - (s_summary['subtotal_delaytime'].divide(s_summary['subtotal_treatment_time']))
         print(df)
         if request.POST.get('next', '') == 'CSV出力':
             response = HttpResponse(content_type='text/csv; charset=cp932')
