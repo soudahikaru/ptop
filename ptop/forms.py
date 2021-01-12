@@ -138,9 +138,9 @@ class EventCreateForm(forms.ModelForm):
 #		super(EventCreateForm, self).__init__(*args, **kwargs)
 #		self.fields['operation_type'].widget.attrs['readonly'] = True
 
-    def cleam_attachment():
+    def clean_attachment(self):
         # 何もチェックせず返す
-        return attachment
+        return self.cleaned_data['attachment']
 
     def clean(self):
         cleaned_data = super().clean()
