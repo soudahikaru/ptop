@@ -3,8 +3,7 @@
 {% block header %}
 
 {% load static %}
-<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
-{% load bootstrap4 %}{% bootstrap_css %}{% bootstrap_javascript jquery='full' %}
+{% load bootstrap4 %}{% bootstrap_css %}
 
 <style>
 .input-inline { display: inline-block; width: 150px; }
@@ -38,6 +37,8 @@
               <button type="button" class="btn btn-info js-upload-photos">
               <span class="glyphicon glyphicon-cloud-upload"></span> 添付ファイルのアップロード
               </button>
+              <ul id='id_list_attachment'>
+              </ul>
           {% endif %}
           {% if field.help_text %}
             <span class="helptext">{{ field.help_text|safe }}</span>
@@ -114,9 +115,10 @@
             console.log(data.result.pk)
             $option = $('<option>')
               .val(data.result.pk)
-              .text(encodeURIComponent(data.result.title))
+              .text(data.result.title)
               .prop('selected', true);
             $("#id_attachments").append($option);
+            $("#id_list_attachment").append("<li>"+data.result.title+"</li>");
   //          $("#id_attachments").val(list);
           }
         },

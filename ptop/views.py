@@ -275,6 +275,10 @@ class EventBaseMixin(LoginRequiredMixin, object):
                 data = {'is_valid': False}
             return JsonResponse(data)
         else:
+#            form = EventCreateForm(self.request.POST)
+#            form.fields['attachments'].queryset = Attachment.objects.all().order_by('id')
+#            print(self.request.POST)
+#            print(form.fields['attachments'].queryset.reverse())
             return super().post(request, *args, **kwargs)
 
 class GroupCreateFromEventView(GroupBaseMixin, CreateView):
@@ -733,10 +737,10 @@ def statistics_create_view(request):
 
         #operation
         statistics_operation = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField()))) \
-            .annotate(index=Trunc('start_time',kind=subtotal_frequency)) \
+            .annotate(index=Trunc('start_time', kind=subtotal_frequency)) \
             .values('index') \
-            .annotate(subtotal_operation_time=Cast(Sum('time_diff'), output_field=FloatField())) \
-            .annotate(subtotal_treatment_time=Cast(Sum('time_diff', filter=Q(operation_type__name__iexact='治療')), output_field=FloatField())) \
+            .annotate(subtotal_operation_time=ExpressionWrapper(Sum('time_diff'), output_field=FloatField())) \
+            .annotate(subtotal_treatment_time=ExpressionWrapper(Sum('time_diff', filter=Q(operation_type__name__iexact='治療')), output_field=FloatField())) \
             .order_by('index')
         df_operation = make_dataframe(statistics_operation, start_localized, end_localized, subtotal_frequency)
 

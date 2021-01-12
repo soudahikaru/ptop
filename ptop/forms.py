@@ -131,16 +131,22 @@ class EventCreateForm(forms.ModelForm):
         help_text='エラーメッセージを部分一致検索します。空白部をクリックまたはTab→キー入力で複数選択可能。',
         required=False)
     attachments = forms.ModelMultipleChoiceField(
-    	Attachment.objects.filter(id__gt=Attachment.objects.all().count()), label='添付ファイル', required=False,
-    	help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます'
-    	)
-#	def __init__(self, *args, **kwargs):
-#		super(EventCreateForm, self).__init__(*args, **kwargs)
-#		self.fields['operation_type'].widget.attrs['readonly'] = True
+        Attachment.objects.all(), label='添付ファイル', required=False, 
+        widget=forms.SelectMultiple(attrs={'style':'display:none;'}),
+        help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます')
 
-    def clean_attachment(self):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['operation_type'].widget.attrs['readonly'] = True
+        print('init queryset')
+        print(TroubleEvent.objects.filter(pk=kwargs.get('pk')))
+#        self.fields['attachments'].queryset = Attachment.objects.filter(id__in=TroubleEvent.objects.filter(pk=kwargs.get('pk')))
+
+    def clean_attachments(self):
         # 何もチェックせず返す
-        return self.cleaned_data['attachment']
+        print('validation')
+        print(self.cleaned_data['attachments'])
+        return self.cleaned_data['attachments']
 
     def clean(self):
         cleaned_data = super().clean()
@@ -149,6 +155,11 @@ class EventCreateForm(forms.ModelForm):
             print(cleaned_data.get('end_time'))
             raise forms.ValidationError("復旧日時は発生日時より後にしてください。")
         super().clean()
+
+#    def __init__(self, *args, **kwargs):
+#        self.attachments = kwargs.pop('attachments')
+#        super(EventCreateForm, self).__init__(*args, **kwargs)
+#        self.fields['attachments'].queryset = Attachment.objects.filter(id__in=self.attachments)
 
     class Meta:
         model = TroubleEvent
