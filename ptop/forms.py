@@ -138,6 +138,10 @@ class EventCreateForm(forms.ModelForm):
 #		super(EventCreateForm, self).__init__(*args, **kwargs)
 #		self.fields['operation_type'].widget.attrs['readonly'] = True
 
+    def cleam_attachment():
+        # 何もチェックせず返す
+        return attachment
+
     def clean(self):
         cleaned_data = super().clean()
         print(cleaned_data.get('start_time'))
