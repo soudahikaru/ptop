@@ -59,7 +59,7 @@ def ajax_search_operation_from_datetime(request):
             ope = Operation.objects.filter(end_time__gte=time).first()
             if not ope:
                 print('newest operation')
-                ope = Operation.objects.order_by('id').last()
+                ope = Operation.objects.order_by('start_time').last()
             print(ope.operation_type.id)
             return JsonResponse({'operation_type':ope.operation_type.id})
         else:
@@ -555,7 +555,7 @@ class OperationCreateView(OperationBaseMixin, CreateView):
 @login_required
 def change_operation(request):
     """Operation変更画面"""
-    current_operation = Operation.objects.order_by('id').last()
+    current_operation = Operation.objects.order_by('start_time').last()
     if current_operation:
         return render(
             request,
@@ -573,7 +573,7 @@ def change_operation_execute(request):
     """Operation変更実行"""
     form = ChangeOperationForm(data=request.POST)
     form.full_clean()
-    current_operation = Operation.objects.order_by('id').last()
+    current_operation = Operation.objects.order_by('start_time').last()
     if current_operation:
         current_operation.end_time = form.cleaned_data.get('change_time')
         current_operation.operation_time = (current_operation.end_time - current_operation.start_time).total_seconds() / 60.0
@@ -832,7 +832,7 @@ class Home(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['current_operation'] = Operation.objects.order_by('id').last()
+        context['current_operation'] = Operation.objects.order_by('start_time').last()
         context['announce_list'] = Announcement.objects.order_by('posted_time').reverse()[:5]
 #        print(context)
         return context
