@@ -576,6 +576,7 @@ def change_operation_execute(request):
     current_operation = Operation.objects.order_by('id').last()
     if current_operation:
         current_operation.end_time = form.cleaned_data.get('change_time')
+        current_operation.operation_time = (current_operation.end_time - current_operation.start_time).total_seconds() / 60.0
         current_operation.save()
         new_operation = Operation.objects.create(
             operation_type=form.cleaned_data.get('operation_type'),
