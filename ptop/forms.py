@@ -131,14 +131,9 @@ class EventCreateForm(forms.ModelForm):
         help_text='エラーメッセージを部分一致検索します。空白部をクリックまたはTab→キー入力で複数選択可能。',
         required=False)
     attachments = forms.ModelMultipleChoiceField(
-        Attachment.objects.filter(id=-1), label='添付ファイル', required=False,
-        help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます'
-        )
-#    attachments = forms.ModelMultipleChoiceField(
-#        Attachment.objects.all(), label='添付ファイル', required=False,
-#        widget=forms.SelectMultiple(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
-#        )
-
+    	Attachment.objects.filter(id__gt=Attachment.objects.all().count()), label='添付ファイル', required=False,
+    	help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます'
+    	)
 #	def __init__(self, *args, **kwargs):
 #		super(EventCreateForm, self).__init__(*args, **kwargs)
 #		self.fields['operation_type'].widget.attrs['readonly'] = True
