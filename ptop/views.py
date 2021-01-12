@@ -144,8 +144,11 @@ class GroupDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        print(self.kwargs.get('pk'))
-        context['events'] = TroubleEvent.objects.filter(group_id=self.kwargs.get('pk'))
+#        context['events'] = TroubleEvent.objects.filter(group_id=self.kwargs.get('pk'))
+        startpath = '/' + context.get('object').path.split('/')[1] + '/'
+        print(startpath)
+        context['events'] = TroubleEvent.objects.filter(group__path__startswith=startpath)
+        context['child_group'] = TroubleGroup.objects.filter(path__startswith=startpath)
 #		print(events)
         return context
 

@@ -33,20 +33,50 @@
             {% endfor %}</td></tr>
             
       </table>
+      </div>
+    </div>
 
-      <p>
-      登録されているトラブル事象
-      </p>
-      <table border>
+      
+      {% if child_group %}
+      <div class="card">
+      <h5 class="card-header">同一グループのトラブル類型</h5>
+        <div class="card-body">
+            <table border>
+            <tr><th>分類ID</th><th>初発日時</th><th>題名</th></tr>
+            {% for group in child_group %}
+            <tr><td>{% if object.classify_id == group.classify_id %}<b>{{group.classify_id}}</b>{% else %}{{group.classify_id}}{% endif %}</td><td>{{group.first_datetime|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:group_detail' group.pk%}">{{group.title}}</a></td></tr>
+            {% endfor %}
+        </table>
+        </div>
+      </div>
+      {% else %}
+        <p>サブグループなし</p>
+      {% endif %}
+  
+      <div class="card">
+        <h5 class="card-header">登録されているトラブル事象</h5>
+        <div class="card-body">
+          <table border>
+            <tr><th>事象ID</th><th>分類ID</th><th>発生日時</th><th>題名</th></tr>
 {% for event in events %}
-      <tr><td>{{event.id}}</td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td></tr>
+  {% if event.group.classify_id == object.classify_id %}
+      <tr><td><b>{{event.id}}</b></td><td><b>{{event.group.classify_id}}</b></td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td></tr>
+  {% else %}
+      <tr><td>{{event.id}}</td><td>{{event.group.classify_id}}</td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td></tr>
+  {% endif %}
 {% empty %}
       なし
 {% endfor %}
-      </table>
+          </table>
+        </div>
+    </div>
 
-    <a href="{% url 'ptop:update_group' object.pk %}" class="btn btn-primary">編集</a>
-    <a href="{% url 'ptop:group_list' %}" class="btn btn-primary">戻る</a>
+  <div class="card">
+    <div class="card-body">
+      <a href="{% url 'ptop:update_group' object.pk %}" class="btn btn-primary">編集</a>
+      <a href="{% url 'ptop:child_group_create' object.pk %}" class="btn btn-info">サブグループ作成</a>
+      <a href="{% url 'ptop:group_list' %}" class="btn btn-secondary">戻る</a>
     </div>
   </div>
+</div>
 {% endblock content %}
