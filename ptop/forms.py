@@ -193,9 +193,9 @@ class GroupCreateForm(forms.ModelForm):
         help_text='エラーメッセージを部分一致検索します。空白部をクリックまたはTab→キー入力で複数選択可能。',
         required=False)
     attachments = forms.ModelMultipleChoiceField(
-        Attachment.objects.filter(id=-1), label='添付ファイル', required=False,
-        help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます'
-        )
+        Attachment.objects.all(), label='添付ファイル', required=False, 
+        widget=forms.SelectMultiple(attrs={'style':'display:none;'}),
+        help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます')
     is_common_trouble = forms.BooleanField(
         help_text='チェックするとトップページのよくあるトラブルに登録され、再発事象の入力が簡単になります',
         required=False)
