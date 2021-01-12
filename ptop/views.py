@@ -758,12 +758,6 @@ def statistics_create_view(request):
         operations_annotate = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField())))
         #print(operations_annotate)
         total_operation_time = operations_annotate.aggregate(value=Sum('time_diff'))
-        if total_operation_time['value'] is not None:
-            total_availability = 1.0 - float(total_downtime['value'])/float(total_operation_time['value'].total_seconds()/60)
-            total_optime = total_operation_time['value'].total_seconds()/60
-        else:
-            total_availability = np.nan
-            total_optime = 0
         s_summary = df.sum()
         s_summary['total_availability']=1.0 - (s_summary['subtotal_downtime'] / s_summary['subtotal_operation_time'])
         s_summary['treatment_availability'] = 1.0 - (s_summary['subtotal_delaytime'] / s_summary['subtotal_treatment_time'])
@@ -783,9 +777,6 @@ def statistics_create_view(request):
                 'statistics_create.html',
                 {
                     'form':form, 
-                    'total_downtime':total_downtime['value'], 
-                    'total_operation_time':total_optime,
-                    'total_availability':total_availability,
                     'subtotal_frequency':subtotal_frequency,
                     'df':df,
                     's_summary':s_summary,
