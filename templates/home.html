@@ -44,7 +44,7 @@
         <h5 class="card-header">お知らせ</h5>
         <table>
         {% for item in announce_list %}
-        <tr><td>{{ item.posted_time|date:'Y/n/j'}}</td><td><a href="{% url 'ptop:announcement_detail' item.pk %}">{{ item.title|truncatechars:30 }}</a></td></tr>
+        <tr><td>{{ item.posted_time|date:'Y/n/j'}}</td><td><a href="{% url 'ptop:announcement_detail' item.pk %}">{{ item.title|truncatechars:60 }}</a></td></tr>
         {% endfor %}
         </table>
         <div style="text-align:right"><a href="{% url 'ptop:announcement_list' %}">お知らせ一覧</a></div>
@@ -61,7 +61,7 @@
           {% for item in object_list %}
           <tr>
             <td>{{item.start_time|date:"Y/m/d H:i"}}</td>
-            <td><b>{{item.title|truncatechars:30}}</b></td>
+            <td><a href="{% url 'ptop:event_detail' item.pk %}"><b>{{item.title|truncatechars:30}}</b></a></td>
             <td>{{item.device.device_id}}</td>
             <td>{{item.downtime}}</td>
             <td>{% if item.group is not None %}
