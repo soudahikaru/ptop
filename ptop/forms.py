@@ -215,11 +215,22 @@ class GroupCreateForm(forms.ModelForm):
             'path', 'classify_operator', 'attachments')
 
 class OperationCreateForm(forms.ModelForm):
+
+    def save(self, commit=True):
+        m = super(OperationCreateForm, self).save(commit=False)
+        # do custom stuff
+        m.operation_time = (m.end_time - m.start_time).total_seconds() / 60.0
+        print(m.operation_time)
+        if commit:
+            m.save()
+        return m
+
     class Meta:
         model = Operation
         fields = (
             'operation_type', 'start_time', 'end_time',
             'num_treat_hc1', 'num_treat_gc2', 'num_qa_hc1', 'num_qa_gc2', 'comment')
+
 
 class ChangeOperationForm(forms.Form):
     operation_type = forms.ModelChoiceField(queryset=OperationType.objects.all().order_by('id'), label='次のオペレーション')
@@ -233,6 +244,7 @@ class ChangeOperationForm(forms.Form):
         widget=forms.Textarea(attrs={'cols':'60', 'rows':'4'}),
         label='コメント', required=False)
 
+    
 class AnnouncementCreateForm(forms.ModelForm):
     title = forms.CharField(
         widget=forms.TextInput(attrs={'size':80}), label='題名', required=True)

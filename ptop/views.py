@@ -739,18 +739,16 @@ def statistics_create_view(request):
         df_event = make_dataframe(statistics_event, start_localized, end_localized, subtotal_frequency)
 
         #operation
-        statistics_operation = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField()))) \
-            .annotate(index=Trunc('start_time', kind=subtotal_frequency)) \
+        statistics_operation = operations.annotate(index=Trunc('start_time', kind=subtotal_frequency)) \
             .values('index') \
-            .annotate(subtotal_operation_time=ExpressionWrapper(Extract(Sum('time_diff'), 'epoch'), output_field=FloatField())) \
-            .annotate(subtotal_treatment_time=ExpressionWrapper(Sum('time_diff', filter=Q(operation_type__name__iexact='治療')), output_field=FloatField())) \
+            .annotate(subtotal_operation_time=Sum('operation_time')) \
+            .annotate(subtotal_treatment_time=Sum('operation_time', filter=Q(operation_type__name__iexact='治療'))) \
             .order_by('index')
         df_operation = make_dataframe(statistics_operation, start_localized, end_localized, subtotal_frequency)
 
-
         df = pd.merge(df_operation, df_event, left_index=True, right_index=True, how='outer').fillna(0)
-        df['subtotal_operation_time'] = df['subtotal_operation_time'] / 60000000
-        df['subtotal_treatment_time'] = df['subtotal_treatment_time'] / 60000000
+#        df['subtotal_operation_time'] = df['subtotal_operation_time'] / 60000000
+#        df['subtotal_treatment_time'] = df['subtotal_treatment_time'] / 60000000
         df['total_availability'] = 1.0 - (df['subtotal_downtime'] / df['subtotal_operation_time'])
         df['treatment_availability'] = 1.0 - (df['subtotal_delaytime'] / df['subtotal_treatment_time'])
         print(df['subtotal_operation_time'])

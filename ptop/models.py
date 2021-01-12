@@ -220,6 +220,7 @@ class Operation(models.Model):
         on_delete=models.SET_NULL)
     start_time = models.DateTimeField('開始日時', null=True)
     end_time = models.DateTimeField('終了日時', null=True, blank=True)
+    operation_time = models.PositiveIntegerField('運転時間', null=True, blank=True)
     num_treat_hc1 = models.IntegerField('HC1 治療ポート数', null=True, blank=True)
     num_treat_gc2 = models.IntegerField('GC2 治療ポート数', null=True, blank=True)
     num_qa_hc1 = models.IntegerField('HC1 QAポート数', null=True, blank=True)
