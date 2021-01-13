@@ -112,9 +112,9 @@ class EventCreateForm(forms.ModelForm):
         required=True)
 #	end_time = forms.DateTimeField(label='復旧時刻', help_text='空欄の場合、装置故障時間を入力すると自動的に入力されます。', required=True)
     downtime = forms.IntegerField(
-        label='装置故障時間', help_text='未入力の場合、復旧時刻を入力すると自動的に入力されます。', required=True)
+        label='装置故障時間(分)', help_text='実際に装置運転に影響があった時間を入力してください。未入力の場合、復旧時刻を入力すると自動的に入力されます。', required=True)
     delaytime = forms.IntegerField(
-        label='治療遅延時間', help_text='未入力の場合、運転状況が「治療」で装置故障時間が(自動でも)入力されると自動的に入力されます。', required=True)
+        label='治療遅延時間(分)', help_text='未入力の場合、運転状況が「治療」で装置故障時間が(自動でも)入力されると自動的に入力されます。', required=True)
     delay_flag = forms.BooleanField(
         label='治療遅延の有無', help_text='治療遅延時間が未入力の場合、運転状況が「治療」で装置故障時間が(自動でも)入力されると自動的にONになります。実際には遅延しなかった場合は手動でOFFにしてください。', required=False)
     operation_type = forms.ModelChoiceField(

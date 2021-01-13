@@ -10,7 +10,7 @@
       <div class="card-body">
       <table border>
       <tr><td>分類ID</td><td>{{object.classify_id}}</td></tr>
-      <tr><td>Device ID</td><td>{{object.device.device_id}}</td></tr>
+      <tr><td>Device ID</td><td>{{object.device.device_id}}({{object.device.name}})</td></tr>
       <tr><td>事象</td><td>{{object.description | linebreaksbr }}</td></tr>
       <tr><td>エラーメッセージ</td><td>{% for error in object.errors.all %}
 {{ error.error_code }}{% if forloop.last %}{% else %},{% endif %}

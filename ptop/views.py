@@ -39,7 +39,7 @@ from .models import Announcement
 # Create your views here.
 
 def api_devices_get(request):
-    """サジェスト候補のデバイスIDをJSONで返す。"""
+    """（不使用）サジェスト候補のデバイスIDをJSONで返す。"""
     keyword = request.GET.get('keyword')
     if keyword:
         post_list = [
@@ -72,8 +72,11 @@ class DeviceAutoComplete(autocomplete.Select2QuerySetView):
     def get_queryset(self):
         qs = Device.objects.all()
         if self.q:
-            qs = qs.filter(device_id__icontains=self.q)
+            qs = qs.filter(Q(device_id__icontains=self.q) | Q(name__icontains=self.q))
         return qs
+
+    def get_result_label(self, item):
+        return '%s(%s)' % (item.device_id, item.name)
 
 class ErrorAutoComplete(autocomplete.Select2QuerySetView):
     """Errorを部分一致検索して入力"""
