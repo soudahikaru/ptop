@@ -11,7 +11,7 @@
         <table border>
             <tr><td>題名</td><td>{{object.title}}</td></tr>
             <tr><td>内容</td><td>{{object.description|linebreaksbr}}</td></tr>
-            <tr><td>作成日</td><td>{{object.posted_time|date:'Y/n/j h:m'}}</td></tr>
+            <tr><td>作成日</td><td>{{object.posted_time|date:'Y/n/j G:i'}}</td></tr>
             <tr><td>作成者</td><td>{{object.user}}</td></tr>
         </table>
       <a href="{% url 'ptop:home' %}" class="btn btn-secondary">戻る</a>
