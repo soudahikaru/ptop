@@ -173,9 +173,9 @@ class TroubleEventList(ListView):
         if q_word:
             object_list = TroubleEvent.objects.filter(
                 Q(title__icontains=q_word) | Q(description__icontains=q_word)
-            )
+            ).order_by('start_time').reverse()
         else:
-            object_list = TroubleEvent.objects.all().order_by('id').reverse()
+            object_list = TroubleEvent.objects.all().order_by('start_time').reverse()
         return object_list
 
     def get_context_data(self, **kwargs):
@@ -598,6 +598,9 @@ class AnnouncementListView(ListView):
     template_name = 'announcement_list.html'
     model = Announcement
     paginate_by = 10
+
+    def get_queryset(self):
+        return Announcement.objects.all().order_by('posted_time')
 
 class AnnouncementDetailView(DetailView):
     """Announcement詳細画面"""
