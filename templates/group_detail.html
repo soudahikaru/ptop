@@ -28,7 +28,9 @@
       <tr><td>FMEA致命度スコア</td><td>{{object.criticality_score}}</td></tr>
       <tr><td>FMEA発生頻度スコア</td><td>{{object.frequency_score}}</td></tr>
       <tr><td>FMEA対処難度スコア</td><td>{{object.difficulty_score}}</td></tr>
-      <tr><td>添付ファイル</td><td>{% for attachment in object.attachments.all %}
+      <tr><td>添付ファイル</td><td>
+      {% spaceless %}
+      {% for attachment in object.attachments.all %}
         {% if '.png' in attachment.title or '.PNG' in attachment.title or '.jpg' in attachment.title or '.JPG' in attachment.title %}
           <a href="{{attachment.file.url}}"><img src="{{attachment.file.url}}" alt="{{attachment.title}}" width="200" /></a>
         {% else %}
@@ -36,7 +38,7 @@
         {% endif %}
         {% if forloop.last %}{% else %},{% endif %}
       {% endfor %}</td></tr>
-            
+      {% endspaceless %}      
       </table>
       </div>
     </div>
@@ -63,6 +65,7 @@
         <div class="card-body">
           <table border>
             <tr><th>事象ID</th><th>分類ID</th><th>発生日時</th><th>題名</th></tr>
+{% spaceless %}
 {% for event in events %}
   {% if event.group.classify_id == object.classify_id %}
       <tr><td><b>{{event.id}}</b></td><td><b>{{event.group.classify_id}}</b></td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td></tr>
@@ -72,6 +75,7 @@
 {% empty %}
       なし
 {% endfor %}
+{% endspaceless %}
           </table>
         </div>
     </div>

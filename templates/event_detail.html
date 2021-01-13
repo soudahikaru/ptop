@@ -29,14 +29,14 @@
       <tr><td>承認者</td><td>{{object.approval_operator}}</td></tr>
       <tr><td>報告した物理士</td><td>{{object.reported_physicist}}</td></tr>
       <tr><td>添付ファイル</td><td>
-{% for attachment in object.attachments.all %}
+{% spaceless %}{% for attachment in object.attachments.all %}
   {% if '.png' in attachment.title or '.jpg' in attachment.title %}
     <a href="{{attachment.file.url}}"><img src="{{attachment.file.url}}" alt="{{attachment.title}}" width="200" /></a>
   {% else %}
     <a href="{{attachment.file.url}}">{{ attachment.title }}</a>
   {% endif %}
   {% if forloop.last %}{% else %},{% endif %}
-{% endfor %}</td></tr>
+{% endfor %}{% endspaceless %}</td></tr>
       </table>
       <a href="{% url 'ptop:update_event' object.pk %}" class="btn btn-primary">編集</a>
       <a href="{% url 'ptop:recurrent_event_create_from_event' object.pk %}" class="btn btn-warning">再発</a>
