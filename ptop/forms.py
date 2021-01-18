@@ -348,6 +348,14 @@ class GroupCreateForm(forms.ModelForm):
             'path', 'classify_operator', 'attachments')
 
 class OperationCreateForm(forms.ModelForm):
+    start_time = forms.DateTimeField(
+        widget=datetimepicker.DateTimePickerInput(
+            options={'format':'YYYY-MM-DD HH:mm', 'sideBySide':True}),
+        label='開始時刻', required=True)
+    end_time = forms.DateTimeField(
+        widget=datetimepicker.DateTimePickerInput(
+            options={'format':'YYYY-MM-DD HH:mm', 'sideBySide':True}),
+        label='終了時刻', required=True)
 
     def save(self, commit=True):
         m = super(OperationCreateForm, self).save(commit=False)
