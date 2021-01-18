@@ -66,13 +66,19 @@
             <a class="nav-link" href="{% url 'ptop:eventlist' %}">トラブル事象一覧</a>
           </li>
           <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:event_advanced_search' %}">トラブル事象の詳細検索</a>
+          </li>
+          <li class="nav-item">
             <a class="nav-link" href="{% url 'ptop:group_list' %}">トラブル類型一覧</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'ptop:create_event' %}">トラブル事象を新規作成</a>
-          </li>
-          <li class="nav-item">
             <a class="nav-link" href="{% url 'ptop:advanced_search' %}">トラブル類型の詳細検索</a>
+          </li>
+        </ul>
+        <div class="dropdown-divider"></div>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:create_event' %}">トラブル事象を新規作成</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'ptop:unapproved_event_list' %}">未承認イベントの分類</a>
