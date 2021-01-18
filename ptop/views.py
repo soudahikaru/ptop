@@ -764,15 +764,17 @@ def statistics_create_view(request):
         form = StatisticsForm(data=request.POST)
 #        print(request.POST.get('df'))
         start = request.POST['date_s']
-        end = request.POST['date_e'] + timedelta(days=1)
+        end = request.POST['date_e']
+        start_t = datetime.strptime(start, '%Y-%m-%d')
+        end_t = datetime.strptime(end, '%Y-%m-%d') + datetime.timedelta(days=1)
         subtotal_frequency = request.POST['subtotal_frequency']
         if start and end:
             events = TroubleEvent.objects.filter(
-                Q(start_time__gt=start) & Q(end_time__lt=end)
+                Q(start_time__gt=start_t) & Q(end_time__lt=end_t)
                 ).order_by('start_time')
             operations = Operation.objects.filter(
                 ~Q(operation_type__name__iexact='装置停止')
-                & Q(start_time__gt=start) & Q(end_time__lt=end)
+                & Q(start_time__gt=start_t) & Q(end_time__lt=end_t)
             ).order_by('start_time')
         else:
             events = TroubleGroup.objects.all()
