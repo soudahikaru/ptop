@@ -44,6 +44,57 @@ class StatisticsForm(forms.Form):
     subtotal_frequency = forms.ChoiceField(
         label='小計単位', widget=forms.RadioSelect, choices=CHOICE, initial='day')
 
+class EventAdvancedSearchForm(forms.Form):
+    """TroubleEventの詳細検索Form"""
+    CHOICE = (
+        ('0', ''),
+        ('1', ''),
+        ('2', ''),
+        ('3', ''),
+    )
+    tuple_noselect = (('NOSELECT', '指定しない'),)
+    id = forms.CharField(label='事象ID', max_length=100, required=False)
+    title = forms.CharField(label='題名', max_length=100, required=False)
+    description = forms.CharField(label='内容', max_length=100, required=False)
+    cause = forms.CharField(label='原因や状況', max_length=100, required=False)
+    error = forms.CharField(label='エラーメッセージ', max_length=100, required=False)
+    device = forms.CharField(label='デバイスID', max_length=100, required=False)
+    date_type = forms.ChoiceField(label='', widget=forms.RadioSelect, choices=CHOICE, initial='0')
+    date_delta1 = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+    date2 = forms.DateField(
+        widget=datetimepicker.DatePickerInput(
+            format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        required=False)
+    date_delta2 = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+    date3s = forms.DateField(
+        widget=datetimepicker.DatePickerInput(
+            format='%Y-%m-%d',
+            options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}
+            ).start_of('期間'), required=False)
+    date3e = forms.DateField(
+        widget=datetimepicker.DatePickerInput(
+            format='%Y-%m-%d',
+            options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}
+            ).end_of('期間'), required=False)
+#	print(tuple_noselect+TroubleGroup.VENDOR_STATUS)
+    downtime_low = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'min': 0, 'style': 'width:6ch',}),
+        validators=[validators.MinValueValidator(0)], required=False)
+    downtime_high = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'min': 0, 'style': 'width:6ch',}),
+        validators=[validators.MinValueValidator(0)], required=False)
+    delaytime_low = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'min': 0, 'style': 'width:6ch',}),
+        validators=[validators.MinValueValidator(0)], required=False)
+    delaytime_high = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'min': 0, 'style': 'width:6ch',}),
+        validators=[validators.MinValueValidator(0)], required=False)
+
+
 class AdvancedSearchForm(forms.Form):
     """TroubleGroupの詳細検索Form"""
     CHOICE = (
@@ -61,14 +112,14 @@ class AdvancedSearchForm(forms.Form):
     device = forms.CharField(label='デバイスID', max_length=100, required=False)
     date_type = forms.ChoiceField(label='', widget=forms.RadioSelect, choices=CHOICE, initial='0')
     date_delta1 = forms.IntegerField(
-        widget=forms.NumberInput(attrs={'style': 'width:6ch',}),
+        widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
     date2 = forms.DateField(
         widget=datetimepicker.DatePickerInput(
             format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         required=False)
     date_delta2 = forms.IntegerField(
-        widget=forms.NumberInput(attrs={'style': 'width:6ch',}),
+        widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
     date3s = forms.DateField(
         widget=datetimepicker.DatePickerInput(

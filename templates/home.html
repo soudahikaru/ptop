@@ -1,22 +1,30 @@
 {% extends 'base.html' %}
 
 {% block header %}
+<style>
+  h1 {text-align: center; }
+  h2 {font-size: 1.5em; }
+  .database-name {font-size: 1.5em; text-align: center; margin: 0px}
+</style>
+
 {% endblock header %}
 
 {% block content %}
 
   <div class="container">
    <h1>Particle Therapy Database of Operation and Maintenance</h1>
+   <p class="database-name">山形大学医学部東日本重粒子センター 重粒子線照射装置 運転・維持管理データベース</p>
   </div>
 
   <div class="container">
     <div class="row">
       <div class="col-sm-6">
         <div class="card">
-          <h5 class="card-header">トラブル検索</h5>
+          <h2 class="card-header">トラブル検索</h2>
           <form action="{% url 'ptop:eventlist' %}">
             トラブル事象 <input name="query" value="{{ request.GET.query }}" type="text">
             <button type="submit" class="btn btn-primary">検索</button>
+            <a href="{% url 'ptop:event_advanced_search' %}" class="btn btn-primary">詳細検索</a>
           </form>
           <form action="{% url 'ptop:group_list' %}">
             トラブル類型 <input name="query" value="{{ request.GET.query }}" type="text">
@@ -28,7 +36,7 @@
 
       <div class="col-sm-6">
         <div class="card">
-          <h5 class="card-header">トラブル入力</h5>
+          <h2 class="card-header">トラブル入力</h2>
           <p>
             <a href="{% url 'ptop:create_event' %}" class="btn btn-primary w-25">新規入力</a>
             <a href="{% url 'ptop:unapproved_event_list' %}" class="btn btn-info w-25">分類</a>
@@ -41,7 +49,7 @@
   <div class="container">
     <div class="col-sm-12">
       <div class="card">
-        <h5 class="card-header">お知らせ</h5>
+        <h2 class="card-header">お知らせ</h2>
         <table>
         {% for item in announce_list %}
         <tr><td>{{ item.posted_time|date:'Y/n/j'}}</td><td><a href="{% url 'ptop:announcement_detail' item.pk %}">{{ item.title|truncatechars:60 }}</a></td></tr>
@@ -55,7 +63,7 @@
   <div class="container">
     <div class="col-sm-12">
       <div class="card">
-        <h5 class="card-header">最近のトラブル</h5>
+        <h2 class="card-header">最近のトラブル</h2>
         <table border>
           <tr><th>発生日時</th><th>題名</th><th>デバイスID</th><th>故障時間</th><th>トラブル類型</th></tr>
           {% for item in object_list %}

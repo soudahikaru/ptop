@@ -26,6 +26,7 @@ from .forms import AttachmentForm
 from .forms import EventCreateForm
 from .forms import GroupCreateForm
 from .forms import AdvancedSearchForm
+from .forms import EventAdvancedSearchForm
 from .forms import ChangeOperationForm
 from .forms import OperationCreateForm
 from .forms import StatisticsForm
@@ -436,13 +437,57 @@ class AdvancedSearchView(ListView):
         context['search_form'] = search_form
         return context
 
+class EventAdvancedSearchView(ListView):
+    """Event詳細検索画面"""
+    template_name = 'event_advanced_search.html'
+    searchForm = EventAdvancedSearchForm
+    model = TroubleEvent
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # sessionに値がある場合、その値をセットする。（ページングしてもform値が変わらないように）
+#		title = ''
+#		text = ''
+#		if 'form_value' in self.request.session:
+#			form_value = self.request.session['form_value']
+#			title = form_value[0]
+#			text = form_value[1]
+#		default_data = {'title': title,  # タイトル
+#						'text': text,  # 内容
+#						}
+        if not self.request.GET.get('date_type'):
+            date_type = '0'
+        else:
+            date_type = self.request.GET.get('date_type'),
+        default_data = {
+            'id' : self.request.GET.get('id'),
+            'title' : self.request.GET.get('title'),
+            'description' : self.request.GET.get('description'),
+            'cause' : self.request.GET.get('cause'),
+            'device' : self.request.GET.get('device'),
+            'error' : self.request.GET.get('error'),
+            'date_type' : date_type,
+            'date_delta1' : self.request.GET.get('date_delta1'),
+            'date2' : self.request.GET.get('date2'),
+            'date_delta2' : self.request.GET.get('date_delta2'),
+            'date3s' : self.request.GET.get('date3s'),
+            'date3e' : self.request.GET.get('date3e'),
+            'downtime_low' : self.request.GET.get('downtime_low'),
+            'downtime_high' : self.request.GET.get('downtime_high'),
+            'delaytime_low' : self.request.GET.get('delaytime_low'),
+            'delaytime_high' : self.request.GET.get('delaytime_high'),
+        }
+        search_form = EventAdvancedSearchForm(initial=default_data) # 検索フォーム
+        context['search_form'] = search_form
+        return context
+
     def get_queryset(self):
         queryset = super().get_queryset()
 #		print(queryset)
-        form = self.search_form = AdvancedSearchForm(self.request.GET or None)
+        form = self.search_form = EventAdvancedSearchForm(self.request.GET or None)
         if form.is_valid():
-            classify_id = form.cleaned_data.get('classify_id')
-            if classify_id:
+            id = form.cleaned_data.get('id')
+            if id:
                 queryset = queryset.filter(Q(classify_id__exact=classify_id))
             title = form.cleaned_data.get('title')
             if title:
@@ -464,7 +509,7 @@ class AdvancedSearchView(ListView):
                 print((datetime.now() - timedelta(days=date_delta1), datetime.now))
                 queryset = queryset.filter(
                     Q(
-                        first_datetime__range=(
+                        start_time__range=(
                             datetime.now() - timedelta(days=date_delta1),
                             datetime.now()
                         )
@@ -475,7 +520,7 @@ class AdvancedSearchView(ListView):
                 date_delta2 = int(form.cleaned_data.get('date_delta2'))
                 queryset = queryset.filter(
                     Q(
-                        first_datetime__range=(
+                        start_time__range=(
                             date2-timedelta(days=date_delta2),
                             date2+timedelta(days=date_delta2)
                         )
@@ -484,16 +529,18 @@ class AdvancedSearchView(ListView):
             elif date_type == '3':
                 date3s = form.cleaned_data.get('date3s')
                 date3e = form.cleaned_data.get('date3e')
-                queryset = queryset.filter(Q(first_datetime__range=(date3s, date3e)))
-            causetype = form.cleaned_data.get('causetype')
-            if not causetype == 'NOSELECT':
-                queryset = queryset.filter(Q(causetype=causetype))
-            vendor_status = form.cleaned_data.get('vendor_status')
-            if not vendor_status == 'NOSELECT':
-                queryset = queryset.filter(Q(vendor_status=vendor_status))
-            handling_status = form.cleaned_data.get('handling_status')
-            if not handling_status == 'NOSELECT':
-                queryset = queryset.filter(Q(handling_status=handling_status))
+                queryset = queryset.filter(Q(start_time__range=(date3s, date3e)))
+            print(form.cleaned_data)
+            if form.cleaned_data.get('downtime_low'):
+                print(form.cleaned_data.get('downtime_low'))
+                queryset = queryset.filter(Q(downtime__gte=int(form.cleaned_data.get('downtime_low'))))
+            if form.cleaned_data.get('downtime_high'):
+                print(form.cleaned_data.get('downtime_high'))
+                queryset = queryset.filter(Q(downtime__lte=int(form.cleaned_data.get('downtime_high'))))
+            if form.cleaned_data.get('delaytime_low'):
+                queryset = queryset.filter(Q(delaytime__gte=int(form.cleaned_data.get('delaytime_low'))))
+            if form.cleaned_data.get('delaytime_high'):
+                queryset = queryset.filter(Q(delaytime__lte=int(form.cleaned_data.get('delaytime_high'))))
         object_list = queryset
         return object_list
 
@@ -717,15 +764,15 @@ def statistics_create_view(request):
         form = StatisticsForm(data=request.POST)
 #        print(request.POST.get('df'))
         start = request.POST['date_s']
-        end = request.POST['date_e']
+        end = request.POST['date_e'] + timedelta(days=1)
         subtotal_frequency = request.POST['subtotal_frequency']
         if start and end:
             events = TroubleEvent.objects.filter(
-                Q(start_time__gt=start) & Q(end_time__lte=end)
+                Q(start_time__gt=start) & Q(end_time__lt=end)
                 ).order_by('start_time')
             operations = Operation.objects.filter(
                 ~Q(operation_type__name__iexact='装置停止')
-                & Q(start_time__gt=start) & Q(end_time__lte=end)
+                & Q(start_time__gt=start) & Q(end_time__lt=end)
             ).order_by('start_time')
         else:
             events = TroubleGroup.objects.all()
