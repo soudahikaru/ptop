@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.utils import timezone
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 #from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -25,7 +26,9 @@ from dal import autocomplete
 from .forms import AttachmentForm
 from .forms import EventCreateForm
 from .forms import GroupCreateForm
+from .forms import GroupSearchForm
 from .forms import AdvancedSearchForm
+from .forms import EventSearchForm
 from .forms import EventAdvancedSearchForm
 from .forms import ChangeOperationForm
 from .forms import OperationCreateForm
@@ -91,7 +94,23 @@ class TroubleGroupListView(ListView):
     """TroubleGroupList画面"""
     template_name = 'group_list.html'
     model = TroubleGroup
+    searchForm = GroupSearchForm
     paginate_by = 10
+
+    def get_paginate_by(self, queryset):
+        return self.request.GET.get("paginate_by", self.paginate_by)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['q'] = self.request.GET.get('query', '')
+        default_data = {
+            'query' : self.request.GET.get('query'),
+            'sort_by' : self.request.GET.get('sort_by'),
+            'paginate_by' : self.request.GET.get('paginate_by'),
+        }
+        search_form = GroupSearchForm(initial=default_data) # 検索フォーム
+        ctx['search_form'] = search_form
+        return ctx
 
     def get_queryset(self):
         q_word = self.request.GET.get('query')
@@ -100,8 +119,10 @@ class TroubleGroupListView(ListView):
                 Q(title__icontains=q_word) | Q(description__icontains=q_word)
             )
         else:
-            object_list = TroubleGroup.objects.all().order_by('id').reverse()
+            object_list = TroubleGroup.objects.all()
+        object_list=object_list.order_by(self.request.GET.get('sort_by', '-first_datetime'))
         return object_list
+
 
 class DeviceCreate(CreateView):
     """新規Deviceの作成"""
@@ -170,22 +191,34 @@ class TroubleEventList(ListView):
     """TroubleEventList画面"""
     template_name = 'eventlist.html'
     model = TroubleEvent
+    searchForm = EventSearchForm
     paginate_by = 10
+
+    def get_paginate_by(self, queryset):
+        return self.request.GET.get("paginate_by", self.paginate_by)
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['q'] = self.request.GET.get('query', '')
+        default_data = {
+            'query' : self.request.GET.get('query'),
+            'sort_by' : self.request.GET.get('sort_by'),
+            'paginate_by' : self.request.GET.get('paginate_by'),
+        }
+        search_form = EventSearchForm(initial=default_data) # 検索フォーム
+        ctx['search_form'] = search_form
+        return ctx
 
     def get_queryset(self):
         q_word = self.request.GET.get('query')
         if q_word:
             object_list = TroubleEvent.objects.filter(
                 Q(title__icontains=q_word) | Q(description__icontains=q_word)
-            ).order_by('start_time').reverse()
+            )
         else:
-            object_list = TroubleEvent.objects.all().order_by('start_time').reverse()
+            object_list = TroubleEvent.objects.all()
+        object_list=object_list.order_by(self.request.GET.get('sort_by', '-start_time'))
         return object_list
-
-    def get_context_data(self, **kwargs):
-        ctx = super().get_context_data(**kwargs)
-        ctx['q'] = self.request.GET.get('query', '')
-        return ctx
 
 class GroupBaseMixin(LoginRequiredMixin, object):
     """各種Group作成/更新画面のベースとなる処理"""
@@ -400,6 +433,11 @@ class AdvancedSearchView(ListView):
     template_name = 'advanced_search.html'
     searchForm = AdvancedSearchForm
     model = TroubleGroup
+    paginate_by = 10
+
+    def get_paginate_by(self, queryset):
+        return self.request.GET.get("paginate_by", self.paginate_by)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # sessionに値がある場合、その値をセットする。（ページングしてもform値が変わらないように）
@@ -432,17 +470,83 @@ class AdvancedSearchView(ListView):
             'causetype' : self.request.GET.get('causetype'),
             'vendor_status' : self.request.GET.get('vendor_status'),
             'handling_status' : self.request.GET.get('handling_status'),
+            'sort_by' : self.request.GET.get('sort_by'),
+            'paginate_by' : self.request.GET.get('paginate_by'),
         }
         search_form = AdvancedSearchForm(initial=default_data) # 検索フォーム
         context['search_form'] = search_form
         return context
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        form = self.search_form = AdvancedSearchForm(self.request.GET or None)
+        if form.is_valid():
+            classify_id = form.cleaned_data.get('classify_id')
+            if classify_id:
+                queryset = queryset.filter(Q(classify_id__exact=classify_id))
+            title = form.cleaned_data.get('title')
+            if title:
+                queryset = queryset.filter(Q(title__icontains=title))
+            description = form.cleaned_data.get('description')
+            if description:
+                queryset = queryset.filter(Q(description__icontains=description))
+            device = form.cleaned_data.get('device')
+            if device:
+                queryset = queryset.filter(Q(device__device_id__icontains=device))
+            error = form.cleaned_data.get('error')
+            if error:
+                queryset = queryset.filter(Q(errors__error_code__icontains=error))
+            date_type = form.cleaned_data.get('date_type')
+            print(date_type)
+            if date_type == '1':
+                date_delta1 = int(form.cleaned_data.get('date_delta1'))
+                print(date_delta1)
+                print((datetime.now() - timedelta(days=date_delta1), datetime.now))
+                queryset = queryset.filter(
+                    Q(
+                        first_datetime__range=(
+                            datetime.now() - timedelta(days=date_delta1),
+                            datetime.now()
+                        )
+                    )
+                )
+            elif date_type == '2':
+                date2 = form.cleaned_data.get('date2')
+                date_delta2 = int(form.cleaned_data.get('date_delta2'))
+                queryset = queryset.filter(
+                    Q(
+                        first_datetime__range=(
+                            date2-timedelta(days=date_delta2),
+                            date2+timedelta(days=date_delta2)
+                        )
+                    )
+                )
+            elif date_type == '3':
+                date3s = form.cleaned_data.get('date3s')
+                date3e = form.cleaned_data.get('date3e')
+                queryset = queryset.filter(Q(first_datetime__range=(date3s, date3e)))
+            causetype = form.cleaned_data.get('causetype')
+            if not causetype == 'NOSELECT':
+                queryset = queryset.filter(Q(causetype=causetype))
+            vendor_status = form.cleaned_data.get('vendor_status')
+            if not vendor_status == 'NOSELECT':
+                queryset = queryset.filter(Q(vendor_status=vendor_status))
+            handling_status = form.cleaned_data.get('handling_status')
+            if not handling_status == 'NOSELECT':
+                queryset = queryset.filter(Q(handling_status=handling_status))
+        object_list = queryset.order_by(self.request.GET.get('sort_by', '-first_datetime'))
+        return object_list
 
 class EventAdvancedSearchView(ListView):
     """Event詳細検索画面"""
     template_name = 'event_advanced_search.html'
     searchForm = EventAdvancedSearchForm
     model = TroubleEvent
-    
+    paginate_by = 10
+
+    def get_paginate_by(self, queryset):
+        return self.request.GET.get("paginate_by", self.paginate_by)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         # sessionに値がある場合、その値をセットする。（ページングしてもform値が変わらないように）
@@ -455,6 +559,7 @@ class EventAdvancedSearchView(ListView):
 #		default_data = {'title': title,  # タイトル
 #						'text': text,  # 内容
 #						}
+
         if not self.request.GET.get('date_type'):
             date_type = '0'
         else:
@@ -476,6 +581,8 @@ class EventAdvancedSearchView(ListView):
             'downtime_high' : self.request.GET.get('downtime_high'),
             'delaytime_low' : self.request.GET.get('delaytime_low'),
             'delaytime_high' : self.request.GET.get('delaytime_high'),
+            'sort_by' : self.request.GET.get('sort_by'),
+            'paginate_by' : self.request.GET.get('paginate_by'),
         }
         search_form = EventAdvancedSearchForm(initial=default_data) # 検索フォーム
         context['search_form'] = search_form
@@ -541,9 +648,10 @@ class EventAdvancedSearchView(ListView):
                 queryset = queryset.filter(Q(delaytime__gte=int(form.cleaned_data.get('delaytime_low'))))
             if form.cleaned_data.get('delaytime_high'):
                 queryset = queryset.filter(Q(delaytime__lte=int(form.cleaned_data.get('delaytime_high'))))
-        object_list = queryset
+        
+        object_list = queryset.order_by(self.request.GET.get('sort_by', '-start_time'))
         return object_list
-
+ 
 class OperationListView(ListView):
     """OperationList画面"""
     template_name = 'operation_list.html'
@@ -650,7 +758,7 @@ class AnnouncementListView(ListView):
     paginate_by = 10
 
     def get_queryset(self):
-        return Announcement.objects.all().order_by('posted_time')
+        return Announcement.objects.all().order_by('-posted_time')
 
 class AnnouncementDetailView(DetailView):
     """Announcement詳細画面"""

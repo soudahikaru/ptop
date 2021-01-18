@@ -44,6 +44,31 @@ class StatisticsForm(forms.Form):
     subtotal_frequency = forms.ChoiceField(
         label='小計単位', widget=forms.RadioSelect, choices=CHOICE, initial='day')
 
+class EventSearchForm(forms.Form):
+    """TroubleEventの簡易検索Form"""
+    query = forms.CharField(label='キーワード', max_length=100, required=False)
+
+    CHOICE_SORT = (
+        ('-start_time', '発生日時が新しい順'),
+        ('start_time', '発生日時が古い順'),
+        ('-id', '入力日時(id)が新しい順'),
+        ('id', '入力日時(id)が古い順'),
+        ('-downtime', '故障時間が長い順'),
+        ('downtime', '故障時間が短い順'),
+        ('-delaytime', '治療遅延時間が長い順'),
+        ('delaytime', '治療遅延時間が短い順'),
+    )
+    sort_by = forms.ChoiceField(choices=CHOICE_SORT, label='並び順', required=False)
+
+    CHOICE_PAGE = (
+        ('10', '10'),
+        ('20', '20'),
+        ('30', '30'),
+        ('50', '50'),
+        ('100', '100'),
+    )
+    paginate_by = forms.ChoiceField(choices=CHOICE_PAGE, label='1ページの件数', required=False)
+
 class EventAdvancedSearchForm(forms.Form):
     """TroubleEventの詳細検索Form"""
     CHOICE = (
@@ -93,7 +118,47 @@ class EventAdvancedSearchForm(forms.Form):
     delaytime_high = forms.IntegerField(
         widget=forms.NumberInput(attrs={'min': 0, 'style': 'width:6ch',}),
         validators=[validators.MinValueValidator(0)], required=False)
+    CHOICE_SORT = (
+        ('-start_time', '発生日時が新しい順'),
+        ('start_time', '発生日時が古い順'),
+        ('-id', '入力日時(id)が新しい順'),
+        ('id', '入力日時(id)が古い順'),
+        ('-downtime', '故障時間が長い順'),
+        ('downtime', '故障時間が短い順'),
+        ('-delaytime', '治療遅延時間が長い順'),
+        ('delaytime', '治療遅延時間が短い順'),
+    )
+    sort_by = forms.ChoiceField(choices=CHOICE_SORT, label='並び順', required=False)
 
+    CHOICE_PAGE = (
+        ('10', '10'),
+        ('20', '20'),
+        ('30', '30'),
+        ('50', '50'),
+        ('100', '100'),
+    )
+    paginate_by = forms.ChoiceField(choices=CHOICE_PAGE, label='1ページの件数', required=False)
+
+class GroupSearchForm(forms.Form):
+    """TroubleGroupの簡易検索Form"""
+    query = forms.CharField(label='キーワード', max_length=100, required=False)
+
+    CHOICE_SORT = (
+        ('-first_datetime', '発生日時が新しい順'),
+        ('first_datetime', '発生日時が古い順'),
+        ('-id', '入力日時(id)が新しい順'),
+        ('id', '入力日時(id)が古い順'),
+    )
+    sort_by = forms.ChoiceField(choices=CHOICE_SORT, label='並び順', required=False)
+
+    CHOICE_PAGE = (
+        ('10', '10'),
+        ('20', '20'),
+        ('30', '30'),
+        ('50', '50'),
+        ('100', '100'),
+    )
+    paginate_by = forms.ChoiceField(choices=CHOICE_PAGE, label='1ページの件数', required=False)
 
 class AdvancedSearchForm(forms.Form):
     """TroubleGroupの詳細検索Form"""
@@ -139,6 +204,23 @@ class AdvancedSearchForm(forms.Form):
     handling_status = forms.ModelChoiceField(
         HandlingStatusType.objects.all(), label='メーカー対応状況', required=False, empty_label='指定しない')
 
+    CHOICE_SORT = (
+        ('-first_datetime', '発生日時が新しい順'),
+        ('first_datetime', '発生日時が古い順'),
+        ('-id', '入力日時(id)が新しい順'),
+        ('id', '入力日時(id)が古い順'),
+    )
+    sort_by = forms.ChoiceField(choices=CHOICE_SORT, label='並び順', required=False)
+
+    CHOICE_PAGE = (
+        ('10', '10'),
+        ('20', '20'),
+        ('30', '30'),
+        ('50', '50'),
+        ('100', '100'),
+    )
+    paginate_by = forms.ChoiceField(choices=CHOICE_PAGE, label='1ページの件数', required=False)
+
 class EventCreateForm(forms.ModelForm):
     """TroubleEventの新規作成Form"""
     title = forms.CharField(
@@ -174,7 +256,7 @@ class EventCreateForm(forms.ModelForm):
         label='運転状況', help_text='発生日時から自動的に設定されます。', required=False)
     device = forms.ModelChoiceField(
         Device.objects.all(), label='デバイスID',
-        widget=autocomplete.ModelSelect2(url='ptop:device_autocomplete'),
+        widget=autocomplete.ModelSelect2(url='ptop:device_autocomplete', attrs={'style':'width:40em;'}),
         help_text='デバイスIDを部分一致検索します。', required=True)
     errors = forms.ModelMultipleChoiceField(
         Error.objects.all(), label='エラーメッセージ',
@@ -236,7 +318,7 @@ class GroupCreateForm(forms.ModelForm):
 
     device = forms.ModelChoiceField(
         Device.objects.all(), label='デバイスID',
-        widget=autocomplete.ModelSelect2(url='ptop:device_autocomplete'),
+        widget=autocomplete.ModelSelect2(url='ptop:device_autocomplete', attrs={'style':'width:40em;'}),
         help_text='デバイスIDを部分一致検索します。', required=True)
     errors = forms.ModelMultipleChoiceField(
         Error.objects.all(), label='エラーメッセージ',
@@ -285,7 +367,10 @@ class OperationCreateForm(forms.ModelForm):
 
 class ChangeOperationForm(forms.Form):
     operation_type = forms.ModelChoiceField(queryset=OperationType.objects.all().order_by('id'), label='次のオペレーション')
-    change_time = forms.DateTimeField(initial=timezone.now, label='切り替え時刻')
+    change_time = forms.DateTimeField(
+        widget=datetimepicker.DateTimePickerInput(
+            options={'format':'YYYY-MM-DD HH:mm', 'sideBySide':True}),
+        label='切り替え時刻', required=True)
 
     num_treat_hc1 = forms.IntegerField(initial=0, label='HC1治療ポート数')
     num_treat_gc2 = forms.IntegerField(initial=0, label='GC2治療ポート数')

@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block header %}
+{% load static %}
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+{% load bootstrap4 %},{% bootstrap_css %},{% bootstrap_javascript jquery='full' %}
 {% endblock header %}
 
 {% block content %}
@@ -8,14 +11,16 @@
   <div class="container">
     <h4>トラブル類型一覧</h4>
 
-    <div class="container">
-      <div class="card">
-        <form action="" method="get">
-          <input name="query" value="{{ request.GET.query }}" type="text">
-          <button type="submit">絞り込み</button>
-        </form>
+    <form action="" method="get" id="id_form">
+      <div class="container">
+        {{ search_form.query.label_tag }}{{ search_form.query }}
+        <button type="submit" class="btn btn-primary">絞り込み</button>
       </div>
-    </div>
+      <div style="text-align: right;">
+        {{ search_form.sort_by.label_tag }}{{ search_form.sort_by }}
+        {{ search_form.paginate_by.label_tag }}{{ search_form.paginate_by }}
+      </div>
+    </form>
 
     <table border>
       <tr><th>内部ID</th><th>初発日時</th><th>題名</th><th>デバイスID</th><th>故障時間</th></tr>
@@ -40,3 +45,20 @@
   </div>
 
 {% endblock content %}
+
+{% block javascript %}
+<script type="text/javascript">
+
+$(function(){
+  $("#id_paginate_by").change(function(){
+    $("#id_form").submit();
+  });
+});
+$(function(){
+  $("#id_sort_by").change(function(){
+    $("#id_form").submit();
+  });
+});
+
+</script>
+{% endblock javascript %}

@@ -14,7 +14,7 @@
 
   <div class="container">
     <h3>トラブル分類詳細検索</h3>
-    <form action="" method="get">
+    <form action="" method="get" id="id_form">
         <div class="field">
             {{ search_form.classify_id.label_tag }}
             {{ search_form.classify_id }}
@@ -73,21 +73,42 @@
                 <span class="helptext">{{ search_form.handling_status.help_text }}</span>
             {% endif %}
       <input type="submit" class="btn btn-primary" value="検索">
-    </form>
   </div>
 
  {{search_form.media}}
 
   <div class="container">
     <h4>検索結果</h4>
-    <table border>
-      <tr><th>分類ID</th><th>題名</th><th>内容</th><th></th></tr>
+    <div style="text-align: right;">
+        {{ search_form.sort_by.label_tag }}{{ search_form.sort_by }}
+        {{ search_form.paginate_by.label_tag }}{{ search_form.paginate_by }}
+        </div>
+        <table border>
+      <tr><th>分類ID</th><th>初発日時</th><th>題名</th><th>内容</th><th></th></tr>
     {% for item in object_list %}
-      <tr><td>{{item.classify_id}}</td><td>{{item.title}}</td><td>{{item.description|truncatechars:30}}</td><td><a href="{% url 'ptop:group_detail' item.pk %}" class="btn btn-primary">詳細</a></td></tr>
+      <tr><td>{{item.classify_id}}</td><td>{{item.first_datetime|date:'Y/m/d H:i'}}</td><td><a href="{% url 'ptop:group_detail' item.pk %}">{{item.title}}</a></td><td>{{item.description|truncatechars:30}}</td><td><a href="{% url 'ptop:group_detail' item.pk %}" class="btn btn-primary">詳細</a></td></tr>
     {% endfor %}
     </table>
 
     <a href="{% url 'ptop:home' %}" class="btn btn-primary">戻る</a>
   </div>
+</form>
 
 {% endblock content %}
+
+{% block javascript %}
+<script type="text/javascript">
+
+$(function(){
+  $("#id_paginate_by").change(function(){
+    $("#id_form").submit();
+  });
+});
+$(function(){
+  $("#id_sort_by").change(function(){
+    $("#id_form").submit();
+  });
+});
+
+</script>
+{% endblock javascript %}

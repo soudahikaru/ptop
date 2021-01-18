@@ -1,9 +1,17 @@
 {% extends 'base.html' %}
 
 {% block header %}
+
+{% load static %}
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+{% load bootstrap4 %}{% bootstrap_css %}{% bootstrap_javascript jquery='full' %}
+
+  
 {% endblock header %}
 
 {% block content %}
+
+
 <div class="container">
   <h2>オペレーション切り替え</h2>
 </div>
@@ -23,9 +31,18 @@
         <form action="{% url 'ptop:change_operation_execute' %}" method="POST">
           {% csrf_token %}
           <table border>
-          {{change_form.as_table}}
-          </table>
-          <input type="submit" value="切り替え実行" class="btn btn-primary">
+            {% for field in change_form %}
+            {% spaceless %}
+            <tr><th>{% if field.field.required %}<span class="required">*</span>{% endif %}{{ field.label_tag }}</th><td>{{ field }}
+              {% if field.help_text %}
+                <span class="helptext">{{ field.help_text|safe }}</span>
+              {% endif %}
+              {{ field.error }}
+            </td></tr>
+            {% endspaceless %}
+            {% endfor %}
+            </table>
+              <input type="submit" value="切り替え実行" class="btn btn-primary">
           <a href="{% url 'ptop:home' %}" class="btn btn-secondary">戻る</a>
         </form>
       </div>
@@ -36,4 +53,11 @@
 
 </div>
 
+{{ change_form.media }}
+
 {% endblock content %}
+
+{% block javascript %}
+
+
+{% endblock javascript %}
