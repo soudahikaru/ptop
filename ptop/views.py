@@ -766,7 +766,7 @@ def statistics_create_view(request):
         start = request.POST['date_s']
         end = request.POST['date_e']
         start_t = datetime.strptime(start, '%Y-%m-%d')
-        end_t = datetime.strptime(end, '%Y-%m-%d') + datetime.timedelta(days=1)
+        end_t = datetime.strptime(end, '%Y-%m-%d') + timedelta(days=1)
         subtotal_frequency = request.POST['subtotal_frequency']
         if start and end:
             events = TroubleEvent.objects.filter(
