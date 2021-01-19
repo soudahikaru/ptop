@@ -54,6 +54,7 @@ urlpatterns = [
     path('announcement_list', views.AnnouncementListView.as_view(), name='announcement_list'),
     path('announcement_detail/<int:pk>/', views.AnnouncementDetailView.as_view(), name='announcement_detail'),
     path('announcement_create/', views.AnnouncementCreateView.as_view(), name='announcement_create'),
+    path('comment_create/<int:pk_>/', views.CommentCreateView.as_view(), name='comment_create'),
     path('statistics_create/', views.statistics_create_view, name='statistics_create'),
     path('error_autocomplete/', views.ErrorAutoComplete.as_view(), name='error_autocomplete'),
     path('device_autocomplete/', views.DeviceAutoComplete.as_view(), name='device_autocomplete'),

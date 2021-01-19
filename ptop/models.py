@@ -351,15 +351,16 @@ class CommentType(models.Model):
 
 class Comment(models.Model):
     """コメントモデル"""
+    posted_group = models.ForeignKey(
+        TroubleGroup, verbose_name='投稿先のトラブル類型', null=True, on_delete=models.CASCADE)
     description = models.TextField('文章', null=True)
     comment_type = models.ForeignKey(
         CommentType, verbose_name='コメントタイプ',
         null=True, blank=True, on_delete=models.SET_NULL)
-
     user = models.ForeignKey(
         User, verbose_name='入力者', limit_choices_to=Q(is_active=True),
         null=True, on_delete=models.SET_NULL, related_name='%(class)s_inputed')
-    posted_time = models.DateTimeField('発生時刻', default=timezone.now)
+    posted_time = models.DateTimeField('作成時刻', auto_now_add=True)
     attachments = models.ManyToManyField(Attachment, verbose_name='添付ファイル', blank=True)
 
 class Announcement(models.Model):

@@ -32,10 +32,12 @@ from .forms import EventAdvancedSearchForm
 from .forms import ChangeOperationForm
 from .forms import OperationCreateForm
 from .forms import StatisticsForm
+from .forms import CommentCreateForm
 from .forms import AnnouncementCreateForm
 from .models import Device, Error
 from .models import TroubleEvent, TroubleGroup
 from .models import Attachment
+from .models import Comment
 from .models import Operation
 from .models import Announcement
 
@@ -776,6 +778,24 @@ class AnnouncementCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form'] = AnnouncementCreateForm(initial={
+            'user':self.request.user,
+            })
+        return context
+
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    """Comment作成画面"""
+    template_name = 'comment_create.html'
+    model = Comment
+    form_class = CommentCreateForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:announcement_detail', kwargs={'pk': self.object.id})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        group = get_object_or_404(TroubleGroup, pk=self.kwargs.get('pk'))
+        context['form'] = CommentCreateForm(initial={
+            'posted_group':group,
             'user':self.request.user,
             })
         return context

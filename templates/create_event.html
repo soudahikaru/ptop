@@ -150,7 +150,7 @@
     });
 
     $("#id_downtime").on("focusout", function () {
-      if($("#id_end_time").val() == ""){ 
+      if($("#id_start_time").val() != "" && $("#id_end_time").val() == ""){ 
         var downtime = Number($(this).val());
 //        console.log(downtime);
         var start_time = new Date($("#id_start_time").val());

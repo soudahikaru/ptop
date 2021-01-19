@@ -109,6 +109,31 @@ $(function(){
     $("#id_form").submit();
   });
 });
+$(function(){
+  $("#id_date_delta1").change(function(){
+    $("input[name=date_type]").val(["1"]);
+  });
+});
+$(function(){
+  $("#id_date2").focusin(function(){
+    $("input[name=date_type]").val(["2"]);
+  });
+});
+$(function(){
+  $("#id_date_delta2").change(function(){
+    $("input[name=date_type]").val(["2"]);
+  });
+});
+$(function(){
+  $("#id_date3s").focusin(function(){
+    $("input[name=date_type]").val(["3"]);
+  });
+});
+$(function(){
+  $("#id_date3e").focusin(function(){
+    $("input[name=date_type]").val(["3"]);
+  });
+});
 
 </script>
 {% endblock javascript %}

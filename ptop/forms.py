@@ -13,9 +13,9 @@ from .models import TroubleGroup
 from .models import User
 from .models import Attachment
 from .models import Announcement
+from .models import Comment, CommentType
 from .models import Operation, OperationType, OperationMetaType
 from .models import CauseType, VendorStatusType, HandlingStatusType
-from .widgets import SuggestWidget
 
 class AttachmentForm(forms.ModelForm):
     """Attachmentを作るForm"""
@@ -245,9 +245,13 @@ class EventCreateForm(forms.ModelForm):
         required=True)
 #	end_time = forms.DateTimeField(label='復旧時刻', help_text='空欄の場合、装置故障時間を入力すると自動的に入力されます。', required=True)
     downtime = forms.IntegerField(
-        label='装置故障時間(分)', help_text='実際に装置運転に影響があった時間を入力してください。未入力の場合、復旧時刻を入力すると自動的に入力されます。', required=True)
+        label='装置故障時間(分)', help_text='実際に装置運転に影響があった時間を入力してください。未入力の場合、復旧時刻を入力すると自動的に入力されます。', required=True, 
+        widget=forms.NumberInput(attrs={'style': 'width:8ch','min': 0, }),
+        validators=[validators.MinValueValidator(0)])
     delaytime = forms.IntegerField(
-        label='治療遅延時間(分)', help_text='未入力の場合、運転状況が「治療」で装置故障時間が(自動でも)入力されると自動的に入力されます。', required=True)
+        label='治療遅延時間(分)', help_text='未入力の場合、運転状況が「治療」で装置故障時間が(自動でも)入力されると自動的に入力されます。', required=True, 
+        widget=forms.NumberInput(attrs={'style': 'width:8ch','min': 0, }),
+        validators=[validators.MinValueValidator(0)])
     delay_flag = forms.BooleanField(
         label='治療遅延の有無', help_text='治療遅延時間が未入力の場合、運転状況が「治療」で装置故障時間が(自動でも)入力されると自動的にONになります。実際には遅延しなかった場合は手動でOFFにしてください。', required=False)
     operation_type = forms.ModelChoiceField(
@@ -380,10 +384,18 @@ class ChangeOperationForm(forms.Form):
             options={'format':'YYYY-MM-DD HH:mm', 'sideBySide':True}),
         label='切り替え時刻', required=True)
 
-    num_treat_hc1 = forms.IntegerField(initial=0, label='HC1治療ポート数')
-    num_treat_gc2 = forms.IntegerField(initial=0, label='GC2治療ポート数')
-    num_qa_hc1 = forms.IntegerField(initial=0, label='HC1 QAポート数')
-    num_qa_gc2 = forms.IntegerField(initial=0, label='GC2 QAポート数')
+    num_treat_hc1 = forms.IntegerField(initial=0, label='HC1治療ポート数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+    num_treat_gc2 = forms.IntegerField(initial=0, label='GC2治療ポート数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+    num_qa_hc1 = forms.IntegerField(initial=0, label='HC1 QAポート数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+    num_qa_gc2 = forms.IntegerField(initial=0, label='GC2 QAポート数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
     comment = forms.CharField(
         widget=forms.Textarea(attrs={'cols':'60', 'rows':'4'}),
         label='コメント', required=False)
@@ -403,3 +415,27 @@ class AnnouncementCreateForm(forms.ModelForm):
         model = Announcement
         fields = (
             'title', 'description', 'user')
+
+class CommentCreateForm(forms.ModelForm):
+    posted_group = forms.ModelChoiceField(
+        TroubleGroup.objects.all(),
+        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+        label='投稿先のトラブル類型', help_text='変更不可', required=False)
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='内容', required=True)
+    comment_type = forms.ModelChoiceField(
+        CommentType.objects.all(),
+        label='コメントの種類', required=False)
+    user = forms.ModelChoiceField(
+        User.objects.all(),
+        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+        label='作成者', help_text='自動的にログインユーザとなります。', required=False)
+    attachments = forms.ModelMultipleChoiceField(
+        Attachment.objects.all(), label='添付ファイル', required=False, 
+        widget=forms.SelectMultiple(attrs={'style':'display:none;'}),
+        help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます')
+
+    class Meta:
+        model = Announcement
+        fields = (
+            'posted_group', 'description', 'comment_type', 'user', 'attachments')
