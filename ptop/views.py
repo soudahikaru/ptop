@@ -334,6 +334,7 @@ class GroupCreateFromEventView(GroupBaseMixin, CreateView):
             'device':event.device,
             'description':event.description,
             'cause':event.cause,
+            'errors':event.errors.all(),
             'first_datetime':event.start_time,
             'common_action':event.temporary_action,
             'classify_operator':self.request.user,
