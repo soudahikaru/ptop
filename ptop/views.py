@@ -123,7 +123,10 @@ class TroubleGroupListView(ListView):
         q_word = self.request.GET.get('query')
         if q_word:
             object_list = TroubleGroup.objects.filter(
-                Q(title__icontains=q_word) | Q(description__icontains=q_word)
+                Q(title__icontains=q_word) 
+                | Q(device__device_id__icontains=q_word)
+                | Q(description__icontains=q_word)
+                | Q(errors__error_code__icontains=q_word)
             )
         else:
             object_list = TroubleGroup.objects.all()
@@ -178,9 +181,19 @@ class GroupDetailView(DetailView):
         context = super().get_context_data(**kwargs)
 #        context['events'] = TroubleEvent.objects.filter(group_id=self.kwargs.get('pk'))
         startpath = '/' + context.get('object').path.split('/')[1] + '/'
-        print(startpath)
+#        print(startpath)
         context['events'] = TroubleEvent.objects.filter(group__path__startswith=startpath)
         context['child_group'] = TroubleGroup.objects.filter(path__startswith=startpath)
+        context['frequency_week_1'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=7), timezone.now())).count()
+        context['frequency_week_2'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=14), timezone.now()-timezone.timedelta(days=8))).count()
+        context['frequency_week_3'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=21), timezone.now()-timezone.timedelta(days=15))).count()
+        context['frequency_week_4'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=28), timezone.now()-timezone.timedelta(days=22))).count()
+        context['frequency_month_1'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=30), timezone.now())).count()
+        context['frequency_month_2'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=60), timezone.now()-timezone.timedelta(days=31))).count()
+        context['frequency_month_3'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=90), timezone.now()-timezone.timedelta(days=61))).count()
+        context['frequency_month_4'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=120), timezone.now()-timezone.timedelta(days=91))).count()
+        print(context['frequency_week_3'])
+        
 #		print(events)
         return context
 
@@ -220,7 +233,10 @@ class TroubleEventList(ListView):
         q_word = self.request.GET.get('query')
         if q_word:
             object_list = TroubleEvent.objects.filter(
-                Q(title__icontains=q_word) | Q(description__icontains=q_word)
+                Q(title__icontains=q_word) 
+                | Q(device__device_id__icontains=q_word) 
+                | Q(description__icontains=q_word)
+                | Q(errors__error_code__icontains=q_word)
             )
         else:
             object_list = TroubleEvent.objects.all()
