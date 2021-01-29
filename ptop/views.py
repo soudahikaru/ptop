@@ -182,7 +182,7 @@ class GroupDetailView(DetailView):
 #        context['events'] = TroubleEvent.objects.filter(group_id=self.kwargs.get('pk'))
         startpath = '/' + context.get('object').path.split('/')[1] + '/'
 #        print(startpath)
-        context['events'] = TroubleEvent.objects.filter(group__path__startswith=startpath)
+        context['events'] = TroubleEvent.objects.filter(group__path__startswith=startpath).order_by('-start_time')
         context['child_group'] = TroubleGroup.objects.filter(path__startswith=startpath)
         context['frequency_week_1'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=7), timezone.now())).count()
         context['frequency_week_2'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=14), timezone.now()-timezone.timedelta(days=8))).count()
