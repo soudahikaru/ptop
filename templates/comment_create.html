@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block header %}
+
+{% load static %}
+{% load bootstrap4 %}{% bootstrap_css %}
+
+<style>
+.input-inline { display: inline-block; width: 150px; }
+.helptext {font-size: small;}
+.required {color: red;}
+</style>
+
+{% endblock header %}
+
+{% block content %}
+<div class="container">
+  <div class="card">
+
+    {% if 'update' in request.path %}
+    <h5 class="card-header">コメント編集</h5>
+    {% else %}
+    <h5 class="card-header">新規トラブル事象入力</h5>
+    {% endif %}
+    <div class="card-body">
+      <form action="" method="POST">
+        {% csrf_token %}
+        <table border>
+        {% for field in form %}
+        {% spaceless %}
+        <tr><th>{% if field.field.required %}<span class="required">*</span>{% endif %}{{ field.label_tag }}</th><td>{{ field }}
+          {% if "device" in field.id_for_label %}
+            <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_device_create' %}', 'subwin','width=500,height=500');" class="btn btn-info btn-sm">追加</a>
+          {% elif "error" in field.id_for_label %}
+            <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_error_create' %}', 'subwin','width=500,height=500');" class="btn btn-info btn-sm">追加</a>
+          {% elif "attachments" in field.id_for_label %}
+              <button type="button" class="btn btn-info js-upload-photos">
+              <span class="glyphicon glyphicon-cloud-upload"></span> 添付ファイルのアップロード
+              </button>
+              <ul id='id_list_attachment'>
+              </ul>
+          {% endif %}
+          {% if field.help_text %}
+            <span class="helptext">{{ field.help_text|safe }}</span>
+          {% endif %}
+          {{ field.error }}
+        </td></tr>
+        {% endspaceless %}
+        {% endfor %}
+        </table>
+
+
+        <div>
+          <input id="fileupload" type="file" name="file" multiple
+          style="display: none;"
+          data-url="{% url 'ptop:create_event'%}"
+          data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
+        </div>
+    
+        {% if 'update' in request.path %}
+        <input class="btn btn-primary" type="submit" value="入力した内容で更新する">
+        {% else %}
+        <input class="btn btn-primary" type="submit" value="トラブル事象を作成する">
+        {% endif %}
+      </form>
+      
+    </div>
+  </div>
+  <a href="{% url 'ptop:home' %}" class="btn btn-secondary">戻る</a>
+
+</div>
+
+<script src="{% static 'ptop/js/jquery-3.1.1.min.js' %}"></script>
+<script src="{% static 'ptop/js/bootstrap.min.js' %}"></script>
+{# JQUERY FILE UPLOAD SCRIPTS #}
+<script src="{% static 'ptop/js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
+<script src="{% static 'ptop/js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
+<script src="{% static 'ptop/js/jquery-file-upload/jquery.fileupload.js' %}"></script>
+
+{# PHOTOS PAGE SCRIPTS #}
+<script src="{% static 'ptop/js/basic-upload.js' %}"></script>
+
+{{form.media}}
+
+{% endblock content %}
+
+{% block javascript %}
+<script>
+    /*
+    On focus out on input nickname,
+    call AJAX get request to check if the nickName
+    already exists or not.
+    */
+    function formatDate(dt) {
+      var y = dt.getFullYear();
+      var m = ('00' + (dt.getMonth()+1)).slice(-2);
+      var d = ('00' + dt.getDate()).slice(-2);
+      var h = ('00' + dt.getHours()).slice(-2);
+      var min = ('00' + dt.getMinutes()).slice(-2);
+      return (y + '-' + m + '-' + d + ' ' + h + ':' + min);
+    }
+
+    $(function () {
+//      $(".js-upload-photos").click(function () {
+//        $("#fileupload").click();
+//      });
+      $("#fileupload").fileupload({
+        dataType: 'json',
+        autoUpload: true,
+        done: function (e, data) {  /* 3. PROCESS THE RESPONSE FROM THE SERVER */
+          console.log("done")
+          if (data.result.is_valid) {
+  //          var list = $("#id_attachments").val();
+  //          list.push(data.result.pk);
+            console.log(data.result.pk)
+            $option = $('<option>')
+              .val(data.result.pk)
+              .text(data.result.title)
+              .prop('selected', true);
+            $("#id_attachments").append($option);
+            $("#id_list_attachment").append("<li>"+data.result.title+"</li>");
+  //          $("#id_attachments").val(list);
+          }
+        },
+        fail: function(e, data) {
+          alert('Fail!');
+        }
+      });
+    });
+
+    $("#id_start_time").on("focusout",function (e) {
+        console.log('ajax called')
+        e.preventDefault();
+        // get the nickname
+        var time = $(this).val();
+        // GET AJAX request
+        $.ajax({
+            type: 'GET',
+            url: "{% url 'ptop:ajax_search_operation_from_datetime' %}",
+            data: {"time": time},
+            success: function (response) {
+                if(response["operation_type"]){
+                    $("#id_operation_type").val(response["operation_type"]);
+                }
+            },
+            error: function (response) {
+                console.log(response)
+            }
+        })
+    });
+
+    $("#id_downtime").on("focusout", function () {
+      if($("#id_start_time").val() != "" && $("#id_end_time").val() == ""){ 
+        var downtime = Number($(this).val());
+//        console.log(downtime);
+        var start_time = new Date($("#id_start_time").val());
+//        console.log(start_time.toLocaleString());
+//        console.log(start_time.getMinutes());
+        start_time.setMinutes(start_time.getMinutes() + downtime);
+//        console.log(start_time.toLocaleString());
+        $("#id_end_time").val(formatDate(start_time));
+      }
+    });
+
+    $("#id_end_time").on("focusout", function () {
+      if($("#id_downtime").val() == ""){
+        var end_time = new Date($(this).val());
+        var start_time = new Date($("#id_start_time").val());
+        // minute
+        var downtime = (end_time-start_time) / 60000;
+          $("#id_downtime").val(downtime);
+        }
+    });
+
+    $("#id_downtime").on("change", function () {
+      if($("#id_delaytime").val() == ""){
+        var ope_text = $("#id_operation_type option:selected").text();
+        console.log(ope_text);
+        if (ope_text == "治療" && ($("#id_downtime").val() != "0")){
+          $("#id_delay_flag").prop("checked", true)
+          $("#id_delaytime").val($("#id_downtime").val());
+        }else{
+          $("#id_delay_flag").prop("checked", false)
+          $("#id_delaytime").val("0");
+        }
+      } 
+    });
+
+    $("#id_delaytime").on("change", function () {
+      if($("#id_delaytime").val() == "0"){
+        $("#id_delay_flag").prop("checked", false);
+      } 
+    });
+
+    $("#id_delay_flag").change(function () {
+      console.log($("#id_delay_flag").prop("checked"))
+      if($("#id_delay_flag").prop("checked") == false){
+        $("#id_delaytime").val("0")
+      } 
+    });
+
+    function add_device(name, pk){
+        var select = document.getElementById('id_device');
+        // <option value="pk">選択肢名</option> をつくる
+        var option = document.createElement('option');
+        option.setAttribute('value', pk);
+        option.innerHTML = name;
+
+        // カテゴリの先頭に追加し、選択済みにする
+        select.add(option,0);
+        select.options[0].selected= true;
+    }
+
+    function add_error(name, pk){
+        var select = document.getElementById('id_errors');
+        // <option value="pk">選択肢名</option> をつくる
+        var option = document.createElement('option');
+        option.setAttribute('value', pk);
+        option.innerHTML = name;
+
+        // カテゴリの先頭に追加し、選択済みにする
+        select.add(option,0);
+        select.options[0].selected= true;
+    }
+
+</script>
+{% endblock javascript %}

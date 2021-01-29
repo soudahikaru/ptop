@@ -7,8 +7,15 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.core.validators import EmailValidator
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+import jaconv
 
 # Create your models here.
+
+def standardize_character(str):
+    """文字表記ゆれを統一する関数(カナは全角、英数字と記号は半角に変換)"""
+    str = jaconv.z2h(str, kana=False, digit=True, ascii=True)
+    str = jaconv.h2z(str, kana=True, digit=False, ascii=False)
+    return str
 
 class CustomUserManager(UserManager):
     """ユーザーマネージャー"""
@@ -159,15 +166,31 @@ class Device(models.Model):
     device_type = models.ForeignKey(
         DeviceType, verbose_name='デバイス種類', null=True, blank=True,
         on_delete=models.SET_NULL)
+
     def __str__(self):
         return self.device_id
+
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                value = getattr(self, field.name)
+                if value:
+                    setattr(self, field.name, standardize_character(value))
 
 class Error(models.Model):
     """Errorモデル。エラーコードとエラーの説明を管理する。"""
     error_code = models.CharField('エラーコード', max_length=100, unique=True)
     error_description = models.CharField('エラー説明', max_length=200, null=True, blank=True)
+
     def __str__(self):
         return self.error_code
+
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                value = getattr(self, field.name)
+                if value:
+                    setattr(self, field.name, standardize_character(value))
 
 class Attachment(models.Model):
     """添付ファイルモデル"""
@@ -299,6 +322,12 @@ class TroubleGroup(models.Model):
     def __str__(self):
         return self.title
 
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                value = getattr(self, field.name)
+                if value:
+                    setattr(self, field.name, standardize_character(value))
 
 class TroubleEvent(models.Model):
     """トラブル事象モデル"""
@@ -342,6 +371,13 @@ class TroubleEvent(models.Model):
     def __str__(self):
         return self.title
 
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                value = getattr(self, field.name)
+                if value:
+                    setattr(self, field.name, standardize_character(value))
+
 class CommentType(models.Model):
     """コメントタイプモデル"""
     name = models.CharField('コメントタイプ名称', max_length=100)
@@ -363,6 +399,13 @@ class Comment(models.Model):
     posted_time = models.DateTimeField('作成時刻', auto_now_add=True)
     attachments = models.ManyToManyField(Attachment, verbose_name='添付ファイル', blank=True)
 
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                value = getattr(self, field.name)
+                if value:
+                    setattr(self, field.name, standardize_character(value))
+
 class Announcement(models.Model):
     """お知らせモデル"""
     title = models.CharField('題名', max_length=200, null=True)
@@ -374,3 +417,10 @@ class Announcement(models.Model):
 
     def __str__(self):
         return self.title
+
+    def clean(self):
+        for field in self._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                value = getattr(self, field.name)
+                if value:
+                    setattr(self, field.name, standardize_character(value))

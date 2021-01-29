@@ -1,5 +1,4 @@
 """ PTOP view module """
-
 import pytz
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
@@ -20,6 +19,7 @@ from django.shortcuts import get_object_or_404
 from django_pandas.io import read_frame
 import pandas as pd
 import numpy as np
+import jaconv
 #from django.shortcuts import get_list_or_404
 from dal import autocomplete
 from .forms import AttachmentForm
@@ -42,6 +42,12 @@ from .models import Operation
 from .models import Announcement
 
 # Create your views here.
+
+def standardize_character(str):
+    """文字表記ゆれを統一する関数(カナは全角、英数字と記号は半角に変換)"""
+    str = jaconv.z2h(str, kana=False, digit=True, ascii=True)
+    str = jaconv.h2z(str, kana=True, digit=False, ascii=False)
+    return str
 
 def api_devices_get(request):
     """（不使用）サジェスト候補のデバイスIDをJSONで返す。"""
@@ -316,7 +322,7 @@ class EventBaseMixin(LoginRequiredMixin, object):
                 data = {'is_valid': False}
             return JsonResponse(data)
         else:
-#            form = EventCreateForm(self.request.POST)
+            form = EventCreateForm(self.request.POST)
 #            form.fields['attachments'].queryset = Attachment.objects.all().order_by('id')
 #            print(self.request.POST)
 #            print(form.fields['attachments'].queryset.reverse())
@@ -334,6 +340,7 @@ class GroupCreateFromEventView(GroupBaseMixin, CreateView):
             'device':event.device,
             'description':event.description,
             'cause':event.cause,
+            'trigger':event.trigger,
             'errors':event.errors.all(),
             'first_datetime':event.start_time,
             'common_action':event.temporary_action,
