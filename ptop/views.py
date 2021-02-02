@@ -876,7 +876,7 @@ def event_classify_execute(request):
     event.group = group
     event.save()
     # 初発日時より前に発生したイベントがあれば初発日時を書き換える
-    if event.start_time < group.first_datetime:
+    if group.first_datetime is None or event.start_time < group.first_datetime:
         group.first_datetime = event.start_time
         group.save()
 
