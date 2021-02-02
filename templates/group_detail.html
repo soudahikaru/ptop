@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 
 {% block header %}
+{% load static %}
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+{% load bootstrap4 %}{% bootstrap_css %}{% bootstrap_javascript jquery='full' %}
+
 {% endblock header %}
 
 {% block content %}
@@ -20,14 +24,6 @@
       <tr><td>原因</td><td>{{object.cause | linebreaksbr }}</td></tr>
       <tr><td>原因分類</td><td>{{object.causetype | linebreaksbr }}</td></tr>
       <tr><td>初発日時</td><td>{{object.first_datetime|date:"Y/m/d H:i"}}</td></tr>
-      <tr><td>発生回数</td><td>
-        <table border>
-          <tr><td>0-7日前</td><td>8-14日前</td><td>15-21日前</td><td>22-28日前</td></tr>
-          <tr><td>{{frequency_week_1}}</td><td>{{frequency_week_2}}</td><td>{{frequency_week_3}}</td><td>{{frequency_week_4}}</td></tr>
-          <tr><td>0-30日前</td><td>31-60日前</td><td>61-90日前</td><td>91-120日前</td></tr>
-          <tr><td>{{frequency_month_1}}</td><td>{{frequency_month_2}}</td><td>{{frequency_month_3}}</td><td>{{frequency_month_4}}</td></tr>
-        </table>
-        </td></tr>
       <tr><td>主な処置内容</td><td>{{object.common_action | linebreaksbr }}</td></tr>
       <tr><td>分類作成者</td><td>{{object.classify_operator}}</td></tr>
       <tr><td>対処状況</td><td>{{object.handling_status}}</td></tr>
@@ -70,20 +66,36 @@
       <div class="card">
         <h5 class="card-header">登録されているトラブル事象</h5>
         <div class="card-body">
-          <table border>
-            <tr><th>事象ID</th><th>分類ID</th><th>発生日時</th><th>題名</th></tr>
+          <div style="text-align: right;">
+            <form action="" method="get" id="id_form">
+              {{ form.display_range}}
+            </form>
+          </div>
+            <b>発生回数</b>
+              <table border>
+                <tr><td>0-7日前</td><td>8-14日前</td><td>15-21日前</td><td>22-28日前</td></tr>
+                <tr><td>{{frequency_week_1}}</td><td>{{frequency_week_2}}</td><td>{{frequency_week_3}}</td><td>{{frequency_week_4}}</td></tr>
+                <tr><td>0-30日前</td><td>31-60日前</td><td>61-90日前</td><td>91-120日前</td></tr>
+                <tr><td>{{frequency_month_1}}</td><td>{{frequency_month_2}}</td><td>{{frequency_month_3}}</td><td>{{frequency_month_4}}</td></tr>
+              </table>
 {% spaceless %}
-{% for event in events %}
-  {% if event.group.classify_id == object.classify_id %}
-      <tr><td><b>{{event.id}}</b></td><td><b>{{event.group.classify_id}}</b></td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td></tr>
-  {% else %}
-      <tr><td>{{event.id}}</td><td>{{event.group.classify_id}}</td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td></tr>
-  {% endif %}
-{% empty %}
-      なし
-{% endfor %}
+{% if events %}
+            <p>
+            <table border>
+              <tr><th>事象ID</th><th>分類ID</th><th>発生日時</th><th>題名</th></tr>
+  {% for event in events %}
+    {% if event.group.classify_id == object.classify_id %}
+        <tr><td><b>{{event.id}}</b></td><td><b>{{event.group.classify_id}}</b></td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td></tr>
+    {% else %}
+        <tr><td>{{event.id}}</td><td>{{event.group.classify_id}}</td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td></tr>
+    {% endif %}
+  {% endfor %}
+{% else %}
+      該当する事象なし
+{% endif %}
 {% endspaceless %}
           </table>
+        </p>
         </div>
     </div>
 
@@ -96,3 +108,16 @@
   </div>
 </div>
 {% endblock content %}
+
+
+{% block javascript %}
+<script type="text/javascript">
+
+$(function(){
+  $("#id_display_range").change(function(){
+    $("#id_form").submit();
+  });
+});
+
+</script>
+{% endblock javascript %}

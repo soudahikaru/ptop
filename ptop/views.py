@@ -3,6 +3,7 @@ import pytz
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
+from django.views.generic.edit import FormMixin
 from django.utils import timezone
 #from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.decorators import login_required
@@ -34,6 +35,7 @@ from .forms import ChangeOperationForm
 from .forms import OperationCreateForm
 from .forms import StatisticsForm
 from .forms import CommentCreateForm
+from .forms import GroupDetailForm
 from .forms import AnnouncementCreateForm
 from .models import Device, Error
 from .models import TroubleEvent, TroubleGroup
@@ -173,17 +175,26 @@ class PopupErrorCreate(ErrorCreate):
         }
         return render(self.request, 'close.html', context)
 
-class GroupDetailView(DetailView):
+class GroupDetailView(FormMixin, DetailView):
     """TroubleGroup詳細画面"""
     template_name = 'group_detail.html'
     model = TroubleGroup
+    form_class = GroupDetailForm
+    fields = ()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 #        context['events'] = TroubleEvent.objects.filter(group_id=self.kwargs.get('pk'))
         startpath = '/' + context.get('object').path.split('/')[1] + '/'
 #        print(startpath)
-        context['events'] = TroubleEvent.objects.filter(group__path__startswith=startpath).order_by('-start_time')
+        display_range = self.request.GET.get('display_range')
+        if display_range == 'only_myself':
+            context['events'] = TroubleEvent.objects.filter(group__path__exact=context.get('object').path).order_by('-start_time')
+        elif display_range == 'myself_and_child':
+            context['events'] = TroubleEvent.objects.filter(group__path__startswith=context.get('object').path).order_by('-start_time')
+        else:
+            context['events'] = TroubleEvent.objects.filter(group__path__startswith=startpath).order_by('-start_time')
+        
         context['child_group'] = TroubleGroup.objects.filter(path__startswith=startpath)
         context['frequency_week_1'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=7), timezone.now())).count()
         context['frequency_week_2'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=14), timezone.now()-timezone.timedelta(days=7))).count()
@@ -193,7 +204,13 @@ class GroupDetailView(DetailView):
         context['frequency_month_2'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=60), timezone.now()-timezone.timedelta(days=30))).count()
         context['frequency_month_3'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=90), timezone.now()-timezone.timedelta(days=60))).count()
         context['frequency_month_4'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=120), timezone.now()-timezone.timedelta(days=90))).count()
-        print(context['frequency_week_3'])
+
+        default_data = {
+            'display_range' : self.request.GET.get('display_range'),
+        }
+        form = GroupDetailForm(initial=default_data) # 検索フォーム
+        context['form'] = form
+#        print(context['frequency_week_3'])
         
 #		print(events)
         return context
@@ -826,7 +843,6 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
             'user':self.request.user,
             })
         return context
-
 
 class EventClassifyView(LoginRequiredMixin, ListView):
     """イベント分類View"""

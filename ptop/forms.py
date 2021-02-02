@@ -356,6 +356,24 @@ class GroupCreateForm(forms.ModelForm):
             'criticality_score', 'frequency_score', 'difficulty_score',
             'path', 'classify_operator', 'attachments')
 
+class GroupDetailForm(forms.Form):
+
+    CHOICE_RANGE = (
+        ('all', '関連する全ての事象'),
+        ('myself_and_child', '自分とその下位類型に属する事象'),
+        ('only_myself', '自分の類型に属する事象のみ'),
+    )
+    display_range = forms.ChoiceField(choices=CHOICE_RANGE, label='表示範囲', required=False)
+
+    CHOICE_PAGE = (
+        ('10', '10'),
+        ('20', '20'),
+        ('30', '30'),
+        ('50', '50'),
+        ('100', '100'),
+    )
+    paginate_by = forms.ChoiceField(choices=CHOICE_PAGE, label='1ページの件数', required=False)
+
 class OperationCreateForm(forms.ModelForm):
     start_time = forms.DateTimeField(
         widget=datetimepicker.DateTimePickerInput(
