@@ -226,7 +226,7 @@ class EventCreateForm(forms.ModelForm):
     title = forms.CharField(
         widget=forms.TextInput(attrs={'size':80}), label='トラブル題名', required=True)
     description = forms.CharField(
-        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='内容', required=True)
+        widget=forms.Textarea(attrs={'rows':8, 'cols':80}), label='内容', required=True)
     trigger = forms.CharField(
         widget=forms.Textarea(attrs={'rows':2, 'cols':80}), label='発生直前の操作', required=False)
     cause = forms.CharField(
@@ -310,7 +310,7 @@ class GroupCreateForm(forms.ModelForm):
     title = forms.CharField(
         widget=forms.TextInput(attrs={'size':80}), label='トラブル類型題名', required=True)
     description = forms.CharField(
-        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='内容', required=True)
+        widget=forms.Textarea(attrs={'rows':8, 'cols':80}), label='内容', required=True)
     trigger = forms.CharField(
         widget=forms.Textarea(attrs={'rows':2, 'cols':80}), label='発生の契機となる操作', required=False)
     cause = forms.CharField(
@@ -405,7 +405,7 @@ class AnnouncementCreateForm(forms.ModelForm):
     title = forms.CharField(
         widget=forms.TextInput(attrs={'size':80}), label='題名', required=True)
     description = forms.CharField(
-        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='内容', required=True)
+        widget=forms.Textarea(attrs={'rows':10, 'cols':80}), label='内容', required=True)
     user = forms.ModelChoiceField(
         User.objects.all(),
         widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),

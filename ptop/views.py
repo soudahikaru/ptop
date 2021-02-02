@@ -373,8 +373,10 @@ class ChildGroupCreateView(GroupBaseMixin, CreateView):
         context['form'] = GroupCreateForm(initial={
             'title':parent_group.title + '(sub)',
             'description':parent_group.description,
+            'trigger':parent_group.trigger,
             'cause':parent_group.cause,
             'common_action':parent_group.common_action,
+            'permanent_action':parent_group.permanent_action,
             'path':parent_group.path,
             'classify_operator':self.request.user,
             })

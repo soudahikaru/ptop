@@ -9,12 +9,14 @@
       <h5 class="card-header">{{object.title}}</h5>
       <div class="card-body">
       <table border>
-      <tr><td>分類ID</td><td>{{object.classify_id}}</td></tr>
-      <tr><td>Device ID</td><td>{{object.device.device_id}}({{object.device.name}})</td></tr>
+        <tr><td>分類ID</td><td>{{object.classify_id}}</td></tr>
+        <tr><td>分類経路</td><td>{{object.path}}</td></tr>
+        <tr><td>Device ID</td><td>{{object.device.device_id}}({{object.device.name}})</td></tr>
       <tr><td>事象</td><td>{{object.description | linebreaksbr }}</td></tr>
       <tr><td>エラーメッセージ</td><td>{% for error in object.errors.all %}
 {{ error.error_code }}{% if forloop.last %}{% else %},{% endif %}
 {% endfor %}</td></tr>
+      <tr><td>発生の契機となる操作</td><td>{{object.trigger | linebreaksbr }}</td></tr>
       <tr><td>原因</td><td>{{object.cause | linebreaksbr }}</td></tr>
       <tr><td>原因分類</td><td>{{object.causetype | linebreaksbr }}</td></tr>
       <tr><td>初発日時</td><td>{{object.first_datetime|date:"Y/m/d H:i"}}</td></tr>
