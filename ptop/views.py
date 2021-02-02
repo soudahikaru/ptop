@@ -19,6 +19,7 @@ from django.shortcuts import get_object_or_404
 from django_pandas.io import read_frame
 import pandas as pd
 import numpy as np
+import re
 import jaconv
 #from django.shortcuts import get_list_or_404
 from dal import autocomplete
@@ -843,6 +844,12 @@ def event_classify(request, pk_):
             | Q(description__icontains=q_word)
             | Q(device__name__icontains=q_word)
             )
+    elif event.group:
+        m = re.match('(/\d+/)', event.group.path)
+        path_root = m.group(1)
+        object_list = TroubleGroup.objects.filter(
+            Q(path__startswith=path_root)
+            )
     else:
         object_list = TroubleGroup.objects.all()
 
@@ -868,6 +875,11 @@ def event_classify_execute(request):
         group = None
     event.group = group
     event.save()
+    # 初発日時より前に発生したイベントがあれば初発日時を書き換える
+    if event.start_time < group.first_datetime:
+        group.first_datetime = event.start_time
+        group.save()
+
     return HttpResponseRedirect("/unapproved_event_list/")
 
 def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):

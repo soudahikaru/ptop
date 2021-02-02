@@ -234,6 +234,11 @@ class EventCreateForm(forms.ModelForm):
     temporary_action = forms.CharField(
         widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='応急処置', required=False)
 
+    group = forms.ModelChoiceField(
+        TroubleGroup.objects.all(),
+        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+        label='トラブル類型', help_text='再発事象は自動的に入力されます。新規事象は作成後に分類してください。', required=False)
+
     start_time = forms.DateTimeField(
         widget=datetimepicker.DateTimePickerInput(
             options={'format':'YYYY-MM-DD HH:mm', 'sideBySide':True}),
