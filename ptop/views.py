@@ -686,7 +686,7 @@ class EventAdvancedSearchView(ListView):
             if form.cleaned_data.get('downtime_low'):
                 print(form.cleaned_data.get('downtime_low'))
                 queryset = queryset.filter(Q(downtime__gte=int(form.cleaned_data.get('downtime_low'))))
-                if form.cleaned_data.get('downtime_high'):
+            if form.cleaned_data.get('downtime_high'):
                 print(form.cleaned_data.get('downtime_high'))
                 queryset = queryset.filter(Q(downtime__lte=int(form.cleaned_data.get('downtime_high'))))
             if form.cleaned_data.get('delaytime_low'):
