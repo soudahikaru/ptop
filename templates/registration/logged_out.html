@@ -1,9 +1,16 @@
 {% extends 'base.html' %}
 
-{% block title %}Logout{% endblock %}
-
+{% block header %}
+<style>
+    h1 {text-align: center; margin: 1em; }
+    p {text-align: center; margin: 1em; }
+    .database-name {font-size: 1.5em; text-align: center; margin: 0px}
+  </style>
+{% endblock header %}
+  
 {% block content %}
-<h1>Logged Out</h1>
-<p>Thanks for spending some quality time with the Web site today.</p>
-<p><a href="{% url 'login' %}">Log in again</a></p>
+<h1>ログアウト完了</h1>
+<p>正常にログアウトが完了しました。</p>
+<p>お疲れ様でした。</p>
+<p><a href="{% url 'ptop:home' %}" class='btn btn-secondary'>ホーム画面へ</a> <a href="{% url 'login' %}" class='btn btn-primary'>もう一度ログイン</a></p>
 {% endblock %}

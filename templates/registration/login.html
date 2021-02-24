@@ -1,33 +1,56 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block header %}
+<style>
+  h1 {text-align: center; }
+  h2 {font-size: 1.5em; }
+  .database-name {font-size: 1.5em; text-align: center; margin: 0px}
+  p {text-align: center; margin: 1em; }
+  div {text-align:center;}
+  table {margin:1em auto;}
+  .alert {color: red;}
+</style>
 
+{% endblock header %}
+
+
+{% block content %}
+<div class="container">
+    <p class="database-name">Particle Therapy Database of Operation and Maintenance</p>
+    <p class="database-name">山形大学医学部東日本重粒子センター 重粒子線照射装置 運転・維持管理データベース</p>
+</div>
+
+<h1>ログイン</h1>
 {% if form.errors %}
 <p>Your username and password didn't match. Please try again.</p>
 {% endif %}
 
 {% if next %}
     {% if user.is_authenticated %}
-    <p>トラブル事象承認はチーフオペレータユーザーのみに許可されています。</p>
+    <p class="alert">トラブル事象承認はチーフオペレータユーザーのみに許可されています。</p>
     {% else %}
-    <p>データ作成／編集はログインユーザーのみに許可されています。ログインしてください。</p>
+    <p class="alert">データ作成／編集はログインユーザーのみに許可されています。ログインしてください。</p>
     {% endif %}
 {% endif %}
 
 <form method="post" action="{% url 'login' %}">
 {% csrf_token %}
-<table>
-<tr>
-    <td>{{ form.username.label_tag }}</td>
-    <td>{{ form.username }}</td>
-</tr>
-<tr>
-    <td>{{ form.password.label_tag }}</td>
-    <td>{{ form.password }}</td>
-</tr>
-</table>
+<div>
+    <table>
+        <tr>
+            <td>{{ form.username.label_tag }}</td>
+            <td>{{ form.username }}</td>
+        </tr>
+        <tr>
+            <td>{{ form.password.label_tag }}</td>
+            <td>{{ form.password }}</td>
+        </tr>
+    </table>
+</div>
 
-<input type="submit" value="login" />
-<input type="hidden" name="next" value="{{ next }}" />
+<div>
+    <input type="submit" value="ログイン" class="btn btn-primary"/>
+    <input type="hidden" name="next" value="{{ next }}" />
+</div>
 </form>
 {% endblock %}

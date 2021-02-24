@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 
 {% block header %}
+<style>
+  table, th, td {border: solid 1px;}
+</style>
+  
 {% endblock header %}
 
 {% block content %}
@@ -11,22 +15,30 @@
   <div class="row">
     <div class="col-sm-4">
       <div class="card">
-        <h5 class="card-header">{{event.title}}</h5>
+        <h5 class="card-header">対象のトラブル事象</h5>
         <div class="card-body">
-          <p class="card-text">トラブル類型: {{event.group.title|default:"未選択"}}</p>
-          <p class="card-text">Device ID: {{event.device.device_id}}</p>
-          <p class="card-text">事象: {{event.description}}</p>
-          <p class="card-text">原因: {{event.cause}}</p>
-          <p class="card-text">応急処置: {{event.temporary_action}}</p>
-          <p class="card-text">発生時刻: {{event.start_time|date:"Y/m/d H:i"}}</p>
-          <p class="card-text">復旧時刻: {{event.end_time|date:"Y/m/d H:i"}}</p>
-          <p class="card-text">装置故障時間: {{event.downtime}} 分</p>
-          <p class="card-text">治療遅延時間: {{event.delaytime}} 分</p>
-          <p class="card-text">対応者: {% for operator in event.handling_operators.all %}
-            {{ operator }}{% if forloop.last %}{% else %},{% endif %}    
-        {% endfor %}</p>
-          <p class="card-text">入力者: {{event.input_operator}}</p>
-          <p class="card-text">承認者: {{event.approval_operator}}</p>
+          <table>
+            <tr><td>題名</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td></tr>
+            <tr><td>事象ID</td><td>{{event.id}} </td></tr>
+            <tr><td>トラブル類型</td><td>{% if event.group %}<a href="{%url 'ptop:group_detail' event.group.pk%}">{{event.group.title}}</a>{% else %}<a href="{%url 'ptop:event_classify' event.pk%}">未選択</a>{% endif %}</td></tr>
+            <tr><td>デバイスID</td><td>{{event.device.device_id}}({{event.device.name}})</td></tr>
+            <tr><td>事象</td><td>{{event.description | linebreaksbr }}</td></tr>
+            <tr><td>エラーメッセージ</td><td>{% for error in event.errors.all %}
+      {{ error.error_code }}{% if forloop.last %}{% else %},{% endif %}
+      {% endfor %}</td></tr>
+            <tr><td>発生直前の操作</td><td>{{event.trigger | linebreaksbr }}</td></tr>
+            <tr><td>原因</td><td>{{event.cause | linebreaksbr }}</td></tr>
+            <tr><td>応急処置内容</td><td>{{event.temporary_action | linebreaksbr }}</td></tr>
+            <tr><td>発生時刻</td><td>{{event.start_time|date:"Y/m/d H:i"}}</td></tr>
+            <tr><td>復旧時刻</td><td>{{event.end_time|date:"Y/m/d H:i"}}</td></tr>
+            <tr><td>装置故障時間</td><td>{{event.downtime}} 分</td></tr>
+            <tr><td>治療遅延時間</td><td>{{event.delaytime}} 分</td></tr>
+            <tr><td>対応者</td><td>{% for operator in event.handling_operators.all %}
+          {{ operator }}{% if forloop.last %}{% else %},{% endif %}    
+      {% endfor %}</td></tr>
+            <tr><td>入力者</td><td>{{event.input_operator}}</td></tr>
+            <tr><td>承認者</td><td>{{event.approval_operator}}</td></tr>
+          </table>
         </div>
       </div>
     </div>
@@ -60,23 +72,32 @@
         <div class="card">
           <h5 class="card-header">{{group.title}}</h5>
           <div class="card-body">
-            <p class="card-text">Device ID: {{group.device.device_id}}</p>
-            <p class="card-text">内容: {{group.description}}</p>
-            <p class="card-text">原因: {{group.cause}}</p>
-
+            <table border>
+              <tr><td>分類ID</td><td>{{group.classify_id}}</td></tr>
+              <tr><td>分類経路</td><td>{{group.path}}</td></tr>
+              <tr><td>デバイスID</td><td>{{group.device.device_id}}({{group.device.name}})</td></tr>
+              <tr><td>事象</td><td>{{group.description | linebreaksbr }}</td></tr>
+              <tr><td>エラーメッセージ</td><td>{% for error in group.errors.all %}
+      {{ error.error_code }}{% if forloop.last %}{% else %},{% endif %}
+      {% endfor %}</td></tr>
+              <tr><td>発生の契機となる操作</td><td>{{group.trigger | linebreaksbr }}</td></tr>
+              <tr><td>原因</td><td>{{group.cause | linebreaksbr }}</td></tr>
+              <tr><td>初発日時</td><td>{{group.first_datetime|date:"Y/m/d H:i"}}</td></tr>
+            </table>
+      
             <p><a href="{% url 'ptop:event_classify_execute' %}?event_pk={{event.pk}}&group_pk={{group.pk}}" class="btn btn-primary">割り当て実行</a></p>
-            <p><a href="{% url 'ptop:child_group_create' group.pk %}" class="btn btn-primary">サブグループ作成</a></p>
+            <p><a href="{% url 'ptop:child_group_create' group.pk %}" class="btn btn-info">サブグループ作成</a></p>
 
           </div>
         </div>
       </div>
       {% endif %}
-      <p><a href="{% url 'ptop:group_create_from_event' event.pk %}" class="btn btn-primary">新規グループを作成</a></p>
-      <p><a href="{% url 'ptop:event_classify_execute' %}?event_pk={{event.pk}}&group_pk=None" class="btn btn-primary">未選択に戻す</a></p>
+      <p><a href="{% url 'ptop:group_create_from_event' event.pk %}" class="btn btn-info">新規グループを作成</a></p>
+      <p><a href="{% url 'ptop:event_classify_execute' %}?event_pk={{event.pk}}&group_pk=None" class="btn btn-warning">未選択に戻す</a></p>
     </div>
 
   </div>
-  <a href="{% url 'ptop:unapproved_event_list' %}" class="btn btn-primary">戻る</a>
+  <a href="{% url 'ptop:unapproved_event_list' %}" class="btn btn-secondary">戻る</a>
 
 </div>
 

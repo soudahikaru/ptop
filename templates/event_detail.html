@@ -11,7 +11,7 @@
       <table border>
       <tr><td>事象ID</td><td>{{object.id}}</td></tr>
       <tr><td>トラブル類型</td><td>{% if object.group %}<a href="{%url 'ptop:group_detail' object.group.pk%}">{{object.group.title}}</a> <a href="{%url 'ptop:event_classify' object.pk%}" class="btn btn-info btn-sm">割当変更</a>{% else %}<a href="{%url 'ptop:event_classify' object.pk%}">未選択</a>{% endif %}</td></tr>
-      <tr><td>Device ID</td><td>{{object.device.device_id}}({{object.device.name}})</td></tr>
+      <tr><td>デバイスID</td><td>{{object.device.device_id}}({{object.device.name}})</td></tr>
       <tr><td>事象</td><td>{{object.description | linebreaksbr }}</td></tr>
       <tr><td>エラーメッセージ</td><td>{% for error in object.errors.all %}
 {{ error.error_code }}{% if forloop.last %}{% else %},{% endif %}
@@ -26,9 +26,9 @@
       <tr><td>対応者</td><td>{% for operator in object.handling_operators.all %}
     {{ operator }}{% if forloop.last %}{% else %},{% endif %}    
 {% endfor %}</td></tr>
-      <tr><td>入力者</td><td>{{object.input_operator}}</td></tr>
-      <tr><td>承認者</td><td>{{object.approval_operator}}</td></tr>
-      <tr><td>報告した物理士</td><td>{{object.reported_physicist}}</td></tr>
+      <tr><td>入力者</td><td>{{object.input_operator|default_if_none:'未入力'}}</td></tr>
+      <tr><td>承認者</td><td>{{object.approval_operator|default_if_none:'未承認'}}</td></tr>
+      <tr><td>報告した物理士</td><td>{{object.reported_physicist|default_if_none:'未報告'}}</td></tr>
       <tr><td>添付ファイル</td><td>{% spaceless %}{% for attachment in object.attachments.all %}
 {% if '.png' in attachment.title or '.PNG' in attachment.title or '.jpg' in attachment.title or '.JPG' in attachment.title %}
 <a href="{{attachment.file.url}}"><img src="{{attachment.file.url}}" alt="{{attachment.title}}" width="200" /></a>

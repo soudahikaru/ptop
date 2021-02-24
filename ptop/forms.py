@@ -127,6 +127,8 @@ class EventAdvancedSearchForm(forms.Form):
         ('downtime', '故障時間が短い順'),
         ('-delaytime', '治療遅延時間が長い順'),
         ('delaytime', '治療遅延時間が短い順'),
+        ('-group', 'トラブル累計初発日時が新しい順'),
+        ('group', 'トラブル累計初発日時が古い順'),
     )
     sort_by = forms.ChoiceField(choices=CHOICE_SORT, label='並び順', required=False)
 
