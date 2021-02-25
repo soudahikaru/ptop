@@ -409,21 +409,21 @@ class ChangeOperationForm(forms.Form):
             options={'format':'YYYY-MM-DD HH:mm', 'sideBySide':True}),
         label='切り替え時刻', required=True)
 
-    num_treat_hc1 = forms.IntegerField(initial=0, label='HC1治療ポート数',
+    num_treat_hc1 = forms.IntegerField(initial=0, label='切替前OperationのHC1治療ポート数',
         widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
-    num_treat_gc2 = forms.IntegerField(initial=0, label='GC2治療ポート数',
+    num_treat_gc2 = forms.IntegerField(initial=0, label='切替前OperationのGC2治療ポート数',
         widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
-    num_qa_hc1 = forms.IntegerField(initial=0, label='HC1 QAポート数',
+    num_qa_hc1 = forms.IntegerField(initial=0, label='切替前OperationのHC1 QAポート数',
         widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
-    num_qa_gc2 = forms.IntegerField(initial=0, label='GC2 QAポート数',
+    num_qa_gc2 = forms.IntegerField(initial=0, label='切替前OperationのGC2 QAポート数',
         widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
     comment = forms.CharField(
         widget=forms.Textarea(attrs={'cols':'60', 'rows':'4'}),
-        label='コメント', required=False)
+        label='切替前Operationのコメント', required=False)
 
     
 class AnnouncementCreateForm(forms.ModelForm):
