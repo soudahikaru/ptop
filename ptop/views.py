@@ -784,10 +784,10 @@ def change_operation_execute(request):
         new_operation = Operation.objects.create(
             operation_type=form.cleaned_data.get('operation_type'),
             start_time=form.cleaned_data.get('change_time'),
-            num_treat_hc1=form.cleaned_data.get('num_treat_hc1'),
-            num_treat_gc2=form.cleaned_data.get('num_treat_gc2'),
-            num_qa_hc1=form.cleaned_data.get('num_qa_hc1'),
-            num_qa_gc2=form.cleaned_data.get('num_qa_gc2'),
+#            num_treat_hc1=form.cleaned_data.get('num_treat_hc1'),
+#            num_treat_gc2=form.cleaned_data.get('num_treat_gc2'),
+#            num_qa_hc1=form.cleaned_data.get('num_qa_hc1'),
+#            num_qa_gc2=form.cleaned_data.get('num_qa_gc2'),
             )
     else:
         current_operation = Operation.objects.create(
