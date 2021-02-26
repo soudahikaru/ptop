@@ -780,14 +780,14 @@ def change_operation_execute(request):
     if current_operation:
         current_operation.end_time = form.cleaned_data.get('change_time')
         current_operation.operation_time = (current_operation.end_time - current_operation.start_time).total_seconds() / 60.0
-        current_operation.num_treat_hc1 = form.cleaned_data['num_treat_hc1'],
-        current_operation.num_treat_gc2 = form.cleaned_data.get('num_treat_gc2'),
-        current_operation.num_qa_hc1 = form.cleaned_data.get('num_qa_hc1'),
-        current_operation.num_qa_gc2 = form.cleaned_data.get('num_qa_gc2'),
         current_operation.save()
         new_operation = Operation.objects.create(
             operation_type=form.cleaned_data.get('operation_type'),
             start_time=form.cleaned_data.get('change_time'),
+            num_treat_hc1=form.cleaned_data.get('num_treat_hc1'),
+            num_treat_gc2=form.cleaned_data.get('num_treat_gc2'),
+            num_qa_hc1=form.cleaned_data.get('num_qa_hc1'),
+            num_qa_gc2=form.cleaned_data.get('num_qa_gc2'),
             )
     else:
         current_operation = Operation.objects.create(
