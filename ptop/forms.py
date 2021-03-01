@@ -263,8 +263,8 @@ class EventCreateForm(forms.ModelForm):
         label='治療遅延の有無', help_text='治療遅延時間が未入力の場合、運転状況が「治療」で装置故障時間が(自動でも)入力されると自動的にONになります。実際には遅延しなかった場合は手動でOFFにしてください。', required=False)
     operation_type = forms.ModelChoiceField(
         OperationType.objects.all(),
-        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
-        label='運転状況', help_text='発生日時から自動的に設定されます。', required=False)
+#        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+        label='運転状況', help_text='発生日時から自動的に設定されます。手動で修正も可能です。', required=False)
     device = forms.ModelChoiceField(
         Device.objects.all(), label='デバイスID',
         widget=autocomplete.ModelSelect2(url='ptop:device_autocomplete', attrs={'style':'width:40em;'}),
@@ -403,27 +403,27 @@ class OperationCreateForm(forms.ModelForm):
 
 
 class ChangeOperationForm(forms.Form):
-    operation_type = forms.ModelChoiceField(queryset=OperationType.objects.all().order_by('id'), label='次のオペレーション')
+    operation_type = forms.ModelChoiceField(queryset=OperationType.objects.all().order_by('id'), label='次のオペレーション', required=True)
     change_time = forms.DateTimeField(
         widget=datetimepicker.DateTimePickerInput(
             options={'format':'YYYY-MM-DD HH:mm', 'sideBySide':True}),
         label='切り替え時刻', required=True)
 
-    num_treat_hc1 = forms.IntegerField(initial=0, label='切替前OperationのHC1治療ポート数',
+    num_treat_hc1 = forms.IntegerField(initial=0, label='HC1治療ポート数',
         widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
-    num_treat_gc2 = forms.IntegerField(initial=0, label='切替前OperationのGC2治療ポート数',
+    num_treat_gc2 = forms.IntegerField(initial=0, label='GC2治療ポート数',
         widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
-    num_qa_hc1 = forms.IntegerField(initial=0, label='切替前OperationのHC1 QAポート数',
+    num_qa_hc1 = forms.IntegerField(initial=0, label='HC1 QAポート数',
         widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
-    num_qa_gc2 = forms.IntegerField(initial=0, label='切替前OperationのGC2 QAポート数',
+    num_qa_gc2 = forms.IntegerField(initial=0, label='GC2 QAポート数',
         widget=forms.NumberInput(attrs={'style': 'width:6ch','min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
     comment = forms.CharField(
         widget=forms.Textarea(attrs={'cols':'60', 'rows':'4'}),
-        label='切替前Operationのコメント', required=False)
+        label='コメント', required=False)
 
     
 class AnnouncementCreateForm(forms.ModelForm):

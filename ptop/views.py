@@ -694,7 +694,8 @@ class EventAdvancedSearchView(ListView):
             if form.cleaned_data.get('delaytime_high'):
                 queryset = queryset.filter(Q(delaytime__lte=int(form.cleaned_data.get('delaytime_high'))))
         
-        object_list = queryset.order_by(self.request.GET.get('sort_by', '-start_time'))
+        sort_by = self.request.GET.get('sort_by', default='-start_time')
+        object_list = queryset.order_by(sort_by, '-start_time')
         return object_list
  
 class OperationListView(ListView):
@@ -759,11 +760,22 @@ class OperationCreateView(OperationBaseMixin, CreateView):
 def change_operation(request):
     """Operation変更画面"""
     current_operation = Operation.objects.order_by('start_time').last()
+    treat_flag = False
+    pqa_flag = False
     if current_operation:
+        if current_operation.operation_type.name == '治療':
+            treat_flag = True
+        elif  current_operation.operation_type.name == '患者QA':
+            pqa_flag = True
         return render(
             request,
             'change_operation.html',
-            {'current_operation':current_operation, 'change_form':ChangeOperationForm}
+            {
+                'current_operation':current_operation,
+                'change_form':ChangeOperationForm,
+                'treat_flag':treat_flag,
+                'pqa_flag':pqa_flag,
+            }
             )
     else:
         return render(
@@ -780,6 +792,18 @@ def change_operation_execute(request):
     if current_operation:
         current_operation.end_time = form.cleaned_data.get('change_time')
         current_operation.operation_time = (current_operation.end_time - current_operation.start_time).total_seconds() / 60.0
+        (current_operation.num_treat_hc1, ) = form.cleaned_data.get('num_treat_hc1'),
+        (current_operation.num_treat_gc2, ) = form.cleaned_data.get('num_treat_gc2'),
+        (current_operation.num_qa_hc1, ) = form.cleaned_data.get('num_qa_hc1'),
+        (current_operation.num_qa_gc2, ) = form.cleaned_data.get('num_qa_gc2'),
+        if current_operation.num_treat_hc1 is None:
+            current_operation.num_treat_hc1 = 0
+        if current_operation.num_treat_gc2 is None:
+            current_operation.num_treat_gc2 = 0
+        if current_operation.num_qa_hc1 is None:
+            current_operation.num_qa_hc1 = 0
+        if current_operation.num_qa_gc2 is None:
+            current_operation.num_qa_gc2 = 0
         current_operation.save()
         new_operation = Operation.objects.create(
             operation_type=form.cleaned_data.get('operation_type'),

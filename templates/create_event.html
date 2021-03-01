@@ -168,8 +168,20 @@
         var start_time = new Date($("#id_start_time").val());
         // minute
         var downtime = (end_time-start_time) / 60000;
-          $("#id_downtime").val(downtime);
-        }
+        $("#id_downtime").val(downtime);
+        if($("#id_delaytime").val() == ""){
+          var ope_text = $("#id_operation_type option:selected").text();
+          console.log(ope_text);
+          if (ope_text == "治療" && ($("#id_downtime").val() != "0")){
+            $("#id_delay_flag").prop("checked", true)
+            $("#id_delaytime").val($("#id_downtime").val());
+          }else{
+            $("#id_delay_flag").prop("checked", false)
+            $("#id_delaytime").val("0");
+          }
+        } 
+      }
+
     });
 
     $("#id_downtime").on("change", function () {
@@ -185,6 +197,7 @@
         }
       } 
     });
+
 
     $("#id_delaytime").on("change", function () {
       if($("#id_delaytime").val() == "0"){
