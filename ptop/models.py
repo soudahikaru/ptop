@@ -69,7 +69,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(blank=True, validators=[EmailValidator('Invalid email address.')])
     phs_number = models.CharField(blank=True, max_length=10)
 
-    #display_order = models.IntegerField(null=True, blank=True)
+    display_order = models.IntegerField(null=True, blank=True)
 
     # 拡張項目
     authority_level = models.IntegerField(choices=AUTHORITIES, null=True)
