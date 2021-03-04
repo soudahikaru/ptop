@@ -23,6 +23,10 @@
       <tr><td>復旧時刻</td><td>{{object.end_time|date:"Y/m/d H:i"}}</td></tr>
       <tr><td>装置故障時間</td><td>{{object.downtime}} 分</td></tr>
       <tr><td>治療遅延時間</td><td>{{object.delaytime}} 分</td></tr>
+      <tr><td>治療可否の状態</td><td>{{object.treatment_status}}</td></tr>
+      <tr><td>影響範囲</td><td>{{object.effect_scope}}</td></tr>
+      <tr><td>対処緊急度</td><td>{{object.urgency}}</td></tr>
+  
       <tr><td>対応者</td><td>{% for operator in object.handling_operators.all %}
     {{ operator }}{% if forloop.last %}{% else %},{% endif %}    
 {% endfor %}</td></tr>
