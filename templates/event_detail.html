@@ -40,6 +40,7 @@
       </table>
       <a href="{% url 'ptop:update_event' object.pk %}" class="btn btn-primary">編集</a>
       <a href="{% url 'ptop:recurrent_event_create_from_event' object.pk %}" class="btn btn-warning">再発</a>
+      <a href="{% url 'ptop:trouble_communication_sheet' object.pk %}" class="btn btn-danger">不具合連絡票発行</a>
       <a href="{% url 'ptop:eventlist' %}" class="btn btn-secondary">戻る</a>
     </div>
   </div>

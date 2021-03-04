@@ -248,15 +248,17 @@ class EventCreateForm(forms.ModelForm):
     end_time = forms.DateTimeField(
         widget=datetimepicker.DateTimePickerInput(
             options={'format':'YYYY-MM-DD HH:mm', 'sideBySide':True}),
-        label='復旧時刻', help_text='未入力の場合、装置故障時間を入力すると自動的に入力されます。',
-        required=True)
+        label='復旧時刻', help_text='運転を再開した時刻を入力してください。装置故障時間を入力すると自動的に入力されます。未解決の場合は空欄のままにしてください。',
+        required=False)
 #	end_time = forms.DateTimeField(label='復旧時刻', help_text='空欄の場合、装置故障時間を入力すると自動的に入力されます。', required=True)
     downtime = forms.IntegerField(
-        label='装置故障時間(分)', help_text='実際に装置運転に影響があった時間を入力してください。未入力の場合、復旧時刻を入力すると自動的に入力されます。', required=True, 
+        label='装置故障時間(分)', help_text='実際に装置運転に影響があった時間を入力してください。復旧時刻を入力すると自動的に入力されます。未解決の場合は空欄のままにしてください。', 
+        required=False, 
         widget=forms.NumberInput(attrs={'style': 'width:8ch','min': 0, }),
         validators=[validators.MinValueValidator(0)])
     delaytime = forms.IntegerField(
-        label='治療遅延時間(分)', help_text='未入力の場合、運転状況が「治療」で装置故障時間が(自動でも)入力されると自動的に入力されます。', required=True, 
+        label='治療遅延時間(分)', help_text='未入力の場合、運転状況が「治療」で装置故障時間が(自動でも)入力されると自動的に入力されます。未解決の場合は空欄のままにしてください。', 
+        required=False, 
         widget=forms.NumberInput(attrs={'style': 'width:8ch','min': 0, }),
         validators=[validators.MinValueValidator(0)])
     delay_flag = forms.BooleanField(
@@ -294,10 +296,11 @@ class EventCreateForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        print(cleaned_data.get('start_time'))
-        if cleaned_data.get('start_time') > cleaned_data.get('end_time'):
-            print(cleaned_data.get('end_time'))
-            raise forms.ValidationError("復旧日時は発生日時より後にしてください。")
+        if cleaned_data.get('end_time'):
+            print(cleaned_data.get('start_time'))
+            if cleaned_data.get('start_time') > cleaned_data.get('end_time'):
+                print(cleaned_data.get('end_time'))
+                raise forms.ValidationError("復旧日時は発生日時より後にしてください。")
         super().clean()
 
 #    def __init__(self, *args, **kwargs):
@@ -311,6 +314,7 @@ class EventCreateForm(forms.ModelForm):
             'title', 'group', 'device',
             'description', 'trigger', 'cause', 'temporary_action', 'errors',
             'start_time', 'downtime', 'operation_type', 'end_time', 'delay_flag', 'delaytime',
+            'effect_scope', 'treatment_status', 'urgency',
             'input_operator', 'handling_operators', 'reported_physicist', 'attachments')
 
 class GroupCreateForm(forms.ModelForm):

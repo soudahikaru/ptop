@@ -220,6 +220,12 @@ class EventDetailView(DetailView):
     template_name = 'event_detail.html'
     model = TroubleEvent
 
+class TroubleCommunicationSheetView(DetailView):
+    """不具合連絡票詳細画面"""
+    template_name = 'trouble_communication_sheet.html'
+    model = TroubleEvent
+
+
 class TroubleEventDetail(DetailView):
     """TroubleEvent詳細画面(旧ver)"""
     template_name = 'event.html'

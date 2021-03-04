@@ -217,6 +217,27 @@ class OperationType(models.Model):
     def __str__(self):
         return self.name
 
+class TreatmentStatusType(models.Model):
+    """装置不具合連絡票用の治療可能かどうかのタイプ。"""
+    name = models.CharField('治療可否タイプ名称', max_length=100)
+    treatment_available_flag = models.BooleanField('治療可ならTrue')
+    def __str__(self):
+        return self.name
+
+class EffectScope(models.Model):
+    """影響範囲モデル。"""
+    name = models.CharField('影響範囲名称', max_length=100)
+    hc1_flag = models.BooleanField('HC1に影響があればTrue')
+    gc2_flag = models.BooleanField('GC2に影響があればTrue')
+    def __str__(self):
+        return self.name
+
+class Urgency(models.Model):
+    """対処緊急性モデル。"""
+    name = models.CharField('緊急性名称', max_length=100)
+    def __str__(self):
+        return self.name
+
 class CauseType(models.Model):
     """TroubleGroupの原因のType。経年劣化、偶発故障など。"""
     name = models.CharField('原因タイプ名称', max_length=100)
@@ -347,12 +368,21 @@ class TroubleEvent(models.Model):
     errors = models.ManyToManyField(Error, verbose_name='エラーメッセージ', null=True, blank=True)
     start_time = models.DateTimeField('発生時刻', null=True)
     end_time = models.DateTimeField('復旧時刻', null=True, blank=True)
-    downtime = models.PositiveIntegerField('装置故障時間', null=True) # 分
+    downtime = models.PositiveIntegerField('装置故障時間', null=True, blank=True) # 分
     operation_type = models.ForeignKey(
         OperationType, verbose_name='発生時の運転内容',
         null=True, blank=True, on_delete=models.SET_NULL)
     delaytime = models.PositiveIntegerField('治療遅延時間', null=True, blank=True) # 分
     delay_flag = models.BooleanField('治療遅延の有無', default=False)
+    effect_scope = models.ForeignKey(
+        EffectScope, verbose_name='影響範囲',
+        null=True, blank=True, on_delete=models.SET_NULL)
+    treatment_status = models.ForeignKey(
+        TreatmentStatusType, verbose_name='発生中の治療可否状況',
+        null=True, blank=True, on_delete=models.SET_NULL)
+    urgency = models.ForeignKey(
+        Urgency, verbose_name='対処緊急性',
+        null=True, blank=True, on_delete=models.SET_NULL)
     input_operator = models.ForeignKey(
         User, verbose_name='入力者', limit_choices_to=Q(groups__name='Operator')&Q(is_active=True),
         null=True, on_delete=models.SET_NULL, related_name='%(class)s_inputed')

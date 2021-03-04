@@ -24,6 +24,9 @@ from .models import Section
 from .models import SuperSection
 from .models import DeviceType
 from .models import Announcement
+from .models import EffectScope
+from .models import TreatmentStatusType
+from .models import Urgency
 
 #@admin.register(User)
 
@@ -173,6 +176,43 @@ class DeviceTypeAdmin(ImportExportModelAdmin):
     resource_class = DeviceTypeResource
 
 
+class TreatmentStatusTypeResource(resources.ModelResource):
+    """ Resource for Operation Type """
+    class Meta:
+        """ Resource for Operation Type model Meta"""
+        model = TreatmentStatusType
+        skip_unchanged = True
+        report_skipped = False
+
+class TreatmentStatusTypeAdmin(ImportExportModelAdmin):
+    """ Admin for Operation Type """
+    resource_class = TreatmentStatusTypeResource
+
+class EffectScopeResource(resources.ModelResource):
+    """ Resource for Operation Type """
+    class Meta:
+        """ Resource for Operation Type model Meta"""
+        model = EffectScope
+        skip_unchanged = True
+        report_skipped = False
+
+class EffectScopeAdmin(ImportExportModelAdmin):
+    """ Admin for Operation Type """
+    resource_class = EffectScopeResource
+
+class UrgencyResource(resources.ModelResource):
+    """ Resource for Operation Type """
+    class Meta:
+        """ Resource for Operation Type model Meta"""
+        model = Urgency
+        skip_unchanged = True
+        report_skipped = False
+
+class UrgencyAdmin(ImportExportModelAdmin):
+    """ Admin for Operation Type """
+    resource_class = UrgencyResource
+
+
 # Register your models here.
 admin.site.register(User, AdminUserAdmin)
 admin.site.register(Attachment)
@@ -192,3 +232,6 @@ admin.site.register(CommentType, CommentTypeAdmin)
 admin.site.register(Section, SectionAdmin)
 admin.site.register(SuperSection, SuperSectionAdmin)
 admin.site.register(DeviceType, DeviceTypeAdmin)
+admin.site.register(EffectScope, EffectScopeAdmin)
+admin.site.register(TreatmentStatusType, TreatmentStatusTypeAdmin)
+admin.site.register(Urgency, UrgencyAdmin)

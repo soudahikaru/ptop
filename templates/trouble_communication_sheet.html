@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<title>装置不具合連絡票 - {{object.title}} - Particle Therapy Database of Operation and Maintenance</title>
+<style>
+    body{padding-top: 32px;}
+    h1 {text-align: center;}
+    h2 {text-align: center;}
+    table {width:800px; table-layout: fixed; margin: auto;}
+    .label {width: 10em;}
+    .date {text-align: right;}
+    .facility {text-align: right;}
+    .footer {text-align: right;}
+    .counterperson {text-align: right;}
+</style>
+
+{% endblock header %}
+
+{% block content %}
+<h1>装置不具合連絡票</h1>
+<h2>連絡票ID: {{object.id}}</h2>
+<p class="facility">
+    山形大学医学部東日本重粒子センター
+</p>
+<p class="date">
+  発行日時: {% now "Y/n/j H:i" %}
+</p>
+<p class="counterperson">
+    対応窓口：<input type="text" value="{{object.input_operator}}{% if object.input_operator.phs_number %}(PHS{{object.input_operator.phs_number}}){% endif %}"></input>    
+</p>
+<div class="container">
+  <table border>
+    <tr><td class="label">題名</td><td><b>{{object.title}}</b></td></tr>
+
+    <tr><td>治療可否の状態</td><td><b>{{object.treatment_status}}</b></td></tr>
+    <tr><td>影響範囲</td><td><b>{{object.effect_scope}}</b></td></tr>
+    <tr><td>対処緊急度</td><td><b>{{object.urgency}}</b></td></tr>
+
+    <tr><td>デバイスID</td><td>{{object.device.device_id}}({{object.device.name}})</td></tr>
+    <tr><td>事象</td><td>{{object.description | linebreaksbr }}</td></tr>
+    <tr><td>エラーメッセージ</td><td>{% for error in object.errors.all %}
+{{ error.error_code }}{% if forloop.last %}{% else %},{% endif %}
+{% endfor %}</td></tr>
+    <tr><td>発生直前の操作</td><td>{{object.trigger | linebreaksbr }}</td></tr>
+    <tr><td>推定原因</td><td>{{object.cause | linebreaksbr }}</td></tr>
+    <tr><td>応急処置内容</td><td>{{object.temporary_action | linebreaksbr }}</td></tr>
+    <tr><td>発生時刻</td><td><b>{{object.start_time|date:"Y/m/d H:i"}}</b></td></tr>
+    <tr><td>復旧時刻</td><td>{{object.end_time|date:"Y/m/d H:i"}}</td></tr>
+    <tr><td>装置故障時間</td><td>{{object.downtime|default_if_none:'未定'}} 分</td></tr>
+    <tr><td>治療遅延時間</td><td>{{object.delaytime|default_if_none:'未定'}} 分</td></tr>
+    <tr><td>事象ID</td><td>{{object.id}}</td></tr>
+    <tr><td>トラブル類型</td><td>{{object.group.title}}</td></tr>
+    <tr><td>入力者</td><td>{{object.input_operator|default_if_none:'未入力'}}</td></tr>
+    <tr><td>現場対応者</td><td>{% for operator in object.handling_operators.all %}
+    {{ operator }}{% if forloop.last %}{% else %},{% endif %}    
+{% endfor %}</td></tr>
+
+    <tr><td>添付ファイル</td><td>{% spaceless %}{% for attachment in object.attachments.all %}
+{% if '.png' in attachment.title or '.PNG' in attachment.title or '.jpg' in attachment.title or '.JPG' in attachment.title %}
+<a href="{{attachment.file.url}}"><img src="{{attachment.file.url}}" alt="{{attachment.title}}" width="200" /></a>
+{% else %}
+<a href="{{attachment.file.url}}">{{ attachment.title }}</a>
+{% endif %}
+{% if forloop.last %}{% else %},{% endif %}
+{% endfor %}{% endspaceless %}</td></tr>
+      <tr><td>追加情報</td><td><textarea name="additional" rows="4" cols="80"></textarea></td></tr>
+    </table>
+
+    <div class="footer">
+    <a href="javascript:void(0)" onclick="window.print();return false;" class="btn btn-info">印刷</a>
+    <a href="{% url 'ptop:event_detail' object.pk %}" class="btn btn-secondary">戻る</a>
+    </div>
+  </div>
+{% endblock content %}
