@@ -24,15 +24,15 @@
     </form>
 
     <table border>
-      <tr><th>ID</th><th>発生日時</th><th>題名</th><th>デバイスID</th><th>故障時間</th><th>トラブル類型</th></tr>
+      <tr><th>ID</th><th>発生日時</th><th class="bg-event">題名</th><th>デバイスID</th><th>故障時間</th><th class="bg-group">トラブル類型</th></tr>
     {% for item in object_list %}
       <tr>
         <td>{{item.pk}}</td>
         <td>{{item.start_time|date:"Y/m/d H:i"}}</td>
-        <td><b><a href="{% url 'ptop:event_detail' item.pk %}">{{item.title|truncatechars:30}}</a></b></td>
+        <td class="bg-event"><b><a href="{% url 'ptop:event_detail' item.pk %}">{{item.title|truncatechars:30}}</a></b></td>
         <td>{{item.device.device_id}}</td>
-        <td>{{item.downtime}}</td>
-        <td>{% if item.group is not None %}
+        <td>{{item.downtime}}{% if item.delaytime %}<span class="delaytime"> ({{item.delaytime}})</span>{% endif %}</td>
+        <td class="bg-group">{% if item.group is not None %}
           <a href="{% url 'ptop:group_detail' item.group.pk %}">{{item.group.title|truncatechars:10}}</a>
           {% else %} 
           {% endif %}

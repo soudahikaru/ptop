@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<title>ログノート帳票 - {{object.title}} - Particle Therapy Database of Operation and Maintenance</title>
+<style>
+    body{padding-top: 32px;}
+    h1 {text-align: center;}
+    h2 {text-align: center;}
+    table {width:800px; table-layout: fixed; margin: auto;}
+    p {margin:0%; line-height: 1.2; color: red;}
+    .firstline {line-height: 2.0}
+    .secondline {margin-left:2em; }
+    .label {width: 10em;}
+    .date {text-align: right;}
+    .facility {text-align: right;}
+    .footer {text-align: right;}
+    .counterperson {text-align: right;}
+    .border1 {border: solid 1px;}
+    .result {margin: 1em;}
+</style>
+
+{% endblock header %}
+
+{% block content %}
+<div class="container border1">
+  <div class="result">
+    <p class="firstline">
+      {{object.start_time|date:"Y/m/d H:i"}} <b>{{object.title}}</b>
+    </p>
+    <p class="secondline">
+      {{object.description | linebreaksbr }}
+    </p>
+  {% if object.temporary_action %}
+    <p class="secondline">
+      {{object.temporary_action | linebreaksbr }}
+    </p>
+  {% endif %}
+  {% if object.downtime %}
+    <p class="secondline">
+      {{object.end_time|date:"Y/m/d H:i"}}復旧。故障時間{{object.downtime}}分{% if object.delaytime %}(治療遅延{{object.delaytime}}分){% endif %}。
+    </p>
+  {% else %}
+    <p class="secondline">
+      本トラブルによる運転停止なし。
+    </p>
+  {% endif %}
+  {% if object.trigger %}
+    <p class="secondline">
+      発生直前の操作: {{object.trigger}}
+    </p>
+  {% endif %}
+    <p class="secondline">
+      PT-DOM 事象ID:{{object.id}}, デバイス: {{object.device.device_id}}({{object.device.name}}), {% if object.errors.all %}エラーメッセージ:{% for error in object.errors.all %}
+      {{ error.error_code }}{% if forloop.last %}{% else %},{% endif %}
+      {% endfor %}{% endif %}
+      {% if object.handling_operators.all %}対応者: {% for operator in object.handling_operators.all %}
+      {{ operator }}{% if forloop.last %}{% else %},{% endif %}    
+  {% endfor %}{% endif %}{% if object.input_operator %}記録者: {{object.input_operator}}{% endif %}
+    </p>
+  </div>
+</div>
+
+<div class="container footer">
+  <a href="javascript:void(0)" onclick="window.print();return false;" class="btn btn-info">印刷</a>
+  <a href="{% url 'ptop:event_detail' object.pk %}" class="btn btn-secondary">戻る</a>
+</div>
+{% endblock content %}

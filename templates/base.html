@@ -8,7 +8,7 @@
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
 
-    <title>Particle Therapy Database of Operation and Maintenance</title>
+    <title>{% if object %}{{object.title}} - {% endif %}Particle Therapy Database of Operation and Maintenance</title>
 
     <style>
       .navbar-toggler-icon {font-size: 0.8em;}
@@ -18,6 +18,10 @@
       .nav-link{padding: 2px;}
       .nav-link:hover{background-color:azure;}
       .container{padding-bottom: 8px;}
+      .bg-event {background-color: #fff0f0;}
+      .bg-group {background-color: #ffffe0;}
+      .delaytime {color: red;}
+
     </style>
     
     {% load static %}

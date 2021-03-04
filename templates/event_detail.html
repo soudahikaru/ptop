@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block header %}
+<style>
+table {background-color:#fff0f0}
+</style>
 {% endblock header %}
 
 {% block content %}
@@ -21,11 +24,11 @@
       <tr><td>応急処置内容</td><td>{{object.temporary_action | linebreaksbr }}</td></tr>
       <tr><td>発生時刻</td><td>{{object.start_time|date:"Y/m/d H:i"}}</td></tr>
       <tr><td>復旧時刻</td><td>{{object.end_time|date:"Y/m/d H:i"}}</td></tr>
-      <tr><td>装置故障時間</td><td>{{object.downtime}} 分</td></tr>
-      <tr><td>治療遅延時間</td><td>{{object.delaytime}} 分</td></tr>
-      <tr><td>治療可否の状態</td><td>{{object.treatment_status}}</td></tr>
-      <tr><td>影響範囲</td><td>{{object.effect_scope}}</td></tr>
-      <tr><td>対処緊急度</td><td>{{object.urgency}}</td></tr>
+      <tr><td>装置故障時間</td><td>{% if object.downtime is not None %}{{object.downtime}} 分{% else %}未復旧{% endif %}</td></tr>
+      <tr><td>治療遅延時間</td><td>{% if object.delaytime is not None %}{{object.delaytime}} 分{% else %}未定{% endif %}</td></tr>
+      <tr><td>治療可否の状態</td><td>{{object.treatment_status|default_if_none:'未入力'}}</td></tr>
+      <tr><td>影響範囲</td><td>{{object.effect_scope|default_if_none:'未入力'}}</td></tr>
+      <tr><td>対処緊急度</td><td>{{object.urgency|default_if_none:'未入力'}}</td></tr>
   
       <tr><td>対応者</td><td>{% for operator in object.handling_operators.all %}
     {{ operator }}{% if forloop.last %}{% else %},{% endif %}    
@@ -42,10 +45,23 @@
 {% if forloop.last %}{% else %},{% endif %}
 {% endfor %}{% endspaceless %}</td></tr>
       </table>
-      <a href="{% url 'ptop:update_event' object.pk %}" class="btn btn-primary">編集</a>
-      <a href="{% url 'ptop:recurrent_event_create_from_event' object.pk %}" class="btn btn-warning">再発</a>
-      <a href="{% url 'ptop:trouble_communication_sheet' object.pk %}" class="btn btn-danger">不具合連絡票発行</a>
-      <a href="{% url 'ptop:eventlist' %}" class="btn btn-secondary">戻る</a>
     </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-4 text-left">
+          <a href="#" onclick="window.history.back(); return false;" class="btn btn-secondary">戻る</a>
+        </div>
+        <div class="col-sm-4 text-center">
+          <a href="{% url 'ptop:lognote_sheet' object.pk %}" class="btn btn-info">ログノート帳票</a>
+          <a href="{% url 'ptop:trouble_communication_sheet' object.pk %}" class="btn btn-danger">不具合連絡票発行</a>
+        </div>
+        <div class="col-sm-4 text-right">
+          <a href="{% url 'ptop:update_event' object.pk %}" class="btn btn-primary">編集</a>
+          <a href="{% url 'ptop:recurrent_event_create_from_event' object.pk %}" class="btn btn-warning">再発入力</a>
+        </div>
+      </div>
+    </div>
+
   </div>
-{% endblock content %}
+
+  {% endblock content %}

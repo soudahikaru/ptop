@@ -22,14 +22,18 @@
         <div class="card">
           <h2 class="card-header">トラブル検索</h2>
           <form action="{% url 'ptop:eventlist' %}">
-            トラブル事象 <input name="query" value="{{ request.GET.query }}" type="text">
-            <button type="submit" class="btn btn-primary">検索</button>
-            <a href="{% url 'ptop:event_advanced_search' %}" class="btn btn-primary">詳細検索</a>
+            <div class="bg-event">
+              トラブル事象 <input name="query" value="{{ request.GET.query }}" type="text">
+              <button type="submit" class="btn btn-primary">検索</button>
+              <a href="{% url 'ptop:event_advanced_search' %}" class="btn btn-primary">詳細検索</a>
+            </div>
           </form>
           <form action="{% url 'ptop:group_list' %}">
-            トラブル類型 <input name="query" value="{{ request.GET.query }}" type="text">
-            <button type="submit" class="btn btn-primary">検索</button> 
-            <a href="{% url 'ptop:advanced_search' %}" class="btn btn-primary">詳細検索</a>
+            <div class="bg-group">
+              トラブル類型 <input name="query" value="{{ request.GET.query }}" type="text">
+              <button type="submit" class="btn btn-primary">検索</button> 
+              <a href="{% url 'ptop:advanced_search' %}" class="btn btn-primary">詳細検索</a>
+            </div>
           </form>
         </div>
       </div>
@@ -65,14 +69,14 @@
       <div class="card">
         <h2 class="card-header">最近のトラブル</h2>
         <table border>
-          <tr><th>発生日時</th><th>題名</th><th>デバイスID</th><th>故障時間</th><th>トラブル類型</th></tr>
+          <tr><th>発生日時</th><th class="bg-event">題名</th><th>デバイスID</th><th>故障時間</th><th class="bg-group">トラブル類型</th></tr>
           {% for item in object_list %}
           <tr>
             <td>{{item.start_time|date:"Y/m/d H:i"}}</td>
-            <td><a href="{% url 'ptop:event_detail' item.pk %}"><b>{{item.title|truncatechars:30}}</b></a></td>
+            <td class="bg-event"><a href="{% url 'ptop:event_detail' item.pk %}"><b>{{item.title|truncatechars:30}}</b></a></td>
             <td>{{item.device.device_id}}</td>
-            <td>{{item.downtime}}</td>
-            <td>{% if item.group is not None %}
+            <td>{{item.downtime}}{% if item.delaytime %}<span class="delaytime"> ({{item.delaytime}})</span>{% endif %}</td>
+            <td class="bg-group">{% if item.group is not None %}
               <a href="{% url 'ptop:group_detail' item.group.pk %}">{{item.group.title|truncatechars:10}}</a>
               {% else %} 
               {% endif %}

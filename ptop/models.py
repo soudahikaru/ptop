@@ -69,6 +69,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(blank=True, validators=[EmailValidator('Invalid email address.')])
     phs_number = models.CharField(blank=True, max_length=10)
 
+    #display_order = models.IntegerField(null=True, blank=True)
+
     # 拡張項目
     authority_level = models.IntegerField(choices=AUTHORITIES, null=True)
     experience_level = models.IntegerField(choices=EXPERIENCES, null=True)
@@ -384,10 +386,10 @@ class TroubleEvent(models.Model):
         Urgency, verbose_name='対処緊急性',
         null=True, blank=True, on_delete=models.SET_NULL)
     input_operator = models.ForeignKey(
-        User, verbose_name='入力者', limit_choices_to=Q(groups__name='Operator')&Q(is_active=True),
+        User, verbose_name='入力者', limit_choices_to=((Q(groups__name='Operator')|Q(groups__name='Physicist'))&Q(is_active=True)),
         null=True, on_delete=models.SET_NULL, related_name='%(class)s_inputed')
     handling_operators = models.ManyToManyField(
-        User, verbose_name='対応者', limit_choices_to=Q(groups__name='Operator')&Q(is_active=True),
+        User, verbose_name='対応者', limit_choices_to=((Q(groups__name='Operator')|Q(groups__name='Physicist'))&Q(is_active=True)),
         blank=True)
     approval_operator = models.ForeignKey(
         User, verbose_name='承認者',

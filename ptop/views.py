@@ -225,6 +225,11 @@ class TroubleCommunicationSheetView(DetailView):
     template_name = 'trouble_communication_sheet.html'
     model = TroubleEvent
 
+class LognoteSheetView(DetailView):
+    """ログノート帳票画面"""
+    template_name = 'lognote_sheet.html'
+    model = TroubleEvent
+
 
 class TroubleEventDetail(DetailView):
     """TroubleEvent詳細画面(旧ver)"""
