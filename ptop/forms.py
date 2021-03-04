@@ -16,6 +16,7 @@ from .models import Announcement
 from .models import Comment, CommentType
 from .models import Operation, OperationType, OperationMetaType
 from .models import CauseType, VendorStatusType, HandlingStatusType
+from .models import EffectScope, TreatmentStatusType, Urgency
 
 class AttachmentForm(forms.ModelForm):
     """Attachmentを作るForm"""
@@ -261,6 +262,18 @@ class EventCreateForm(forms.ModelForm):
         required=False, 
         widget=forms.NumberInput(attrs={'style': 'width:8ch','min': 0, }),
         validators=[validators.MinValueValidator(0)])
+    effect_scope = forms.ModelChoiceField(
+        label='影響範囲',
+        queryset=EffectScope.objects.all().order_by('id'),
+        required=False)
+    treatment_status = forms.ModelChoiceField(
+        label='治療可否の状況',
+        queryset=TreatmentStatusType.objects.all().order_by('id'),
+        required=False)
+    urgency = forms.ModelChoiceField(
+        label='対処緊急度',
+        queryset=Urgency.objects.all().order_by('id'),
+        required=False)
     delay_flag = forms.BooleanField(
         label='治療遅延の有無', help_text='治療遅延時間が未入力の場合、運転状況が「治療」で装置故障時間が(自動でも)入力されると自動的にONになります。実際には遅延しなかった場合は手動でOFFにしてください。', required=False)
     operation_type = forms.ModelChoiceField(
