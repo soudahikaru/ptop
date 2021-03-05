@@ -32,7 +32,7 @@
     </p>
   {% if object.temporary_action %}
     <p class="secondline">
-      {{object.temporary_action | linebreaksbr }}
+      処置: {{object.temporary_action | linebreaksbr }}
     </p>
   {% endif %}
   {% if object.downtime %}
@@ -50,7 +50,7 @@
     </p>
   {% endif %}
     <p class="secondline">
-      PT-DOM 事象ID:{{object.id}}, デバイス: {{object.device.device_id}}({{object.device.name}}), {% if object.errors.all %}エラーメッセージ:{% for error in object.errors.all %}
+      PT-DOM事象ID:{{object.id}}, デバイス: {{object.device.device_id}}({{object.device.name}}), {% if object.errors.all %}エラーメッセージ:{% for error in object.errors.all %}
       {{ error.error_code }}{% if forloop.last %}{% else %},{% endif %}
       {% endfor %}{% endif %}
       {% if object.handling_operators.all %}対応者: {% for operator in object.handling_operators.all %}

@@ -386,10 +386,12 @@ class TroubleEvent(models.Model):
         Urgency, verbose_name='対処緊急性',
         null=True, blank=True, on_delete=models.SET_NULL)
     input_operator = models.ForeignKey(
-        User, verbose_name='入力者', limit_choices_to=((Q(groups__name='Operator')|Q(groups__name='Physicist'))&Q(is_active=True)),
+#        User, verbose_name='入力者', limit_choices_to=((Q(groups__name='Operator')|Q(groups__name='Physicist'))&Q(is_active=True)),
+        User, verbose_name='入力者',
         null=True, on_delete=models.SET_NULL, related_name='%(class)s_inputed')
     handling_operators = models.ManyToManyField(
-        User, verbose_name='対応者', limit_choices_to=((Q(groups__name='Operator')|Q(groups__name='Physicist'))&Q(is_active=True)),
+#        User, verbose_name='対応者', limit_choices_to=((Q(groups__name='Operator')|Q(groups__name='Physicist'))&Q(is_active=True)),
+        User, verbose_name='対応者',
         blank=True)
     approval_operator = models.ForeignKey(
         User, verbose_name='承認者',
