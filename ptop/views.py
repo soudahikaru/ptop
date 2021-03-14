@@ -1016,7 +1016,7 @@ def statistics_create_view(request):
         statistics_operation = operations.annotate(index=Trunc('start_time', kind=subtotal_frequency)) \
             .values('index') \
             .annotate(subtotal_operation_time=Sum('operation_time')) \
-            .annotate(subtotal_treatment_time=Sum('operation_time', filter=Q(operation_type__name__iexact='治療'))) \
+            .annotate(subtotal_treatment_time=Sum('operation_time', filter=Q(operation_type__meta_type__name__iexact='治療'))) \
             .order_by('index')
         df_operation = make_dataframe(statistics_operation, start_localized, end_localized, subtotal_frequency)
 
