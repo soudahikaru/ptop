@@ -133,7 +133,7 @@ class TroubleGroupListView(ListView):
             )
         else:
             object_list = TroubleGroup.objects.all()
-        object_list=object_list.order_by(self.request.GET.get('sort_by', '-first_datetime'))
+        object_list=object_list.order_by(self.request.GET.get('sort_by', '-first_datetime')).distinct()
         return object_list
 
 
@@ -269,7 +269,7 @@ class TroubleEventList(ListView):
             )
         else:
             object_list = TroubleEvent.objects.all()
-        object_list=object_list.order_by(self.request.GET.get('sort_by', '-start_time'))
+        object_list=object_list.order_by(self.request.GET.get('sort_by', '-start_time')).distinct()
         return object_list
 
 class GroupBaseMixin(LoginRequiredMixin, object):
@@ -652,7 +652,7 @@ class EventAdvancedSearchView(ListView):
         if form.is_valid():
             id = form.cleaned_data.get('id')
             if id:
-                queryset = queryset.filter(Q(classify_id__exact=classify_id))
+                queryset = queryset.filter(Q(id__exact=id))
             title = form.cleaned_data.get('title')
             if title:
                 queryset = queryset.filter(Q(title__icontains=title))
@@ -1106,6 +1106,7 @@ class Home(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context['today_trouble']= TroubleEvent.objects.filter(start_time__date=date.today())
         context['current_operation'] = Operation.objects.order_by('start_time').last()
         context['announce_list'] = Announcement.objects.order_by('posted_time').reverse()[:5]
 #        print(context)
