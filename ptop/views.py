@@ -1106,7 +1106,6 @@ class Home(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['today_trouble']= TroubleEvent.objects.filter(start_time__date=date.today())
         context['current_operation'] = Operation.objects.order_by('start_time').last()
         context['announce_list'] = Announcement.objects.order_by('posted_time').reverse()[:5]
 #        print(context)
