@@ -426,6 +426,7 @@ class RecurrentEventCreateFromEventView(EventBaseMixin, CreateView):
             'device':event.device,
             'description':event.description,
             'cause':event.cause,
+            'trigger':event.trigger,
             'temporary_action':event.temporary_action,
             'errors':[i.id for i in event.errors.all()],
             'start_time':timezone.now,
