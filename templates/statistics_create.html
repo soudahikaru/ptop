@@ -28,6 +28,7 @@ td {text-align:right}
             <a href="#" id='button_last_year' class="btn btn-info">昨年</a> |
             <a href="#" id='button_this_fiscalyear' class="btn btn-info">今年度</a> 
             <a href="#" id='button_last_fiscalyear' class="btn btn-info">昨年度</a> |
+            <a href="#" id='button_after_1st_treat' class="btn btn-info">治療開始以降</a> 
             <a href="#" id='button_whole' class="btn btn-info">全期間</a> 
         </div>
         <div class="field">
@@ -43,7 +44,7 @@ td {text-align:right}
     <h4>結果</h4>
     {% if df is not None %}
       <table border>
-        <tr><th>期間</th><th>運転時間[h]</th><th>治療時間[h]</th><th>トラブル件数</th><th>故障時間[m]</th><th>治療遅延時間[m]</th><th>装置稼働率</th><th>治療稼働率</th></tr>
+        <tr><th>期間</th><th>運転時間[h]</th><th>治療時間[h]</th><th>治療ポート数</th><th>QAポート数</th><th>トラブル件数</th><th>故障時間[m]</th><th>治療遅延時間[m]</th><th>装置稼働率</th><th>治療稼働率</th></tr>
       {% for index, row in df.iterrows %}
         {% if forloop.last%}
             <tr style="font-weight:bold">
@@ -63,6 +64,8 @@ td {text-align:right}
             {% endif %}
             <td>{{ row.subtotal_operation_time|divide:60|floatformat:1 }}</td>
             <td>{{ row.subtotal_treatment_time|divide:60|floatformat:1 }}</td>
+            <td>{{ row.subtotal_num_treat_all|floatformat:0 }}</td>
+            <td>{{ row.subtotal_num_qa_all|floatformat:0 }}</td>
             <td>{{ row.num_event|floatformat:0 }}</td>
             <td>{{ row.subtotal_downtime|floatformat:0 }}</td>
             <td>{{ row.subtotal_delaytime|floatformat:0 }}</td>
@@ -181,10 +184,20 @@ td {text-align:right}
             $('input:radio[name="subtotal_frequency"]').val(['month']);
             $("#id_submit").click();
         });
+        $("#button_after_1st_treat").on("click",function (e) {
+            e.preventDefault();
+            var today = new Date();
+            var start_date = new Date(2021,1,25);
+            var end_date = today;
+            $("#id_date_s").val(formatDate(start_date));
+            $("#id_date_e").val(formatDate(end_date));
+            $('input:radio[name="subtotal_frequency"]').val(['week']);
+            $("#id_submit").click();
+        });
         $("#button_whole").on("click",function (e) {
             e.preventDefault();
             var today = new Date();
-            var start_date = new Date(2019,11,1);
+            var start_date = new Date(2019,10,1);
             var end_date = today;
             $("#id_date_s").val(formatDate(start_date));
             $("#id_date_e").val(formatDate(end_date));

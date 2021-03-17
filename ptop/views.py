@@ -468,7 +468,6 @@ class EventCreateView(EventBaseMixin, CreateView):
             })
         return context
 
-
 class EventUpdateView(EventBaseMixin, UpdateView):
     """Event編集画面"""
     model = TroubleEvent
@@ -1018,8 +1017,14 @@ def statistics_create_view(request):
             .values('index') \
             .annotate(subtotal_operation_time=Sum('operation_time')) \
             .annotate(subtotal_treatment_time=Sum('operation_time', filter=Q(operation_type__meta_type__name__iexact='治療'))) \
+            .annotate(subtotal_num_treat_hc1=Sum('num_treat_hc1')) \
+            .annotate(subtotal_num_treat_gc2=Sum('num_treat_gc2')) \
+            .annotate(subtotal_num_qa_hc1=Sum('num_qa_hc1')) \
+            .annotate(subtotal_num_qa_gc2=Sum('num_qa_gc2')) \
             .order_by('index')
         df_operation = make_dataframe(statistics_operation, start_localized, end_localized, subtotal_frequency)
+        df_operation['subtotal_num_treat_all'] = df_operation['subtotal_num_treat_hc1'] + df_operation['subtotal_num_treat_gc2']
+        df_operation['subtotal_num_qa_all'] = df_operation['subtotal_num_qa_hc1'] + df_operation['subtotal_num_qa_gc2']
 
         df = pd.merge(df_operation, df_event, left_index=True, right_index=True, how='outer').fillna(0)
 #        df['subtotal_operation_time'] = df['subtotal_operation_time'] / 60000000
