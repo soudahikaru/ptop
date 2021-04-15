@@ -299,7 +299,9 @@ class EventCreateForm(forms.ModelForm):
         Attachment.objects.all(), label='添付ファイル', required=False, 
         widget=forms.SelectMultiple(attrs={'style':'display:none;'}),
         help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます')
-
+    handling_operators = forms.ModelMultipleChoiceField(
+        User.objects.filter(display_order__gte=0).order_by('display_order'), label='対応者', required=False, 
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'operator_checkbox'}))
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['operation_type'].widget.attrs['readonly'] = True
