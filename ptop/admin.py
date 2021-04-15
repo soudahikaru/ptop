@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.admin import UserAdmin
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
+from simple_history.admin import SimpleHistoryAdmin
 
 from .models import TroubleEvent
 from .models import TroubleGroup
@@ -50,6 +51,7 @@ class DeviceResource(resources.ModelResource):
         model = Device
         skip_unchanged = True
         report_skipped = False
+
 
 class DeviceAdmin(ImportExportModelAdmin):
     """ Admin for Device model """
@@ -217,8 +219,8 @@ class UrgencyAdmin(ImportExportModelAdmin):
 admin.site.register(User, AdminUserAdmin)
 admin.site.register(Attachment)
 admin.site.register(Announcement)
-admin.site.register(TroubleGroup)
-admin.site.register(TroubleEvent)
+admin.site.register(TroubleGroup, SimpleHistoryAdmin)
+admin.site.register(TroubleEvent, SimpleHistoryAdmin)
 admin.site.register(Device, DeviceAdmin)
 admin.site.register(Error, ErrorAdmin)
 admin.site.register(CauseType, CauseTypeAdmin)

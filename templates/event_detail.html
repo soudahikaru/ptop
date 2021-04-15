@@ -44,6 +44,9 @@ table {background-color:#fff0f0}
 {% endif %}
 {% if forloop.last %}{% else %},{% endif %}
 {% endfor %}{% endspaceless %}</td></tr>
+        <tr><td>データ作成日時</td><td>{{object.created_on|date:"Y/m/d H:i"}}</td></tr>
+        <tr><td>最終更新日時</td><td>{{object.modified_on|date:"Y/m/d H:i"}}</td></tr>
+
       </table>
     </div>
     <div class="container">

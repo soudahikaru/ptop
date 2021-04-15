@@ -7,6 +7,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.core.validators import EmailValidator
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
+from simple_history.models import HistoricalRecords
 import jaconv
 
 # Create your models here.
@@ -342,6 +343,11 @@ class TroubleGroup(models.Model):
     num_created_child = models.IntegerField('子Groupの数', default=0)
     attachments = models.ManyToManyField(Attachment, verbose_name='添付ファイル', blank=True)
 
+    created_on = models.DateTimeField(auto_now_add=True)
+    modified_on = models.DateTimeField(auto_now=True)
+
+    history = HistoricalRecords()
+
     def __str__(self):
         return self.title
 
@@ -369,8 +375,9 @@ class TroubleEvent(models.Model):
 #	error_message = models.CharField('エラーメッセージ',max_length=100, blank=True)
     errors = models.ManyToManyField(Error, verbose_name='エラーメッセージ', null=True, blank=True)
     start_time = models.DateTimeField('発生時刻', null=True)
-    end_time = models.DateTimeField('復旧時刻', null=True, blank=True)
-    downtime = models.PositiveIntegerField('装置故障時間', null=True, blank=True) # 分
+    end_time = models.DateTimeField('運転再開時刻', null=True, blank=True)
+    complete_time = models.DateTimeField('復旧完了時刻', null=True, blank=True)
+    downtime = models.PositiveIntegerField('運転停止時間', null=True, blank=True) # 分
     operation_type = models.ForeignKey(
         OperationType, verbose_name='発生時の運転内容',
         null=True, blank=True, on_delete=models.SET_NULL)
@@ -401,6 +408,11 @@ class TroubleEvent(models.Model):
         limit_choices_to=Q(groups__name='Physicist')&Q(is_active=True),
         null=True, blank=True, on_delete=models.SET_NULL, related_name='%(class)s_reported')
     attachments = models.ManyToManyField(Attachment, verbose_name='添付ファイル', blank=True)
+
+    created_on = models.DateTimeField(auto_now_add=True, null=True)
+    modified_on = models.DateTimeField(auto_now=True, null=True)
+
+    history = HistoricalRecords()
 
     def __str__(self):
         return self.title

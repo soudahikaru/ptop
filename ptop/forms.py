@@ -229,13 +229,13 @@ class EventCreateForm(forms.ModelForm):
     title = forms.CharField(
         widget=forms.TextInput(attrs={'size':80}), label='トラブル題名', required=True)
     description = forms.CharField(
-        widget=forms.Textarea(attrs={'rows':8, 'cols':80}), label='内容', required=True)
+        widget=forms.Textarea(attrs={'rows':12, 'cols':120}), label='内容', required=True)
     trigger = forms.CharField(
-        widget=forms.Textarea(attrs={'rows':2, 'cols':80}), label='発生直前の操作', required=False)
+        widget=forms.Textarea(attrs={'rows':2, 'cols':120}), label='発生直前の操作', required=False)
     cause = forms.CharField(
-        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='原因や状況', required=False)
+        widget=forms.Textarea(attrs={'rows':4, 'cols':120}), label='原因や状況', required=False)
     temporary_action = forms.CharField(
-        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='応急処置', required=False)
+        widget=forms.Textarea(attrs={'rows':8, 'cols':120}), label='応急処置', required=False)
 
     group = forms.ModelChoiceField(
         TroubleGroup.objects.all(),
@@ -249,11 +249,17 @@ class EventCreateForm(forms.ModelForm):
     end_time = forms.DateTimeField(
         widget=datetimepicker.DateTimePickerInput(
             options={'format':'YYYY-MM-DD HH:mm', 'sideBySide':True}),
-        label='復旧時刻', help_text='運転を再開した時刻を入力してください。装置故障時間を入力すると自動的に入力されます。未解決の場合は空欄のままにしてください。',
+        label='運転再開時刻', help_text='運転を再開した時刻を入力してください(運転に支障がなかった場合は、発生時刻と同一とする)。運転停止時間を入力すると自動的に入力されます。未解決の場合は空欄のままにしてください。',
+        required=False)
+#	end_time = forms.DateTimeField(label='復旧時刻', help_text='空欄の場合、装置故障時間を入力すると自動的に入力されます。', required=True)
+    complete_time = forms.DateTimeField(
+        widget=datetimepicker.DateTimePickerInput(
+            options={'format':'YYYY-MM-DD HH:mm', 'sideBySide':True}),
+        label='復旧完了時刻', help_text='復旧作業が完了した(または勝手に復旧した)時刻を入力してください。未解決の場合は空欄のままにしてください。',
         required=False)
 #	end_time = forms.DateTimeField(label='復旧時刻', help_text='空欄の場合、装置故障時間を入力すると自動的に入力されます。', required=True)
     downtime = forms.IntegerField(
-        label='装置故障時間(分)', help_text='実際に装置運転に影響があった時間を入力してください。復旧時刻を入力すると自動的に入力されます。未解決の場合は空欄のままにしてください。', 
+        label='運転停止時間(分)', help_text='実際に装置運転に影響があった時間を入力してください(運転に支障がなかった場合は0)。運転再開時刻を入力すると自動的に入力されます。未解決の場合は空欄のままにしてください。', 
         required=False, 
         widget=forms.NumberInput(attrs={'style': 'width:8ch','min': 0, }),
         validators=[validators.MinValueValidator(0)])
@@ -326,7 +332,7 @@ class EventCreateForm(forms.ModelForm):
         fields = (
             'title', 'group', 'device',
             'description', 'trigger', 'cause', 'temporary_action', 'errors',
-            'start_time', 'downtime', 'operation_type', 'end_time', 'delay_flag', 'delaytime',
+            'start_time', 'downtime', 'operation_type', 'end_time', 'complete_time', 'delay_flag', 'delaytime',
             'effect_scope', 'treatment_status', 'urgency',
             'input_operator', 'handling_operators', 'reported_physicist', 'attachments')
 

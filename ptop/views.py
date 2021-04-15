@@ -404,6 +404,8 @@ class ChildGroupCreateView(GroupBaseMixin, CreateView):
             'description':parent_group.description,
             'trigger':parent_group.trigger,
             'cause':parent_group.cause,
+            'causetype':parent_group.causetype,
+            'errors':parent_group.errors.all(),
             'common_action':parent_group.common_action,
             'permanent_action':parent_group.permanent_action,
             'path':parent_group.path,
@@ -549,38 +551,53 @@ class AdvancedSearchView(ListView):
             device = form.cleaned_data.get('device')
             if device:
                 queryset = queryset.filter(Q(device__device_id__icontains=device))
+            cause = form.cleaned_data.get('cause')
+            if cause:
+                queryset = queryset.filter(Q(cause__icontains=cause))
             error = form.cleaned_data.get('error')
             if error:
                 queryset = queryset.filter(Q(errors__error_code__icontains=error))
             date_type = form.cleaned_data.get('date_type')
             print(date_type)
             if date_type == '1':
-                date_delta1 = int(form.cleaned_data.get('date_delta1'))
+                if form.cleaned_data.get('date_delta1'):
+                    date_delta1 = int(form.cleaned_data.get('date_delta1'))
+                else:
+                    date_delta1 = 0
                 print(date_delta1)
                 print((datetime.now() - timedelta(days=date_delta1), datetime.now))
                 queryset = queryset.filter(
                     Q(
-                        first_datetime__range=(
-                            datetime.now() - timedelta(days=date_delta1),
+                        start_time__range=(
+                            datetime.now().date() - timedelta(days=date_delta1),
                             datetime.now()
                         )
                     )
                 )
             elif date_type == '2':
                 date2 = form.cleaned_data.get('date2')
-                date_delta2 = int(form.cleaned_data.get('date_delta2'))
+                if not date2:
+                    date2 = timezone.now().date()
+                if form.cleaned_data.get('date_delta2'):
+                    date_delta2 = int(form.cleaned_data.get('date_delta2'))
+                else:
+                    date_delta2 = 0
                 queryset = queryset.filter(
                     Q(
-                        first_datetime__range=(
+                        start_time__range=(
                             date2-timedelta(days=date_delta2),
-                            date2+timedelta(days=date_delta2)
+                            date2+timedelta(days=date_delta2 + 1)
                         )
                     )
                 )
             elif date_type == '3':
                 date3s = form.cleaned_data.get('date3s')
+                if not date3s:
+                    date3s = datetime(2019,4,1)
                 date3e = form.cleaned_data.get('date3e')
-                queryset = queryset.filter(Q(first_datetime__range=(date3s, date3e)))
+                if not date3e:
+                    date3e = timezone.now()
+                queryset = queryset.filter(Q(start_time__range=(date3s, date3e)))
             causetype = form.cleaned_data.get('causetype')
             if not causetype == 'NOSELECT':
                 queryset = queryset.filter(Q(causetype=causetype))
@@ -661,37 +678,52 @@ class EventAdvancedSearchView(ListView):
             device = form.cleaned_data.get('device')
             if device:
                 queryset = queryset.filter(Q(device__device_id__icontains=device))
+            cause = form.cleaned_data.get('cause')
+            if cause:
+                queryset = queryset.filter(Q(cause__icontains=cause))
             error = form.cleaned_data.get('error')
             if error:
                 queryset = queryset.filter(Q(errors__error_code__icontains=error))
             date_type = form.cleaned_data.get('date_type')
             print(date_type)
             if date_type == '1':
-                date_delta1 = int(form.cleaned_data.get('date_delta1'))
+                if form.cleaned_data.get('date_delta1'):
+                    date_delta1 = int(form.cleaned_data.get('date_delta1'))
+                else:
+                    date_delta1 = 0
                 print(date_delta1)
                 print((datetime.now() - timedelta(days=date_delta1), datetime.now))
                 queryset = queryset.filter(
                     Q(
                         start_time__range=(
-                            datetime.now() - timedelta(days=date_delta1),
+                            datetime.now().date() - timedelta(days=date_delta1),
                             datetime.now()
                         )
                     )
                 )
             elif date_type == '2':
                 date2 = form.cleaned_data.get('date2')
-                date_delta2 = int(form.cleaned_data.get('date_delta2'))
+                if not date2:
+                    date2 = timezone.now().date()
+                if form.cleaned_data.get('date_delta2'):
+                    date_delta2 = int(form.cleaned_data.get('date_delta2'))
+                else:
+                    date_delta2 = 0
                 queryset = queryset.filter(
                     Q(
                         start_time__range=(
                             date2-timedelta(days=date_delta2),
-                            date2+timedelta(days=date_delta2)
+                            date2+timedelta(days=date_delta2 + 1)
                         )
                     )
                 )
             elif date_type == '3':
                 date3s = form.cleaned_data.get('date3s')
+                if not date3s:
+                    date3s = datetime(2019,4,1)
                 date3e = form.cleaned_data.get('date3e')
+                if not date3e:
+                    date3e = timezone.now()
                 queryset = queryset.filter(Q(start_time__range=(date3s, date3e)))
             print(form.cleaned_data)
             if form.cleaned_data.get('downtime_low'):

@@ -3,11 +3,21 @@
   <ul class="pagination justify-content-center">
     {% if page_obj.has_previous %}
     <li class="page-item">
-      <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.paginate_by %}&paginate_by={{ request.GET.paginate_by }}{% endif %}" aria-label="Previous">
+      <a class="page-link" href="?page=1{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.paginate_by %}&paginate_by={{ request.GET.paginate_by }}{% endif %}" aria-label="First">
         <span aria-hidden="true">&laquo;</span>
+        <span class="sr-only">First</span>
+      </a>
+    </li>
+    &nbsp;
+    &nbsp;
+    <li class="page-item">
+      <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.paginate_by %}&paginate_by={{ request.GET.paginate_by }}{% endif %}" aria-label="Previous">
+        <span aria-hidden="true">&lt;</span>
         <span class="sr-only">Previous</span>
       </a>
     </li>
+    &nbsp;
+    &nbsp;
     {% endif %}
     {% for num in paginator.page_range %}
     {% if page_obj.number == num %}
@@ -17,17 +27,28 @@
         <span class="sr-only">(current)</span>
       </span>
     </li>
-    {% else %}
+    <!-- 現在表示しているページの前後10ページへのリンクを表示 -->
+    {% elif num|add:"-10" <= page_obj.number and num|add:"10" >= page_obj.number %}
     <li class="page-item">
       <a class="page-link" href="?page={{ num }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.paginate_by %}&paginate_by={{ request.GET.paginate_by }}{% endif %}{% if request.GET.paginate_by %}&paginate_by={{ request.GET.paginate_by }}{% endif %}">{{ num }}</a>
     </li>
     {% endif %}
     {% endfor %}
     {% if page_obj.has_next %}
+    &nbsp;
+    &nbsp;
     <li class="page-item">
       <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.paginate_by %}&paginate_by={{ request.GET.paginate_by }}{% endif %}" aria-label="Next">
-        <span aria-hidden="true">&raquo;</span>
+        <span aria-hidden="true">&gt;</span>
         <span class="sr-only">Next</span>
+      </a>
+    </li>
+    &nbsp;
+    &nbsp;
+    <li class="page-item">
+      <a class="page-link" href="?page={{ paginator.num_pages }}{% if request.GET.query %}&query={{ request.GET.query }}{% endif %}{% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}{% if request.GET.paginate_by %}&paginate_by={{ request.GET.paginate_by }}{% endif %}" aria-label="Last">
+        <span aria-hidden="true">&raquo;</span>
+        <span class="sr-only">Last</span>
       </a>
     </li>
     {% endif %}
