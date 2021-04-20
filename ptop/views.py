@@ -430,6 +430,7 @@ class RecurrentEventCreateFromEventView(EventBaseMixin, CreateView):
             'cause':event.cause,
             'trigger':event.trigger,
             'temporary_action':event.temporary_action,
+            'input_operator':self.request.user,
             'errors':[i.id for i in event.errors.all()],
             'start_time':timezone.now,
             'end_time':timezone.now,
@@ -452,6 +453,7 @@ class RecurrentEventCreateFromGroupView(CreateView):
             'device':group.device,
             'description':group.description,
             'cause':group.cause,
+            'input_operator':self.request.user,
             'temporary_action':group.common_action,
             'errors':[i.id for i in group.errors.all()],
             })
