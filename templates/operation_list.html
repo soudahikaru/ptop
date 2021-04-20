@@ -36,9 +36,18 @@
       {% include 'pagination.html' %}
     </div>
 
-    <a href="{% url 'ptop:home' %}" class="btn btn-primary">戻る</a>
+  </div>
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-4 text-left">
+        <a href="#" onclick="window.history.back(); return false;" class="btn btn-secondary">戻る</a>
+      </div>
+      <div class="col-sm-4 text-right">
+        <a href="{% url 'ptop:create_operation' %}" class="btn btn-primary">新規追加</a>
+      </div>
+    </div>
   </div>
 
-  </div>
+</div>
 
 {% endblock content %}
