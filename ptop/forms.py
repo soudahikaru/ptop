@@ -205,7 +205,7 @@ class AdvancedSearchForm(forms.Form):
     vendor_status = forms.ModelChoiceField(
         VendorStatusType.objects.all(), label='メーカー対応状況', required=False, empty_label='指定しない')
     handling_status = forms.ModelChoiceField(
-        HandlingStatusType.objects.all(), label='メーカー対応状況', required=False, empty_label='指定しない')
+        HandlingStatusType.objects.all(), label='対応状況', required=False, empty_label='指定しない')
 
     CHOICE_SORT = (
         ('-first_datetime', '発生日時が新しい順'),
@@ -321,7 +321,7 @@ class EventCreateForm(forms.ModelForm):
             print(cleaned_data.get('start_time'))
             if cleaned_data.get('start_time') > cleaned_data.get('end_time'):
                 print(cleaned_data.get('end_time'))
-                raise forms.ValidationError("復旧日時は発生日時より後にしてください。")
+                raise forms.ValidationError("運転再開日時は発生日時より後にしてください。")
         super().clean()
 
 #    def __init__(self, *args, **kwargs):
@@ -334,7 +334,7 @@ class EventCreateForm(forms.ModelForm):
         fields = (
             'title', 'group', 'device',
             'description', 'trigger', 'cause', 'temporary_action', 'errors',
-            'start_time', 'downtime', 'operation_type', 'end_time', 'complete_time', 'delay_flag', 'delaytime',
+            'start_time', 'operation_type', 'end_time', 'complete_time', 'downtime', 'delay_flag', 'delaytime',
             'effect_scope', 'treatment_status', 'urgency',
             'input_operator', 'handling_operators', 'reported_physicist', 'attachments')
 

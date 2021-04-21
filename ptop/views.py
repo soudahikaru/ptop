@@ -432,8 +432,6 @@ class RecurrentEventCreateFromEventView(EventBaseMixin, CreateView):
             'temporary_action':event.temporary_action,
             'input_operator':self.request.user,
             'errors':[i.id for i in event.errors.all()],
-            'start_time':timezone.now,
-            'end_time':timezone.now,
             })
         return context
 
@@ -601,13 +599,13 @@ class AdvancedSearchView(ListView):
                     date3e = timezone.now()
                 queryset = queryset.filter(Q(start_time__range=(date3s, date3e)))
             causetype = form.cleaned_data.get('causetype')
-            if not causetype == 'NOSELECT':
+            if causetype:
                 queryset = queryset.filter(Q(causetype=causetype))
             vendor_status = form.cleaned_data.get('vendor_status')
-            if not vendor_status == 'NOSELECT':
+            if vendor_status:
                 queryset = queryset.filter(Q(vendor_status=vendor_status))
             handling_status = form.cleaned_data.get('handling_status')
-            if not handling_status == 'NOSELECT':
+            if handling_status:
                 queryset = queryset.filter(Q(handling_status=handling_status))
         object_list = queryset.order_by(self.request.GET.get('sort_by', '-first_datetime'))
         return object_list
@@ -752,9 +750,13 @@ class OperationListView(ListView):
     def get_queryset(self):
         q_word = self.request.GET.get('query')
         if q_word:
-            object_list = Operation.objects.filter(
-                Q(start_time__date=datetime.strptime(q_word, '%Y/%m/%d'))
-            ).order_by('start_time').reverse()
+            try:
+                d = datetime.strptime(q_word, '%Y/%m/%d')
+                object_list = Operation.objects.filter(Q(start_time__date=d)).order_by('start_time').reverse()
+            except ValueError:
+                object_list = Operation.objects.filter(
+                    Q(operation_type__name__icontains=q_word)
+                ).order_by('start_time').reverse()
         else:
             object_list = Operation.objects.all().order_by('start_time').reverse()
         return object_list

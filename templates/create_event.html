@@ -8,6 +8,7 @@
 <style>
 table {background-color:#fff0f0}
 .input-inline { display: inline-block; width: 150px; }
+.input-inline2 { display: inline-block; width: 16em; }
 .helptext {font-size: small;}
 .required {color: red;}
 li {display: inline-block; margin-right: 1em}
@@ -31,11 +32,15 @@ ul.operator_checkbox{list-style-type: none; padding-left: 0;}
         <table border>
         {% for field in form %}
         {% spaceless %}
-        <tr><th>{% if field.field.required %}<span class="required">*</span>{% endif %}{{ field.label_tag }}</th><td>{{ field }}
+        <tr><th>{% if field.field.required %}<span class="required">*</span>{% endif %}{{ field.label_tag }}</th><td>{% if "_time" in field.id_for_label %}<div class="input-inline2">{% endif %}{{ field }}{% if "_time" in field.id_for_label %}</div>{% endif %} 
           {% if "device" in field.id_for_label %}
             <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_device_create' %}', 'subwin','width=500,height=500');" class="btn btn-info btn-sm">追加</a>
           {% elif "error" in field.id_for_label %}
             <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_error_create' %}', 'subwin','width=500,height=500');" class="btn btn-info btn-sm">追加</a>
+          {% elif "end_time" in field.id_for_label %}
+            <a href="javascript:void(0);" id="id_end_equal_start" class="btn btn-info btn-sm">発生時刻と同時</a> <br />
+          {% elif "complete_time" in field.id_for_label %}
+            <a href="javascript:void(0);" id="id_complete_equal_end" class="btn btn-info btn-sm">運転再開時刻と同時</a> <br />
           {% elif "attachments" in field.id_for_label %}
               <button type="button" class="btn btn-info js-upload-photos">
               <span class="glyphicon glyphicon-cloud-upload"></span> 添付ファイルのアップロード
@@ -211,9 +216,24 @@ ul.operator_checkbox{list-style-type: none; padding-left: 0;}
     $("#id_delay_flag").change(function () {
       console.log($("#id_delay_flag").prop("checked"))
       if($("#id_delay_flag").prop("checked") == false){
-        $("#id_delaytime").val("0")
+        $("#id_delaytime").val("0");
       } 
     });
+
+    $("#id_end_equal_start").on("click", function () {
+      if($("#id_start_time").val() != ""){
+        $("#id_end_time").val($("#id_start_time").val());
+        $("#id_downtime").val("0");
+        $("#id_delaytime").val("0");
+      } 
+    });
+
+    $("#id_complete_equal_end").on("click", function () {
+      if($("#id_end_time").val() != ""){
+        $("#id_complete_time").val($("#id_end_time").val());
+      } 
+    });
+
 
     function add_device(name, pk){
         var select = document.getElementById('id_device');
