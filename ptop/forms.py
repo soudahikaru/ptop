@@ -298,7 +298,7 @@ class EventCreateForm(forms.ModelForm):
     attachments = forms.ModelMultipleChoiceField(
         Attachment.objects.all(), label='添付ファイル', required=False, 
         widget=forms.SelectMultiple(attrs={'style':'display:none;'}),
-        help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます。チェックを解除して作成／更新すると添付ファイル登録解除できます(ファイル実体は残る)。')
+        help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます。チェックを解除して作成／更新すると添付ファイル登録解除できます。')
     handling_operators = forms.ModelMultipleChoiceField(
         User.objects.filter(display_order__gte=0).order_by('display_order'), label='対応者', required=False, 
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'operator_checkbox'}))
