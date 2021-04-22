@@ -46,6 +46,11 @@ ul.operator_checkbox{list-style-type: none; padding-left: 0;}
               <span class="glyphicon glyphicon-cloud-upload"></span> 添付ファイルのアップロード
               </button>
               <ul id='id_list_attachment'>
+                {% if attachments.all  %}
+                  {% for attachment in attachments.all %}
+                    <li><input type="checkbox" name="attachment_check" value="{{attachment.id}}" checked="checked">{{attachment.title}}</li>
+                  {% endfor %}
+                {% endif %}
               </ul>
           {% endif %}
           {% if field.help_text %}
@@ -126,7 +131,7 @@ ul.operator_checkbox{list-style-type: none; padding-left: 0;}
               .text(data.result.title)
               .prop('selected', true);
             $("#id_attachments").append($option);
-            $("#id_list_attachment").append("<li>"+data.result.title+"</li>");
+            $("#id_list_attachment").append('<li><input type="checkbox" name="attachment_check" value="'+data.result.pk+'" checked="checked">'+data.result.title+"</li>");
   //          $("#id_attachments").val(list);
           }
         },
@@ -134,6 +139,14 @@ ul.operator_checkbox{list-style-type: none; padding-left: 0;}
           alert('Fail!');
         }
       });
+    });
+
+    $(document).on('change', '[name="attachment_check"]', function(){
+        if ($(this).prop('checked')){
+          $('option[value='+$(this).val()+']').prop('selected', true);
+        } else {
+          $('option[value='+$(this).val()+']').prop('selected', false);
+        }
     });
 
     $("#id_start_time").on("focusout",function (e) {

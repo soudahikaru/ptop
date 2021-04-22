@@ -476,6 +476,13 @@ class EventUpdateView(EventBaseMixin, UpdateView):
     form_class = EventCreateForm
     template_name = 'create_event.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print(self.get_object().attachments)
+        context['attachments'] = self.object.attachments
+        return context
+
+
 class GroupUpdateView(GroupBaseMixin, UpdateView):
     """Group編集画面"""
     model = TroubleGroup
