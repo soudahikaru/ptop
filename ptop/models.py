@@ -358,6 +358,20 @@ class TroubleGroup(models.Model):
                 if value:
                     setattr(self, field.name, standardize_character(value))
 
+    def first_event(self):
+        '''初発イベントを返すメソッド'''
+        events = self.troubleevent_set.order_by('start_time')
+        return events[0]
+
+    def num_events(self):
+        '''イベント数を返すメソッド'''
+        return self.troubleevent_set.count()
+
+    def average_downtime(self):
+        '''平均停止時間を返すメソッド'''
+        return list(self.troubleevent_set.aggregate(models.Avg('downtime')).values())[0]
+
+
 class TroubleEvent(models.Model):
     """トラブル事象モデル"""
     title = models.CharField('トラブル名称', max_length=200)
@@ -442,7 +456,9 @@ class Comment(models.Model):
     user = models.ForeignKey(
         User, verbose_name='入力者', limit_choices_to=Q(is_active=True),
         null=True, on_delete=models.SET_NULL, related_name='%(class)s_inputed')
-    posted_time = models.DateTimeField('作成時刻', auto_now_add=True)
+    posted_on = models.DateTimeField('作成時刻', auto_now_add=True)
+    modified_on = models.DateTimeField('更新時刻', auto_now=True)
+    
     attachments = models.ManyToManyField(Attachment, verbose_name='添付ファイル', blank=True)
 
     def clean(self):

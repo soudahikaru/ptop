@@ -18,6 +18,16 @@ from django.http import HttpResponseRedirect
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_pandas.io import read_frame
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.pdfbase import pdfmetrics
+from reportlab.lib.utils import ImageReader
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import portrait
+from reportlab.lib.units import mm
+from reportlab.platypus import Table
+from reportlab.platypus import TableStyle
+from reportlab.lib import colors
 import pandas as pd
 import numpy as np
 import re
@@ -219,6 +229,74 @@ class EventDetailView(DetailView):
     """TroubleEvent詳細画面"""
     template_name = 'event_detail.html'
     model = TroubleEvent
+
+class TroubleCommunicationSheetPDFView(DetailView):
+    """不具合連絡票PDF作成画面"""
+    model = TroubleGroup
+
+    def get(self, request, *args, **kwargs):
+
+        obj = self.get_object()
+        filename = '装置不具合連絡票%s(%s).pdf' % (obj.id, obj.title)  # 出力ファイル名
+        title = '装置不具合連絡票%s(%s).pdf' % (obj.id, obj.title)
+        font_name = 'HeiseiKakuGo-W5'  # フォント
+        is_bottomup = True
+        # PDF出力
+        response = HttpResponse(status=200, content_type='application/pdf')
+        # response['Content-Disposition'] = 'attachment; filename="{}"'.format(self.filename)  # ダウンロードする場合
+        response['Content-Disposition'] = 'filename="{}"'.format(filename)  # 画面に表示する場合
+        # A4縦書きのpdfを作る
+        size = portrait(A4)
+        # pdfを描く場所を作成：位置を決める原点は左上にする(bottomup)
+        # デフォルトの原点は左下
+        p = canvas.Canvas(response, pagesize=size, bottomup=is_bottomup)
+        pdfmetrics.registerFont(UnicodeCIDFont(font_name))
+        p.setFont(font_name, 16)  # フォントを設定
+        # pdfのタイトルを設定
+        p.setTitle(title)
+        first_datetime = timezone.localtime(obj.first_event().start_time)
+        first_downtime = obj.first_event().downtime
+        first_delaytime = obj.first_event().delaytime
+        errorcode_str = ', '.join(list(obj.errors.values_list('error_code', flat=True)))
+        # 表の情報
+        data = [
+            ['題名', obj.title],
+            ['デバイスID', obj.device.device_id],
+            ['内容', obj.description],
+            ['エラーコード', errorcode_str],
+            ['直前の操作', obj.trigger],
+            ['原因', obj.cause],
+            ['応急処置', obj.common_action],
+            ['初発日時', first_datetime.strftime('%Y/%m/%d %H:%M')],
+            ['発生回数', '%d回' % obj.num_events()],
+            ['初回停止時間', '%d分(遅延%d分)' % (first_downtime, first_delaytime)],
+            ['平均停止時間', '%.1f分' % obj.average_downtime()],
+        ]
+        table = Table(data, (30 * mm, 140 * mm), None, hAlign='LEFT')
+        # TableStyleを使って、Tableの装飾をします。
+        table.setStyle(TableStyle([
+            # 表で使うフォントとそのサイズを設定
+            ('FONT', (0, 0), (-1, -1), font_name, 12),
+            # 四角に罫線を引いて、0.5の太さで、色は黒
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            # 四角の内側に格子状の罫線を引いて、0.25の太さで、色は黒
+            ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+            # セルの縦文字位置
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+        ]))
+        table.wrapOn(p, 50 * mm, 50 * mm)
+        table.drawOn(p, 25 * mm, 170 * mm)
+        p.drawString(25 * mm, 280 * mm, '山形大学医学部東日本重粒子センター　重粒子線治療装置')
+        p.drawString(25 * mm, 274 * mm, '装置不具合連絡票')
+        p.drawString(25 * mm, 268 * mm, '連絡票ID: TR%s' % obj.id)
+        p.showPage()  # Canvasに書き込み（改ページ）
+        p.save()  # ファイル保存
+        self._draw(p)
+        return response
+
+    def _draw(self, p):
+        pass
 
 class TroubleCommunicationSheetView(DetailView):
     """不具合連絡票詳細画面"""
@@ -850,6 +928,7 @@ def change_operation_execute(request):
         (current_operation.num_treat_gc2, ) = form.cleaned_data.get('num_treat_gc2'),
         (current_operation.num_qa_hc1, ) = form.cleaned_data.get('num_qa_hc1'),
         (current_operation.num_qa_gc2, ) = form.cleaned_data.get('num_qa_gc2'),
+        (current_operation.comment, ) = form.cleaned_data.get('comment'),
         if current_operation.num_treat_hc1 is None:
             current_operation.num_treat_hc1 = 0
         if current_operation.num_treat_gc2 is None:
@@ -911,7 +990,7 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
     form_class = CommentCreateForm
 
     def get_success_url(self):
-        return reverse_lazy('ptop:announcement_detail', kwargs={'pk': self.object.id})
+        return reverse_lazy('ptop:group_detail', kwargs={'pk': self.object.id})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
