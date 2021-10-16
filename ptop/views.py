@@ -604,6 +604,10 @@ class GroupCreateFromEventView(GroupBaseMixin, CreateView):
             'errors':event.errors.all(),
             'first_datetime':event.start_time,
             'common_action':event.temporary_action,
+            'urgency':event.urgency,
+            'treatment_status':event.treatment_status,
+            'effect_scope':event.effect_scope,
+            'urgency':event.urgency,
             'classify_operator':self.request.user,
         })
         return context
