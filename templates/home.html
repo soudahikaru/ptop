@@ -117,7 +117,7 @@
       <div class="card">
         <h2 class="card-header">情報が更新されたトラブル類型</h2>
         <table border>
-          <tr><th>更新日時</th><td>初発日時</td><th class="bg-event">題名</th><th>デバイスID</th><th>対処状況</th><th>メーカー状況</th><th>最新コメント</th></tr>
+          <tr><th>更新日時</th><td>初発日時</td><th class="bg-group">題名</th><th>デバイスID</th><th>対処状況</th><th>メーカー状況</th><th>最新コメント</th></tr>
           {% for item in updated_group_list %}
           <tr>
             <td>{{item.modified_on|date:"Y/m/d(D) H:i"}}</td>
