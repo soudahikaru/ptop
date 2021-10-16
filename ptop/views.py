@@ -385,7 +385,7 @@ class TroubleCommunicationSheetPDFView(DetailView):
             ['原因', Paragraph(obj.cause, style_table)],
             ['応急処置', Paragraph(obj.common_action, style_table)],
             ['要望項目', ', '.join(list(obj.require_items.values_list('name', flat=True)))],
-            ['要望詳細', Paragraph(obj.require_detail, style_table)],
+            ['要望詳細', Paragraph(obj.require_detail if obj.require_detail is not None else '', style_table)],
         ]
         table = Table(data, (35 * mm, 130 * mm), None, hAlign='LEFT')
         
