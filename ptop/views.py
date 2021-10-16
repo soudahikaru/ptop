@@ -1,4 +1,5 @@
 """ PTOP view module """
+import io
 import pytz
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
@@ -16,6 +17,7 @@ from django.db.models.functions import Cast, TruncDay, TruncMonth, TruncYear, Tr
 from django.http import JsonResponse
 from django.http import HttpResponseRedirect
 from django.http import HttpResponse
+from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_pandas.io import read_frame
 from reportlab.pdfgen import canvas
@@ -27,7 +29,11 @@ from reportlab.lib.pagesizes import portrait
 from reportlab.lib.units import mm
 from reportlab.platypus import Table
 from reportlab.platypus import TableStyle
+from reportlab.platypus import Paragraph
+from reportlab.platypus import SimpleDocTemplate
 from reportlab.lib import colors
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
 import pandas as pd
 import numpy as np
 import re
@@ -185,6 +191,77 @@ class PopupErrorCreate(ErrorCreate):
         }
         return render(self.request, 'close.html', context)
 
+class CommentCreateView(CreateView):
+    """新規Commentの作成"""
+    model = Comment
+    template_name = 'comment_create.html'
+    form_class = CommentCreateForm
+#    fields = '__all__'
+    success_url = reverse_lazy('ptop:home')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+#        print(self.kwargs)
+        posted_group = get_object_or_404(TroubleGroup, pk=self.kwargs.get('pk'))
+        parent_id = self.request.GET.get('parent')
+        if parent_id is not None:
+            parent = get_object_or_404(Comment, pk=parent_id)
+        else:
+            parent = None
+        context['base_group'] = self.kwargs.get('pk')
+        context['form'] = CommentCreateForm(initial={
+            'posted_group':posted_group,
+            'parent':parent,
+            'user':self.request.user,
+        })
+        return context
+
+    def post(self, request, *args, **kwargs):
+#        print(request)
+        if self.request.FILES:
+            print(self.request.FILES)
+            form = AttachmentForm(self.request.POST, self.request.FILES)
+            if form.is_valid():
+                attachment_form = form.instance
+                attachment = Attachment.objects.create(
+                    title=attachment_form.file.name,
+                    file=attachment_form.file,
+                    description='',
+                    uploaded_datetime=datetime.now()
+                    )
+                data = {
+                    'is_valid': True,
+                    'pk': attachment.pk,
+                    'title': attachment.title,
+                    }
+                print(data)
+            else:
+                data = {'is_valid': False}
+            return JsonResponse(data)
+        else:
+#            form = CommentCreateForm(self.request.POST)
+#            form.fields['attachments'].queryset = Attachment.objects.all().order_by('id')
+#            print(self.request.POST)
+#            print(form.fields['attachments'].queryset.reverse())
+            return super().post(request, *args, **kwargs)
+
+
+class PopupCommentCreateView(CommentCreateView):
+    """ポップアップでのComment作成"""
+
+    def form_valid(self, form):
+        print(form)
+        comment = form.save()
+        print(comment.id)
+
+        # 類型のタイムスタンプを更新する
+#        Comment.object.filter(pk=comment.id).update(active=True)
+#        comment.posted_group.modified_on = comment.posted_on
+        comment.posted_group.active = True
+        comment.posted_group.save()
+
+        return render(self.request, 'close_reload.html')
+
 class GroupDetailView(FormMixin, DetailView):
     """TroubleGroup詳細画面"""
     template_name = 'group_detail.html'
@@ -206,6 +283,7 @@ class GroupDetailView(FormMixin, DetailView):
             context['events'] = TroubleEvent.objects.filter(group__path__startswith=startpath).order_by('-start_time')
         
         context['child_group'] = TroubleGroup.objects.filter(path__startswith=startpath)
+        context['parent_comments'] = context.get('object').comments.filter(parent__isnull=True)
         context['frequency_week_1'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=7), timezone.now())).count()
         context['frequency_week_2'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=14), timezone.now()-timezone.timedelta(days=7))).count()
         context['frequency_week_3'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=21), timezone.now()-timezone.timedelta(days=14))).count()
@@ -237,16 +315,27 @@ class TroubleCommunicationSheetPDFView(DetailView):
     def get(self, request, *args, **kwargs):
 
         obj = self.get_object()
-        filename = '装置不具合連絡票%s(%s).pdf' % (obj.id, obj.title)  # 出力ファイル名
-        title = '装置不具合連絡票%s(%s).pdf' % (obj.id, obj.title)
+        filename = '装置不具合連絡票TR%s(%s).pdf' % (obj.id, obj.title)  # 出力ファイル名
+        title = '装置不具合連絡票TR%s(%s).pdf' % (obj.id, obj.title)
         font_name = 'HeiseiKakuGo-W5'  # フォント
         is_bottomup = True
+
         # PDF出力
         response = HttpResponse(status=200, content_type='application/pdf')
-        # response['Content-Disposition'] = 'attachment; filename="{}"'.format(self.filename)  # ダウンロードする場合
-        response['Content-Disposition'] = 'filename="{}"'.format(filename)  # 画面に表示する場合
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)  # ダウンロードする場合
+        # response['Content-Disposition'] = 'filename="{}"'.format(filename)  # 画面に表示する場合
         # A4縦書きのpdfを作る
         size = portrait(A4)
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer,
+                                rightMargin=20*mm,
+                                leftMargin=20*mm,
+                                topMargin=20*mm,
+                                bottomMargin=20*mm,
+                                pagesize=size,
+                                title=filename[:-4])
+        elements = []
         # pdfを描く場所を作成：位置を決める原点は左上にする(bottomup)
         # デフォルトの原点は左下
         p = canvas.Canvas(response, pagesize=size, bottomup=is_bottomup)
@@ -254,25 +343,48 @@ class TroubleCommunicationSheetPDFView(DetailView):
         p.setFont(font_name, 16)  # フォントを設定
         # pdfのタイトルを設定
         p.setTitle(title)
-        first_datetime = timezone.localtime(obj.first_event().start_time)
-        first_downtime = obj.first_event().downtime
-        first_delaytime = obj.first_event().delaytime
+        if obj.first_event() is not None:
+            first_datetime = timezone.localtime(obj.first_event().start_time)
+            if obj.first_event().downtime is not None:
+                first_downtime = obj.first_event().downtime
+            else:
+                first_downtime = 0
+            if obj.first_event().downtime is not None:
+                first_delaytime = obj.first_event().delaytime
+            else:
+                first_delaytime = 0
+        else:
+            first_datetime = None
+            first_downtime = 0
+            first_delaytime = 0
+            
         errorcode_str = ', '.join(list(obj.errors.values_list('error_code', flat=True)))
+        if first_datetime is not None:
+            first_datetime_str = first_datetime.strftime('%Y/%m/%d %H:%M')
+        else:
+            first_datetime_str = ''
+
         # 表の情報
         data = [
             ['題名', obj.title],
-            ['デバイスID', obj.device.device_id],
+            ['治療可否の状態', obj.treatment_status.name if obj.treatment_status is not None else '未入力'],
+            ['影響範囲', obj.effect_scope.name if obj.effect_scope is not None else '未入力'],
+            ['対処緊急度', obj.urgency.name if obj.urgency is not None else '未入力'],
+            ['初発日時', first_datetime_str],
+            ['発生回数', '%d回' % obj.num_events()],
+            ['初回停止時間', '%d分(遅延%d分)' % (first_downtime, first_delaytime)],
+            ['平均停止時間', '%.1f分' % obj.average_downtime() if obj.average_downtime() is not None else '未入力'],
+            ['デバイスID', '%s (%s)' % (obj.device.device_id, obj.device.name)],
             ['内容', obj.description],
             ['エラーコード', errorcode_str],
             ['直前の操作', obj.trigger],
             ['原因', obj.cause],
             ['応急処置', obj.common_action],
-            ['初発日時', first_datetime.strftime('%Y/%m/%d %H:%M')],
-            ['発生回数', '%d回' % obj.num_events()],
-            ['初回停止時間', '%d分(遅延%d分)' % (first_downtime, first_delaytime)],
-            ['平均停止時間', '%.1f分' % obj.average_downtime()],
+            ['要望項目', ', '.join(list(obj.require_items.values_list('name', flat=True)))],
+            ['要望詳細', obj.require_detail],
         ]
-        table = Table(data, (30 * mm, 140 * mm), None, hAlign='LEFT')
+        table = Table(data, (35 * mm, 130 * mm), None, hAlign='LEFT')
+        
         # TableStyleを使って、Tableの装飾をします。
         table.setStyle(TableStyle([
             # 表で使うフォントとそのサイズを設定
@@ -282,18 +394,41 @@ class TroubleCommunicationSheetPDFView(DetailView):
             # 四角の内側に格子状の罫線を引いて、0.25の太さで、色は黒
             ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
             # セルの縦文字位置
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ("ALIGN", (0, 0), (-1, -1), 'LEFT'),
         ]))
-        table.wrapOn(p, 50 * mm, 50 * mm)
-        table.drawOn(p, 25 * mm, 170 * mm)
+        style_title = ParagraphStyle(name='Normal', fontName=font_name, fontSize=18, leading=24, alignment=TA_CENTER)
+        style_signature = ParagraphStyle(name='Normal', fontName=font_name, fontSize=12, leading=16, alignment=TA_RIGHT)
+#        elements.append(Paragraph('山形大学医学部東日本重粒子センター　重粒子線治療装置', style_title))
+        elements.append(Paragraph('装置不具合連絡票', style_title))
+        elements.append(Paragraph('連絡票ID: TR%s' % obj.id, style_title))
+        elements.append(Paragraph('山形大学医学部東日本重粒子センター', style_signature))
+        elements.append(Paragraph('発行者: %s' %  obj.classify_operator.fullname(), style_signature))
+        elements.append(Paragraph('発行日時: %s' % datetime.now().strftime('%Y/%m/%d %H:%M'), style_signature))
+        elements.append(table)
+        table.canv = p
+        w, h = table.wrap(0, 0)
+        print(w / mm, h / mm)
+
+        table.wrapOn(p, 25 * mm, 260 * mm)
+        table.drawOn(p, 25 * mm, 260 * mm - h)
         p.drawString(25 * mm, 280 * mm, '山形大学医学部東日本重粒子センター　重粒子線治療装置')
-        p.drawString(25 * mm, 274 * mm, '装置不具合連絡票')
-        p.drawString(25 * mm, 268 * mm, '連絡票ID: TR%s' % obj.id)
-        p.showPage()  # Canvasに書き込み（改ページ）
-        p.save()  # ファイル保存
-        self._draw(p)
-        return response
+        p.drawString(25 * mm, 272 * mm, '装置不具合連絡票')
+        p.drawString(25 * mm, 264 * mm, '連絡票ID: TR%s' % obj.id)
+
+
+        doc.build(elements)
+#        doc.title(filemame)
+        response = HttpResponse(status=200, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)  # ダウンロードする場合
+
+#        response = HttpResponse(status=200, content_type='application/pdf')
+#        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)  # ダウンロードする場合
+        buffer.seek(0)
+        return FileResponse(buffer, as_attachment=True, filename='{}'.format(filename))
+#        response.write(buffer.getvalue())
+#        buffer.close()        
+#        return response
 
     def _draw(self, p):
         pass
@@ -1001,6 +1136,34 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
             })
         return context
 
+    def post(self, request, *args, **kwargs):
+        if self.request.FILES:
+            print(self.request.FILES)
+            form = AttachmentForm(self.request.POST, self.request.FILES)
+            if form.is_valid():
+                attachment_form = form.instance
+                attachment = Attachment.objects.create(
+                    title=attachment_form.file.name,
+                    file=attachment_form.file,
+                    description='',
+                    uploaded_datetime=datetime.now()
+                    )
+                data = {
+                    'is_valid': True,
+                    'pk': attachment.pk,
+                    'title': attachment.title,
+                    }
+                print(data)
+            else:
+                data = {'is_valid': False}
+            return JsonResponse(data)
+        else:
+            form = CommentCreateForm(self.request.POST)
+#            form.fields['attachments'].queryset = Attachment.objects.all().order_by('id')
+#            print(self.request.POST)
+#            print(form.fields['attachments'].queryset.reverse())
+            return super().post(request, *args, **kwargs)
+
 class EventClassifyView(LoginRequiredMixin, ListView):
     """イベント分類View"""
     template_name = 'event_classify.html'
@@ -1203,6 +1366,113 @@ def statistics_create_view(request):
             )
 
 
+def trouble_statistics_create_view(request):
+    form = StatisticsForm()
+# 仮処置
+    return 0
+
+    if request.method == 'POST':
+        form = StatisticsForm(data=request.POST)
+#        print(request.POST.get('df'))
+        start = request.POST['date_s']
+        end = request.POST['date_e']
+        start_t = datetime.strptime(start, '%Y-%m-%d')
+        end_t = datetime.strptime(end, '%Y-%m-%d') + timedelta(days=1)
+        subtotal_frequency = request.POST['subtotal_frequency']
+        if start and end:
+            events = TroubleEvent.objects.filter(
+                Q(start_time__gt=start_t) & Q(end_time__lt=end_t)
+                ).order_by('start_time')
+            operations = Operation.objects.filter(
+                ~Q(operation_type__name__iexact='装置停止')
+                & Q(start_time__gt=start_t) & Q(end_time__lt=end_t)
+            ).order_by('start_time')
+        else:
+            events = TroubleGroup.objects.all()
+            operations = Operation.objects.all()
+
+        tz_jp = pytz.timezone('Asia/Tokyo')
+        start_datetime = timezone.datetime.strptime(start, '%Y-%m-%d')
+        start_localized = tz_jp.localize(start_datetime)
+        end_datetime = timezone.datetime.strptime(end, '%Y-%m-%d')
+        end_localized = tz_jp.localize(end_datetime)
+        # troubleevent
+        statistics_event = events.annotate(index=Trunc('start_time', kind=subtotal_frequency)) \
+            .values('index') \
+            .annotate(num_event=Count('id')) \
+            .annotate(subtotal_downtime=Sum('downtime')) \
+            .annotate(subtotal_delaytime=Sum('delaytime')) \
+            .order_by('index')
+        df_event = make_dataframe(statistics_event, start_localized, end_localized, subtotal_frequency)
+
+        #operation
+        statistics_operation = operations.annotate(index=Trunc('start_time', kind=subtotal_frequency)) \
+            .values('index') \
+            .annotate(subtotal_operation_time=Sum('operation_time')) \
+            .annotate(subtotal_treatment_time=Sum('operation_time', filter=Q(operation_type__meta_type__name__iexact='治療'))) \
+            .annotate(subtotal_num_treat_hc1=Sum('num_treat_hc1')) \
+            .annotate(subtotal_num_treat_gc2=Sum('num_treat_gc2')) \
+            .annotate(subtotal_num_qa_hc1=Sum('num_qa_hc1')) \
+            .annotate(subtotal_num_qa_gc2=Sum('num_qa_gc2')) \
+            .order_by('index')
+        df_operation = make_dataframe(statistics_operation, start_localized, end_localized, subtotal_frequency)
+        df_operation['subtotal_num_treat_all'] = df_operation['subtotal_num_treat_hc1'] + df_operation['subtotal_num_treat_gc2']
+        df_operation['subtotal_num_qa_all'] = df_operation['subtotal_num_qa_hc1'] + df_operation['subtotal_num_qa_gc2']
+
+        df = pd.merge(df_operation, df_event, left_index=True, right_index=True, how='outer').fillna(0)
+#        df['subtotal_operation_time'] = df['subtotal_operation_time'] / 60000000
+#        df['subtotal_treatment_time'] = df['subtotal_treatment_time'] / 60000000
+        s_summary = df.sum()
+        s_summary.name = '合計'
+        print(s_summary)
+        df = df.append(s_summary)
+
+        df['total_availability'] = 1.0 - (df['subtotal_downtime'].divide(df['subtotal_operation_time']))
+        df['treatment_availability'] = 1.0 - (df['subtotal_delaytime'].divide(df['subtotal_treatment_time']))
+#        print(df['subtotal_operation_time'])
+#        df['operation_time_minute'] = df['subtotal_operation_time'].dt.total_seconds()
+#        print(df)
+  #      total_downtime = events.aggregate(value=Sum('downtime'))
+ #       operations_annotate = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField())))
+        #print(operations_annotate)
+#        total_operation_time = operations_annotate.aggregate(value=Sum('operation_time'))
+#        s_summary['total_availability'] = 1.0 - (s_summary['subtotal_downtime'].divide(s_summary['subtotal_operation_time']))
+#        s_summary['treatment_availability'] = 1.0 - (s_summary['subtotal_delaytime'].divide(s_summary['subtotal_treatment_time']))
+        print(df)
+        if request.POST.get('next', '') == 'CSV出力':
+            response = HttpResponse(content_type='text/csv; charset=cp932')
+            filename = 'stat%s.csv' % (datetime.today().strftime('%Y%m%d-%H%M'))
+            print(filename)
+            response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+            df.to_csv(path_or_buf=response, encoding='utf_8_sig')
+            print(response)
+            return response
+        else:    
+            return render(
+                request,
+                'statistics_create.html',
+                {
+                    'form':form, 
+                    'subtotal_frequency':subtotal_frequency,
+                    'df':df,
+                    's_summary':s_summary,
+                }
+                )
+    else:
+        total_downtime = None
+        total_operation_time = None
+        total_availability = None
+        return render(
+            request,
+            'statistics_create.html',
+            {
+                'form':form, 
+                'total_downtime':0, 
+                'total_operation_time':0,
+                'total_availability':0.0,
+            }
+            )
+
 
 class UnapprovedEventListView(ListView):
     """未承認イベント一覧画面"""
@@ -1235,6 +1505,8 @@ class Home(ListView):
         context = super().get_context_data(**kwargs)
         context['current_operation'] = Operation.objects.order_by('start_time').last()
         context['announce_list'] = Announcement.objects.order_by('posted_time').reverse()[:5]
+        context['updated_event_list'] = TroubleEvent.objects.exclude(modified_on=F('created_on')).order_by('modified_on').reverse()[:5]
+        context['updated_group_list'] = TroubleGroup.objects.exclude(modified_on=F('created_on')).order_by('modified_on').reverse()[:5]
 #        print(context)
         return context
 

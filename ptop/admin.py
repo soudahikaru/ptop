@@ -21,6 +21,7 @@ from .models import CommentType
 from .models import CauseType
 from .models import VendorStatusType
 from .models import HandlingStatusType
+from .models import RequireType
 from .models import Section
 from .models import SuperSection
 from .models import DeviceType
@@ -141,6 +142,18 @@ class HandlingStatusTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = HandlingStatusTypeResource
 
+class RequireTypeResource(resources.ModelResource):
+    """ Resource for Operation Type """
+    class Meta:
+        """ Resource for Operation Type model Meta"""
+        model = RequireType
+        skip_unchanged = True
+        report_skipped = False
+
+class RequireTypeAdmin(ImportExportModelAdmin):
+    """ Admin for Require_items """
+    resource_class = RequireTypeResource
+
 class SectionResource(resources.ModelResource):
     """ Resource for Operation Type """
     class Meta:
@@ -224,6 +237,7 @@ admin.site.register(TroubleEvent, SimpleHistoryAdmin)
 admin.site.register(Device, DeviceAdmin)
 admin.site.register(Error, ErrorAdmin)
 admin.site.register(CauseType, CauseTypeAdmin)
+admin.site.register(RequireType, RequireTypeAdmin)
 admin.site.register(VendorStatusType, VendorStatusTypeAdmin)
 admin.site.register(HandlingStatusType, HandlingStatusTypeAdmin)
 admin.site.register(Operation)

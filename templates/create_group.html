@@ -10,6 +10,8 @@ table {background-color:#fffff0}
 .input-inline { display: inline-block; width: 150px; }
 .helptext {font-size: small;}
 .required {color: red;}
+li {display: inline-block; margin-right: 1em}
+ul.operator_checkbox{list-style-type: none; padding-left: 0;}
 </style>
 
 {% endblock header %}
@@ -35,12 +37,17 @@ table {background-color:#fffff0}
             {% elif "error" in field.id_for_label %}
               <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_error_create' %}', 'subwin','width=500,height=500');" class="btn btn-info btn-sm">追加</a>
             {% elif "attachments" in field.id_for_label %}
-                <button type="button" class="btn btn-info js-upload-photos">
-                <span class="glyphicon glyphicon-cloud-upload"></span> 添付ファイルのアップロード
-                </button>
-                <ul id='id_list_attachment'>
-                </ul>
+              <button type="button" class="btn btn-info js-upload-photos">
+              <span class="glyphicon glyphicon-cloud-upload"></span> 添付ファイルのアップロード
+              </button>
+              <ul id='id_list_attachment'>
+              {% if attachments.all  %}
+                {% for attachment in attachments.all %}
+                  <li><input type="checkbox" name="attachment_check" value="{{attachment.id}}" checked="checked">{{attachment.title}}</li>
+                {% endfor %}
               {% endif %}
+              </ul>
+            {% endif %}
             {% if field.help_text %}
               <span class="helptext">{{ field.help_text|safe }}</span>
             {% endif %}
@@ -117,7 +124,7 @@ table {background-color:#fffff0}
               .text(data.result.title)
               .prop('selected', true);
             $("#id_attachments").append($option);
-            $("#id_list_attachment").append("<li>"+data.result.title+"</li>");
+            $("#id_list_attachment").append('<li><input type="checkbox" name="attachment_check" value="'+data.result.pk+'" checked="checked">'+data.result.title+"</li>");
   //          $("#id_attachments").val(list);
           }
         },
@@ -125,6 +132,14 @@ table {background-color:#fffff0}
           alert('Fail!');
         }
       });
+    });
+
+    $(document).on('change', '[name="attachment_check"]', function(){
+        if ($(this).prop('checked')){
+          $('option[value='+$(this).val()+']').prop('selected', true);
+        } else {
+          $('option[value='+$(this).val()+']').prop('selected', false);
+        }
     });
 
     function add_device(name, pk){

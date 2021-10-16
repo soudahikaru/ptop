@@ -3,6 +3,11 @@
 {% block header %}
 <style>
   table {background-color:#fffff0}
+  p {line-height:150%; margin: 0.5em 0.5em; padding: 0.0em}
+  .comment_type {border: solid 1px; color: blue;}
+  .comment_info {text-align: right;}
+  .comment {background-color:#fffff0; border: solid 1px; margin: 0.5em 0.5em;}
+  .anchor {padding-top: 80px; margin-top:-80px;}  
 </style>
 {% load static %}
 <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
@@ -27,12 +32,16 @@
       <tr><td>原因</td><td>{{object.cause | linebreaksbr }}</td></tr>
       <tr><td>原因分類</td><td>{{object.causetype | linebreaksbr }}</td></tr>
       <tr><td>初発日時</td><td>{{object.first_datetime|date:"Y/m/d H:i"}}</td></tr>
-      <tr><td>主な処置内容</td><td>{{object.common_action | linebreaksbr }}</td></tr>
+      <tr><td>応急処置の内容</td><td>{{object.common_action | linebreaksbr }}</td></tr>
+      <tr><td>恒久対策の内容</td><td>{{object.permanent_action | linebreaksbr}}</td></tr>
+      <tr><td>要望内容</td><td>{% for require in object.require_items.all %}
+        {{ require }}{% if forloop.last %}{% else %},{% endif %}    
+    {% endfor %}</td></tr>
+      <tr><td>要望項目</td><td>{{object.require_detail | linebreaksbr}}</td></tr>
       <tr><td>分類作成者</td><td>{{object.classify_operator}}</td></tr>
       <tr><td>対処状況</td><td>{{object.handling_status}}</td></tr>
       <tr><td>メーカー連絡状況</td><td>{{object.vendor_status}}</td></tr>
       <tr><td>振り返り予定日</td><td>{{object.reminder_datetime}}</td></tr>
-      <tr><td>恒久対策の内容</td><td>{{object.permanent_action}}</td></tr>
       <tr><td>よくあるトラブルフラグ</td><td>{{object.is_common_trouble}}</td></tr>
       <tr><td>FMEA致命度スコア</td><td>{{object.criticality_score}}</td></tr>
       <tr><td>FMEA発生頻度スコア</td><td>{{object.frequency_score}}</td></tr>
@@ -45,11 +54,55 @@
 {% endif %}
 {% if forloop.last %}{% else %},{% endif %}
       {% endfor %}{% endspaceless %}</td></tr>
+      <tr><td>作成日時</td><td>{{object.created_on|date:"Y/m/d H:i"}}</td></tr>
+      <tr><td>更新日時</td><td>{{object.modified_on|date:"Y/m/d H:i"}}</td></tr>
       </table>
       </div>
     </div>
 
-      
+
+    {% for comment in parent_comments %}
+    {% if forloop.first %}
+    <div class="card">
+      <h5 class="card-header">コメント／経過情報</h5>
+      <div class="card-body">
+    {% endif %}
+        <div class="comment">
+          <p><span class="comment_type">{{comment.comment_type}}</span> {{comment.description}}</p>
+          <div class="anchor" id="comment_{{comment.id}}">{% spaceless %}{% for attachment in comment.attachments.all %}
+            {% if '.png' in attachment.title or '.PNG' in attachment.title or '.jpg' in attachment.title or '.JPG' in attachment.title %}
+            <a href="{{attachment.file.url}}"><img src="{{attachment.file.url}}" alt="{{attachment.title}}" width="100" /></a>
+            {% else %}
+            <a href="{{attachment.file.url}}">{{ attachment.title }}</a>
+            {% endif %}
+            {% if forloop.last %}{% else %},{% endif %}
+                  {% endfor %}{% endspaceless %}</div>
+          <div class="comment_info"> {{comment.posted_on|date:"Y/m/d(D) H:i"}} {{comment.user}} 
+            <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_comment_create' object.pk %}?parent={{comment.id}}', 'subwin','width=800,height=500');" class="btn btn-info">返信</a>
+          </div>
+          {% with reply_list=comment.comment_set.all %}
+            {% include 'reply.html' %}
+          {% endwith %}    
+        </div>
+    {% if forloop.last %}
+        <div class="text-right">
+          <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_comment_create' object.pk %}?parent={{comment.id}}', 'subwin','width=500,height=500');" class="btn btn-info">新規コメント作成</a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% empty %}
+    <div class="card">
+      <h5 class="card-header">コメント／経過情報</h5>
+      <div class="card-body">
+        <div class="text-left">
+          <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_comment_create' object.pk %}', 'subwin','width=500,height=500');" class="btn btn-info">新規コメント作成</a>
+        </div>
+      </div>
+    </div>
+
+    {% endfor %}
+
     {% if child_group %}
     <div class="card">
       <h5 class="card-header">同一グループのトラブル類型</h5>
@@ -107,7 +160,8 @@
         <a href="#" onclick="window.history.back(); return false;" class="btn btn-secondary">戻る</a>
       </div>
       <div class="col-sm-4 text-center">
-        <!--<a href="{% url 'ptop:trouble_communication_sheet_pdf' object.pk %}" class="btn btn-danger">不具合連絡票発行</a>-->
+        <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_comment_create' object.pk %}', 'subwin','width=500,height=500');" class="btn btn-info">コメント作成</a>
+        <a href="{% url 'ptop:trouble_communication_sheet_pdf' object.pk %}" class="btn btn-danger">不具合連絡票発行</a>
       </div>
       <div class="col-sm-4 text-right">
         <a href="{% url 'ptop:update_group' object.pk %}" class="btn btn-primary">編集</a>

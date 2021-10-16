@@ -67,12 +67,12 @@
   <div class="container">
     <div class="col-sm-12">
       <div class="card">
-        <h2 class="card-header">最近のトラブル</h2>
+        <h2 class="card-header">最近発生したトラブル</h2>
         <table border>
           <tr><th>発生日時</th><th class="bg-event">題名</th><th>デバイスID</th><th>故障時間</th><th class="bg-group">トラブル類型</th></tr>
           {% for item in object_list %}
           <tr>
-            <td>{{item.start_time|date:"Y/m/d H:i"}}</td>
+            <td>{{item.start_time|date:"Y/m/d(D) H:i"}}</td>
             <td class="bg-event"><a href="{% url 'ptop:event_detail' item.pk %}"><b>{{item.title|truncatechars:30}}</b></a></td>
             <td>{{item.device.device_id}}</td>
             <td>{{item.downtime}}{% if item.delaytime %}<span class="delaytime"> ({{item.delaytime}})</span>{% endif %}</td>
@@ -81,12 +81,56 @@
               {% else %} 
               {% endif %}
             </td>
-            <td><a href="{% url 'ptop:event_detail' item.pk %}" class="btn btn-primary">詳細</a>
+            <td><a href="{% url 'ptop:update_event' item.pk %}" class="btn btn-primary">編集</a>
             <a href="{% url 'ptop:recurrent_event_create_from_event' item.pk %}" class="btn btn-warning">再発</a></td>
           </tr>
           {% endfor %}
         </table>
         <div style="text-align:right"><a href="{% url 'ptop:eventlist' %}">トラブル事象一覧</a></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="col-sm-12">
+      <div class="card">
+        <h2 class="card-header">情報が更新されたトラブル事象</h2>
+        <table border>
+          <tr><th>更新日時</th><td>発生日時</td><th class="bg-event">題名</th><th>デバイスID</th><th>故障時間</th><th class="bg-group">トラブル類型</th></tr>
+          {% for item in updated_event_list %}
+          <tr>
+            <td>{{item.modified_on|date:"Y/m/d(D) H:i"}}</td>
+            <td>{{item.start_time|date:"Y/m/d(D) H:i"}}</td>
+            <td class="bg-event"><a href="{% url 'ptop:event_detail' item.pk %}"><b>{{item.title|truncatechars:30}}</b></a></td>
+            <td>{{item.device.device_id}}</td>
+            <td>{{item.downtime}}{% if item.delaytime %}<span class="delaytime"> ({{item.delaytime}})</span>{% endif %}</td>
+            <td class="bg-group">{% if item.group is not None %}
+              <a href="{% url 'ptop:group_detail' item.group.pk %}">{{item.group.title|truncatechars:10}}</a>
+              {% else %} 
+              {% endif %}
+            </td>
+            <td><a href="{% url 'ptop:update_event' item.pk %}" class="btn btn-primary">編集</a>
+            </tr>
+          {% endfor %}
+        </table>
+      </div>
+      <div class="card">
+        <h2 class="card-header">情報が更新されたトラブル類型</h2>
+        <table border>
+          <tr><th>更新日時</th><td>初発日時</td><th class="bg-event">題名</th><th>デバイスID</th><th>対処状況</th><th>メーカー状況</th><th>最新コメント</th></tr>
+          {% for item in updated_group_list %}
+          <tr>
+            <td>{{item.modified_on|date:"Y/m/d(D) H:i"}}</td>
+            <td>{{item.first_datetime|date:"Y/m/d(D) H:i"}}</td>
+            <td class="bg-group"><a href="{% url 'ptop:group_detail' item.pk %}"><b>{{item.title|truncatechars:30}}</b></a></td>
+            <td>{{item.device.device_id}}</td>
+            <td>{{item.handling_status}}</td>
+            <td>{{item.vendor_status}}</td>
+            <td><a href="{% url 'ptop:group_detail' item.pk %}#comment_{{item.new_comment.id}}">{{item.new_comment.posted_on|date:"m/d H:i"}} {{item.new_comment.user}}</td>
+            <td><a href="{% url 'ptop:update_group' item.pk %}" class="btn btn-primary">編集</a>
+          </tr>
+          {% endfor %}
+        </table>
       </div>
     </div>
   </div>

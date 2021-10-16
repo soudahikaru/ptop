@@ -20,25 +20,27 @@
     {% if 'update' in request.path %}
     <h5 class="card-header">コメント編集</h5>
     {% else %}
-    <h5 class="card-header">新規トラブル事象入力</h5>
+    <h5 class="card-header">新規コメント入力</h5>
     {% endif %}
     <div class="card-body">
       <form action="" method="POST">
         {% csrf_token %}
         <table border>
         {% for field in form %}
+        {% if not field.is_hidden%}
         {% spaceless %}
         <tr><th>{% if field.field.required %}<span class="required">*</span>{% endif %}{{ field.label_tag }}</th><td>{{ field }}
-          {% if "device" in field.id_for_label %}
-            <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_device_create' %}', 'subwin','width=500,height=500');" class="btn btn-info btn-sm">追加</a>
-          {% elif "error" in field.id_for_label %}
-            <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_error_create' %}', 'subwin','width=500,height=500');" class="btn btn-info btn-sm">追加</a>
-          {% elif "attachments" in field.id_for_label %}
-              <button type="button" class="btn btn-info js-upload-photos">
-              <span class="glyphicon glyphicon-cloud-upload"></span> 添付ファイルのアップロード
-              </button>
-              <ul id='id_list_attachment'>
-              </ul>
+          {% if "attachments" in field.id_for_label %}
+            <button type="button" class="btn btn-info js-upload-photos">
+            <span class="glyphicon glyphicon-cloud-upload"></span> 添付ファイルのアップロード
+            </button>
+            <ul id='id_list_attachment'>
+            {% if attachments.all  %}
+              {% for attachment in attachments.all %}
+                <li><input type="checkbox" name="attachment_check" value="{{attachment.id}}" checked="checked">{{attachment.title}}</li>
+              {% endfor %}
+            {% endif %}
+            </ul>
           {% endif %}
           {% if field.help_text %}
             <span class="helptext">{{ field.help_text|safe }}</span>
@@ -46,6 +48,9 @@
           {{ field.error }}
         </td></tr>
         {% endspaceless %}
+        {% else %}
+          {{ field.as_hidden }}
+        {% endif %}
         {% endfor %}
         </table>
 
@@ -53,14 +58,14 @@
         <div>
           <input id="fileupload" type="file" name="file" multiple
           style="display: none;"
-          data-url="{% url 'ptop:create_event'%}"
+          data-url="{{ request.build_absolute_url }}"
           data-form-data='{"csrfmiddlewaretoken": "{{ csrf_token }}"}'>
         </div>
     
         {% if 'update' in request.path %}
         <input class="btn btn-primary" type="submit" value="入力した内容で更新する">
         {% else %}
-        <input class="btn btn-primary" type="submit" value="トラブル事象を作成する">
+        <input class="btn btn-primary" type="submit" value="コメントを作成する">
         {% endif %}
       </form>
       
@@ -118,7 +123,7 @@
               .text(data.result.title)
               .prop('selected', true);
             $("#id_attachments").append($option);
-            $("#id_list_attachment").append("<li>"+data.result.title+"</li>");
+            $("#id_list_attachment").append('<li><input type="checkbox" name="attachment_check" value="'+data.result.pk+'" checked="checked">'+data.result.title+"</li>");
   //          $("#id_attachments").val(list);
           }
         },
@@ -126,6 +131,14 @@
           alert('Fail!');
         }
       });
+    });
+
+    $(document).on('change', '[name="attachment_check"]', function(){
+        if ($(this).prop('checked')){
+          $('option[value='+$(this).val()+']').prop('selected', true);
+        } else {
+          $('option[value='+$(this).val()+']').prop('selected', false);
+        }
     });
 
     $("#id_start_time").on("focusout",function (e) {

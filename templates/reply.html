@@ -1,0 +1,19 @@
+{% for reply in reply_list %}
+    <div class="comment">
+        <p><span class="comment_type">{{reply.comment_type}}</span> {{reply.description}}</p>
+          <div>{% spaceless %}{% for attachment in reply.attachments.all %}
+            {% if '.png' in attachment.title or '.PNG' in attachment.title or '.jpg' in attachment.title or '.JPG' in attachment.title %}
+            <a href="{{attachment.file.url}}"><img src="{{attachment.file.url}}" alt="{{attachment.title}}" width="100" /></a>
+            {% else %}
+            <a href="{{attachment.file.url}}">{{ attachment.title }}</a>
+            {% endif %}
+            {% if forloop.last %}{% else %},{% endif %}
+                  {% endfor %}{% endspaceless %}</div>
+          <div class="comment_info"> {{reply.posted_on|date:"Y/m/d(D) H:i"}} {{reply.user}} 
+            <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_comment_create' object.pk %}?parent={{reply.id}}', 'subwin','width=800,height=500');" class="btn btn-info">返信</a>
+          </div>
+          {% with reply_list=reply.comment_set.all %}
+            {% include 'reply.html' %}
+        {% endwith %}
+    </div>
+{% endfor %}

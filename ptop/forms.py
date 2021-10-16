@@ -14,6 +14,7 @@ from .models import User
 from .models import Attachment
 from .models import Announcement
 from .models import Comment, CommentType
+from .models import RequireType
 from .models import Operation, OperationType, OperationMetaType
 from .models import CauseType, VendorStatusType, HandlingStatusType
 from .models import EffectScope, TreatmentStatusType, Urgency
@@ -302,6 +303,7 @@ class EventCreateForm(forms.ModelForm):
     handling_operators = forms.ModelMultipleChoiceField(
         User.objects.filter(display_order__gte=0).order_by('display_order'), label='対応者', required=False, 
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'operator_checkbox'}))
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['operation_type'].widget.attrs['readonly'] = True
@@ -361,6 +363,13 @@ class GroupCreateForm(forms.ModelForm):
         widget=autocomplete.ModelSelect2Multiple(url='ptop:error_autocomplete'),
         help_text='エラーメッセージを部分一致検索します。空白部をクリックまたはTab→キー入力で複数選択可能。',
         required=False)
+
+    require_items = forms.ModelMultipleChoiceField(
+        RequireType.objects.all().order_by('id'), label='要望項目', required=False, 
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'operator_checkbox'}))
+    require_detail = forms.CharField(
+        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='要望詳細', required=False)
+
     attachments = forms.ModelMultipleChoiceField(
         Attachment.objects.all(), label='添付ファイル', required=False, 
         widget=forms.SelectMultiple(attrs={'style':'display:none;'}),
@@ -378,7 +387,9 @@ class GroupCreateForm(forms.ModelForm):
         fields = (
             'title', 'device', 'description', 'trigger', 'cause', 'causetype',
             'common_action', 'permanent_action', 'errors',
+            'require_items', 'require_detail',
             'handling_status', 'vendor_status',
+            'effect_scope', 'treatment_status', 'urgency',
             'first_datetime', 'reminder_datetime', 'is_common_trouble',
             'criticality_score', 'frequency_score', 'difficulty_score',
             'path', 'classify_operator', 'attachments')
@@ -469,10 +480,17 @@ class AnnouncementCreateForm(forms.ModelForm):
 class CommentCreateForm(forms.ModelForm):
     posted_group = forms.ModelChoiceField(
         TroubleGroup.objects.all(),
-        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
-        label='投稿先のトラブル類型', help_text='変更不可', required=False)
+#        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+        widget=forms.HiddenInput(),
+        label='投稿先のトラブル類型', help_text='変更不可', required=True)
+    parent = forms.ModelChoiceField(
+        Comment.objects.all(),
+#        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+        widget=forms.HiddenInput(),
+        label='親コメント', help_text='変更不可', required=False)
+
     description = forms.CharField(
-        widget=forms.Textarea(attrs={'rows':4, 'cols':80}), label='内容', required=True)
+        widget=forms.Textarea(attrs={'rows':6, 'cols':60}), label='内容', required=True)
     comment_type = forms.ModelChoiceField(
         CommentType.objects.all(),
         label='コメントの種類', required=False)
@@ -486,6 +504,6 @@ class CommentCreateForm(forms.ModelForm):
         help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます')
 
     class Meta:
-        model = Announcement
+        model = Comment
         fields = (
-            'posted_group', 'description', 'comment_type', 'user', 'attachments')
+            'posted_group', 'parent', 'description', 'comment_type', 'user', 'attachments')

@@ -104,6 +104,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELD = ['email']
 
+    def fullname(self):
+        return '%s %s' % (self.last_name, self.first_name)
+
 #	class Meta:
 #		verbose_name = _('user')
 #		verbose_name_plural = _('users')
@@ -235,6 +238,13 @@ class EffectScope(models.Model):
     def __str__(self):
         return self.name
 
+class RequireType(models.Model):
+    """要望項目モデル。"""
+    name = models.CharField('項目名称', max_length=100)
+    display_order = models.IntegerField(null=True, blank=True)
+    def __str__(self):
+        return self.name
+
 class Urgency(models.Model):
     """対処緊急性モデル。"""
     name = models.CharField('緊急性名称', max_length=100)
@@ -333,6 +343,22 @@ class TroubleGroup(models.Model):
         VendorStatusType, verbose_name='メーカー連絡状況', null=True, blank=True, on_delete=models.SET_NULL)
 #    vendor_status = models.CharField(
 #        'メーカー連絡状況', choices=VENDOR_STATUS, max_length=20, null=True, blank=True)
+
+    require_items = models.ManyToManyField(
+        RequireType, verbose_name='要望項目',
+        null=True, blank=True)
+    require_detail = models.TextField('要望詳細', null=True, blank=True)
+
+    effect_scope = models.ForeignKey(
+        EffectScope, verbose_name='影響範囲',
+        null=True, blank=True, on_delete=models.SET_NULL)
+    treatment_status = models.ForeignKey(
+        TreatmentStatusType, verbose_name='発生中の治療可否状況',
+        null=True, blank=True, on_delete=models.SET_NULL)
+    urgency = models.ForeignKey(
+        Urgency, verbose_name='対処緊急性',
+        null=True, blank=True, on_delete=models.SET_NULL)
+
     reminder_datetime = models.DateField('振り返り予定日', null=True, blank=True)
     permanent_action = models.TextField('恒久対策の内容', null=True, blank=True)
     is_common_trouble = models.BooleanField('よくあるトラブルフラグ', default=False, null=True, blank=True)
@@ -360,8 +386,11 @@ class TroubleGroup(models.Model):
 
     def first_event(self):
         '''初発イベントを返すメソッド'''
-        events = self.troubleevent_set.order_by('start_time')
-        return events[0]
+        if self.num_events() > 0:
+            events = self.troubleevent_set.order_by('start_time')
+            return events[0]
+        else:
+            return None
 
     def num_events(self):
         '''イベント数を返すメソッド'''
@@ -369,8 +398,18 @@ class TroubleGroup(models.Model):
 
     def average_downtime(self):
         '''平均停止時間を返すメソッド'''
-        return list(self.troubleevent_set.aggregate(models.Avg('downtime')).values())[0]
+        if self.num_events() > 0:
+            return list(self.troubleevent_set.aggregate(models.Avg('downtime')).values())[0]
+        else:
+            return 0
 
+    def new_comment(self):
+        '''最新コメントを返すメソッド'''
+        if self.comments.count() > 0:
+            comments = self.comments.order_by('-posted_on')
+            return comments[0]
+        else:
+            return None
 
 class TroubleEvent(models.Model):
     """トラブル事象モデル"""
@@ -406,6 +445,7 @@ class TroubleEvent(models.Model):
     urgency = models.ForeignKey(
         Urgency, verbose_name='対処緊急性',
         null=True, blank=True, on_delete=models.SET_NULL)
+
     input_operator = models.ForeignKey(
 #        User, verbose_name='入力者', limit_choices_to=((Q(groups__name='Operator')|Q(groups__name='Physicist'))&Q(is_active=True)),
         User, verbose_name='入力者',
@@ -448,7 +488,9 @@ class CommentType(models.Model):
 class Comment(models.Model):
     """コメントモデル"""
     posted_group = models.ForeignKey(
-        TroubleGroup, verbose_name='投稿先のトラブル類型', null=True, on_delete=models.CASCADE)
+        TroubleGroup, verbose_name='投稿先のトラブル類型', null=True, on_delete=models.CASCADE, related_name='comments')
+    parent = models.ForeignKey('self', verbose_name='親コメント', null=True, blank=True, on_delete=models.CASCADE)
+
     description = models.TextField('文章', null=True)
     comment_type = models.ForeignKey(
         CommentType, verbose_name='コメントタイプ',
@@ -467,6 +509,9 @@ class Comment(models.Model):
                 value = getattr(self, field.name)
                 if value:
                     setattr(self, field.name, standardize_character(value))
+
+    def __str__(self):
+        return '%s%s_%s' % (self.user.last_name, self.user.first_name, self.posted_on.strftime('%Y/%m/%d-%H:%M'))
 
 class Announcement(models.Model):
     """お知らせモデル"""
