@@ -364,6 +364,10 @@ class TroubleCommunicationSheetPDFView(DetailView):
         else:
             first_datetime_str = ''
 
+        style_title = ParagraphStyle(name='Normal', fontName=font_name, fontSize=18, leading=24, alignment=TA_CENTER)
+        style_signature = ParagraphStyle(name='Normal', fontName=font_name, fontSize=12, leading=16, alignment=TA_RIGHT)
+        style_table = ParagraphStyle(name='Normal', fontName=font_name, fontSize=12, leading=14, alignment=TA_LEFT)
+
         # 表の情報
         data = [
             ['題名', obj.title],
@@ -375,13 +379,13 @@ class TroubleCommunicationSheetPDFView(DetailView):
             ['初回停止時間', '%d分(遅延%d分)' % (first_downtime, first_delaytime)],
             ['平均停止時間', '%.1f分' % obj.average_downtime() if obj.average_downtime() is not None else '未入力'],
             ['デバイスID', '%s (%s)' % (obj.device.device_id, obj.device.name)],
-            ['内容', obj.description],
+            ['内容', Paragraph(obj.description, style_table)],
             ['エラーコード', errorcode_str],
-            ['直前の操作', obj.trigger],
-            ['原因', obj.cause],
-            ['応急処置', obj.common_action],
+            ['直前の操作', Paragraph(obj.trigger, style_table)],
+            ['原因', Paragraph(obj.cause, style_table)],
+            ['応急処置', Paragraph(obj.common_action, style_table)],
             ['要望項目', ', '.join(list(obj.require_items.values_list('name', flat=True)))],
-            ['要望詳細', obj.require_detail],
+            ['要望詳細', Paragraph(obj.require_detail, style_table)],
         ]
         table = Table(data, (35 * mm, 130 * mm), None, hAlign='LEFT')
         
@@ -397,8 +401,6 @@ class TroubleCommunicationSheetPDFView(DetailView):
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ("ALIGN", (0, 0), (-1, -1), 'LEFT'),
         ]))
-        style_title = ParagraphStyle(name='Normal', fontName=font_name, fontSize=18, leading=24, alignment=TA_CENTER)
-        style_signature = ParagraphStyle(name='Normal', fontName=font_name, fontSize=12, leading=16, alignment=TA_RIGHT)
 #        elements.append(Paragraph('山形大学医学部東日本重粒子センター　重粒子線治療装置', style_title))
         elements.append(Paragraph('装置不具合連絡票', style_title))
         elements.append(Paragraph('連絡票ID: TR%s' % obj.id, style_title))
