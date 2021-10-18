@@ -86,7 +86,7 @@
         <table border>
       <tr><th>分類ID</th><th>初発日時</th><th>題名</th><th>内容</th><th></th></tr>
     {% for item in object_list %}
-      <tr><td>{{item.classify_id}}</td><td>{{item.first_datetime|date:'Y/m/d H:i'}}</td><td><a href="{% url 'ptop:group_detail' item.pk %}">{{item.title}}</a></td><td>{{item.description|truncatechars:30}}</td><td><a href="{% url 'ptop:group_detail' item.pk %}" class="btn btn-primary">詳細</a></td></tr>
+      <tr><td>{{item.classify_id}}</td><td>{{item.first_datetime|date:'Y/m/d(D) H:i'}}</td><td><a href="{% url 'ptop:group_detail' item.pk %}">{{item.title}}</a></td><td>{{item.description|truncatechars:30}}</td><td><a href="{% url 'ptop:group_detail' item.pk %}" class="btn btn-primary">詳細</a></td></tr>
     {% endfor %}
     </table>
 

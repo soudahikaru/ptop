@@ -27,7 +27,7 @@
       {% for item in object_list %}
       <tr>
         <td>{{item.pk}}</td>
-        <td>{{item.first_datetime|date:"Y/m/d H:i"}}</td>
+        <td>{{item.first_datetime|date:"Y/m/d(D) H:i"}}</td>
         <td><b><a href="{% url 'ptop:group_detail' item.pk %}">{{item.title|truncatechars:30}}</a></b></td>
         <td>{{item.device.device_id}}</td>
         <td><a href="{% url 'ptop:group_detail' item.pk %}" class="btn btn-primary">詳細</a>

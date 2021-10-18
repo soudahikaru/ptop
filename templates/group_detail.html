@@ -31,7 +31,7 @@
       <tr><td>発生の契機となる操作</td><td>{{object.trigger | linebreaksbr }}</td></tr>
       <tr><td>原因</td><td>{{object.cause | linebreaksbr }}</td></tr>
       <tr><td>原因分類</td><td>{{object.causetype | linebreaksbr }}</td></tr>
-      <tr><td>初発日時</td><td>{{object.first_datetime|date:"Y/m/d H:i"}}</td></tr>
+      <tr><td>初発日時</td><td>{{object.first_datetime|date:"Y/m/d(D) H:i"}}</td></tr>
       <tr><td>応急処置の内容</td><td>{{object.common_action | linebreaksbr }}</td></tr>
       <tr><td>恒久対策の内容</td><td>{{object.permanent_action | linebreaksbr}}</td></tr>
       <tr><td>要望内容</td><td>{% for require in object.require_items.all %}
@@ -54,8 +54,8 @@
 {% endif %}
 {% if forloop.last %}{% else %},{% endif %}
       {% endfor %}{% endspaceless %}</td></tr>
-      <tr><td>作成日時</td><td>{{object.created_on|date:"Y/m/d H:i"}}</td></tr>
-      <tr><td>更新日時</td><td>{{object.modified_on|date:"Y/m/d H:i"}}</td></tr>
+      <tr><td>作成日時</td><td>{{object.created_on|date:"Y/m/d(D) H:i"}}</td></tr>
+      <tr><td>更新日時</td><td>{{object.modified_on|date:"Y/m/d(D) H:i"}}</td></tr>
       </table>
       </div>
     </div>
