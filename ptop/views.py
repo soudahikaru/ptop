@@ -1369,8 +1369,8 @@ def statistics_create_view(request):
         keys=[]
         values=[]
         for s_section in ['加速器','照射系','治療計画','建屋','不明']:
-            print(s_section.name)
-            keys.append(s_section.name)
+            print(s_section)
+            keys.append(s_section)
             values.append(events.filter(device__section__super_section__name=s_section.name).count())
         dict_ss={
             'count':values,
