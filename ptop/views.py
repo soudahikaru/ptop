@@ -546,6 +546,22 @@ class GroupBaseMixin(LoginRequiredMixin, object):
                     event.save()
             return redirect('ptop:group_detail', pk=obj.pk)
 #            return redirect('ptop:unapproved_event_list')
+
+        elif 'child_group' in self.request.path:
+            event_pk = request.GET.get('event_pk')
+            print('event_pk=', event_pk)
+            if event_pk:
+                event = TroubleEvent.objects.get(pk=event_pk)
+                print(event)
+                form = self.form_class(request.POST)
+                if form.is_valid():
+                    obj = form.save()
+                    event.group = obj
+                    print('group_pk=', obj.pk)
+                    print('event.group', event.group)
+                    event.save()
+                    return redirect('ptop:group_detail', pk=obj.pk)
+            return redirect('ptop:home')
             
         else:
             return super().post(request, *args, **kwargs)
@@ -627,6 +643,7 @@ class ChildGroupCreateView(GroupBaseMixin, CreateView):
         parent_group = get_object_or_404(TroubleGroup, pk=self.kwargs.get('pk'))
         context['form'] = GroupCreateForm(initial={
             'title':parent_group.title + '(sub)',
+            'device':parent_group.device,
             'description':parent_group.description,
             'trigger':parent_group.trigger,
             'cause':parent_group.cause,
@@ -634,6 +651,11 @@ class ChildGroupCreateView(GroupBaseMixin, CreateView):
             'errors':parent_group.errors.all(),
             'common_action':parent_group.common_action,
             'permanent_action':parent_group.permanent_action,
+            'urgency':parent_group.urgency,
+            'treatment_status':parent_group.treatment_status,
+            'effect_scope':parent_group.effect_scope,
+            'urgency':parent_group.urgency,
+            'classify_operator':self.request.user,
             'path':parent_group.path,
             'classify_operator':self.request.user,
             })
@@ -1243,8 +1265,9 @@ def event_classify_execute(request):
         if group.first_datetime is None or event.start_time < group.first_datetime:
             group.first_datetime = event.start_time
             group.save()
-
-    return HttpResponseRedirect(reverse_lazy('ptop:group_detail', kwargs={'pk': group.pk}))
+        return HttpResponseRedirect(reverse_lazy('ptop:group_detail', kwargs={'pk': group.pk}))
+    else:
+        return HttpResponseRedirect(reverse_lazy('ptop:home'))        
 
 def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     print(start_datetime, end_datetime)
@@ -1345,6 +1368,7 @@ def statistics_create_view(request):
         dict_ss={
             'count':values,
         }
+        keys=['Accelerator','Irradiation','TPS','Building','Other']
         df_ss=pd.DataFrame(dict_ss,index=keys)
         
         print(df_ss)

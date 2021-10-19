@@ -86,7 +86,7 @@
             </table>
       
             <p><a href="{% url 'ptop:event_classify_execute' %}?event_pk={{event.pk}}&group_pk={{group.pk}}" class="btn btn-primary">割り当て実行</a></p>
-            <p><a href="{% url 'ptop:child_group_create' group.pk %}" class="btn btn-info">サブグループ作成</a></p>
+            <p><a href="{% url 'ptop:child_group_create' group.pk %}?event_pk={{event.pk}}" class="btn btn-info">サブグループ作成</a></p>
 
           </div>
         </div>
