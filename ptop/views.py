@@ -561,6 +561,12 @@ class GroupBaseMixin(LoginRequiredMixin, object):
                     print('event.group', event.group)
                     event.save()
                     return redirect('ptop:group_detail', pk=obj.pk)
+            else:
+                form = self.form_class(request.POST)
+                if form.is_valid():
+                    obj = form.save()
+                    return redirect('ptop:group_detail', pk=obj.pk)
+
             return redirect('ptop:home')
             
         else:
