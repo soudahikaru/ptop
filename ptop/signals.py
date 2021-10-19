@@ -32,10 +32,11 @@ def trouble_group_pre_save_receiver(sender, instance, *args, **kwargs):
 		if not instance.path.endswith(finalpath):
 			# pathが存在するが、/自分のID/で終わらない場合=子groupのpath未入力の場合
 			# 作成した瞬間はparent_path = instance.pathになっている
+			print(instance.path)
 			parent_path = instance.path
 			q = TroubleGroup.objects.filter(path__exact=parent_path)
 			parent = q[0]
-	#		print(parent.num_created_child)
+			print(parent.num_created_child)
 			parent.num_created_child += 1
 			parent.save()
 			instance.classify_id = parent.classify_id + '-%d' % parent.num_created_child

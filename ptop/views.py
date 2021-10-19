@@ -650,6 +650,7 @@ class ChildGroupCreateView(GroupBaseMixin, CreateView):
             'causetype':parent_group.causetype,
             'errors':parent_group.errors.all(),
             'common_action':parent_group.common_action,
+            'first_datetime':parent_group.first_datetime,
             'permanent_action':parent_group.permanent_action,
             'urgency':parent_group.urgency,
             'treatment_status':parent_group.treatment_status,
