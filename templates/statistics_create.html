@@ -77,10 +77,12 @@ td {text-align:right}
     {% endif %}
     </div>
 
+    {% if graph_ss %}
     <div class="container">
         <h4>トラブル集計</h4>
         <img src="data:image/png;base64, {{ graph_ss | safe }} " alt="Supersectionごとのトラブル件数">
     </div>
+    {% endif %}
     
 
     <div class="container">
