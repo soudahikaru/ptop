@@ -1389,7 +1389,7 @@ def statistics_create_view(request):
         plt.clf()
         ax1=plt.subplot(111)
 #        print(df_event.loc[:,'num_acc':'num_bld'])
-        df_ss.plot.pie(ax=ax1, subplots=True, autopct=make_autopct(values))
+        df_ss.plot.pie(ax=ax1, subplots=True, autopct=make_autopct(values), startangle=90, counterclock=False)
 #        df_event.plot.bar(y=['num_acc', 'num_irr', 'num_tps', 'num_bld'], stacked=True)
         ax1.get_legend().remove()
 
