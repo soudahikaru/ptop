@@ -1388,10 +1388,10 @@ def statistics_create_view(request):
         print(df_ss)
         plt.clf()
         ax1=plt.subplot(111)
-        ax1.get_legend().remove()
 #        print(df_event.loc[:,'num_acc':'num_bld'])
-        df_ss.plot.pie(subplots=True, autopct=make_autopct(values))
+        df_ss.plot.pie(ax=ax1, subplots=True, autopct=make_autopct(values))
 #        df_event.plot.bar(y=['num_acc', 'num_irr', 'num_tps', 'num_bld'], stacked=True)
+        ax1.get_legend().remove()
 
         buffer = io.BytesIO()
         plt.savefig(buffer, dpi=100, bbox_inches='tight', format='png')
