@@ -34,7 +34,7 @@ def trouble_group_pre_save_receiver(sender, instance, *args, **kwargs):
 			# 作成した瞬間はparent_path = instance.pathになっている
 			print(instance.path)
 			parent_path = instance.path
-			q = TroubleGroup.objects.filter(path__exact=parent_path).exclude(id__isexact=instance.id)
+			q = TroubleGroup.objects.filter(path__exact=parent_path).exclude(id__exact=instance.id)
 			if q is None:
 				print('signal.py: on create_group, path exists but search result of path except itself is None')
 				return
