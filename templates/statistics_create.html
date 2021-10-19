@@ -209,7 +209,7 @@ td {text-align:right}
             var end_date = today;
             $("#id_date_s").val(formatDate(start_date));
             $("#id_date_e").val(formatDate(end_date));
-            $('input:radio[name="subtotal_frequency"]').val(['week']);
+            $('input:radio[name="subtotal_frequency"]').val(['month']);
             $("#id_submit").click();
         });
         $("#button_whole").on("click",function (e) {
