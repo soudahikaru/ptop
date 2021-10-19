@@ -39,6 +39,7 @@ urlpatterns = [
     path('update_event/<int:pk>/', views.EventUpdateView.as_view(), name='update_event'),
     path('eventlist/', TroubleEventList.as_view(), name='eventlist'),
     path('event_advanced_search/', views.EventAdvancedSearchView.as_view(), name='event_advanced_search'),
+    path('event_advanced_search_csv/', views.EventAdvancedSearchView.export_csv, name='event_advanced_search_csv'),
     path('create_event/', EventCreateView.as_view(), name='create_event'),
     path('advanced_search/', views.AdvancedSearchView.as_view(), name='advanced_search'),
     path('group_list/', views.TroubleGroupListView.as_view(), name='group_list'),

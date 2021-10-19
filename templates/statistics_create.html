@@ -14,7 +14,7 @@ td {text-align:right}
 
 {% block content %}
 
-  <div class="container">
+<div class="container">
     <h3>運転統計</h3>
     <form action="" method="post">
         {% csrf_token %}
@@ -43,43 +43,59 @@ td {text-align:right}
   <div class="container">
     <h4>結果</h4>
     {% if df is not None %}
-      <table border>
+        <table border>
         <tr><th>期間</th><th>運転時間[h]</th><th>治療時間[h]</th><th>治療ポート数</th><th>QAポート数</th><th>トラブル件数</th><th>故障時間[m]</th><th>治療遅延時間[m]</th><th>装置稼働率</th><th>治療稼働率</th></tr>
-      {% for index, row in df.iterrows %}
-        {% if forloop.last%}
-            <tr style="font-weight:bold">
-        {% else %}
-            <tr>
-        {% endif %}
-            {% if index == '合計' %}
-            <td>合計</td> 
-            {% elif subtotal_frequency == 'day' %}
-            <td>{{ index|date:'Y/n/j(D)' }}</td> 
-            {% elif subtotal_frequency == 'week' %}
-            <td>{{ index|date:'Y/n/j' }}週</td> 
-            {% elif subtotal_frequency == 'month' %}
-            <td>{{ index|date:'Y/n' }}</td> 
-            {% elif subtotal_frequency == 'year' %}
-            <td>{{ index|date:'Y' }}</td> 
+        {% for index, row in df.iterrows %}
+            {% if forloop.last%}
+                <tr style="font-weight:bold">
+            {% else %}
+                <tr>
             {% endif %}
-            <td>{{ row.subtotal_operation_time|divide:60|floatformat:1 }}</td>
-            <td>{{ row.subtotal_treatment_time|divide:60|floatformat:1 }}</td>
-            <td>{{ row.subtotal_num_treat_all|floatformat:0 }}</td>
-            <td>{{ row.subtotal_num_qa_all|floatformat:0 }}</td>
-            <td>{{ row.num_event|floatformat:0 }}</td>
-            <td>{{ row.subtotal_downtime|floatformat:0 }}</td>
-            <td>{{ row.subtotal_delaytime|floatformat:0 }}</td>
-            <td>{{ row.total_availability|percent:1 }}</td>
-            <td>{{ row.treatment_availability|percent:1 }}</td>
-        </tr>
-      {% endfor %}
-  </table>
+                {% if index == '合計' %}
+                <td>合計</td> 
+                {% elif subtotal_frequency == 'day' %}
+                <td>{{ index|date:'Y/n/j(D)' }}</td> 
+                {% elif subtotal_frequency == 'week' %}
+                <td>{{ index|date:'Y/n/j' }}週</td> 
+                {% elif subtotal_frequency == 'month' %}
+                <td>{{ index|date:'Y/n' }}</td> 
+                {% elif subtotal_frequency == 'year' %}
+                <td>{{ index|date:'Y' }}</td> 
+                {% endif %}
+                <td>{{ row.subtotal_operation_time|divide:60|floatformat:1 }}</td>
+                <td>{{ row.subtotal_treatment_time|divide:60|floatformat:1 }}</td>
+                <td>{{ row.subtotal_num_treat_all|floatformat:0 }}</td>
+                <td>{{ row.subtotal_num_qa_all|floatformat:0 }}</td>
+                <td>{{ row.num_event|floatformat:0 }}</td>
+                <td>{{ row.subtotal_downtime|floatformat:0 }}</td>
+                <td>{{ row.subtotal_delaytime|floatformat:0 }}</td>
+                <td>{{ row.total_availability|percent:1 }}</td>
+                <td>{{ row.treatment_availability|percent:1 }}</td>
+            </tr>
+        {% endfor %}
+        </table>
     {% endif %}
- 
-    <input type="submit" class="btn btn-primary" name="next" value="CSV出力" id="id_to_csv">
-    <a href="{% url 'ptop:home' %}" class="btn btn-secondary">戻る</a>
+    </div>
+
+    <div class="container">
+        <h4>トラブル集計</h4>
+        <img src="data:image/png;base64, {{ graph_ss | safe }} " alt="Supersectionごとのトラブル件数">
+    </div>
+    
+
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-4 text-left">
+                <a href="#" onclick="window.history.back(); return false;" class="btn btn-secondary">戻る</a>
+            </div>
+        <div class="col-sm-4 text-center">
+            <input type="submit" class="btn btn-primary" name="next" value="CSV出力" id="id_to_csv">
+        </div>
+        <div class="col-sm-4 text-right">
+        </div>
+    </div>
     </form>
-</div>
+
 
 {% endblock content %}
 

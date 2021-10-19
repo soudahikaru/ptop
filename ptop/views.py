@@ -1,5 +1,6 @@
 """ PTOP view module """
 import io
+from django.db.models.expressions import Subquery
 import pytz
 from datetime import datetime, timedelta
 from django.shortcuts import render, redirect
@@ -34,10 +35,13 @@ from reportlab.platypus import SimpleDocTemplate
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
+import base64
 import pandas as pd
 import numpy as np
 import re
 import jaconv
+import matplotlib
+import matplotlib.pyplot as plt
 #from django.shortcuts import get_list_or_404
 from dal import autocomplete
 from .forms import AttachmentForm
@@ -53,12 +57,15 @@ from .forms import StatisticsForm
 from .forms import CommentCreateForm
 from .forms import GroupDetailForm
 from .forms import AnnouncementCreateForm
-from .models import Device, Error
+from .models import Device, Error, Section, SuperSection
 from .models import TroubleEvent, TroubleGroup
 from .models import Attachment
 from .models import Comment
 from .models import Operation
 from .models import Announcement
+
+matplotlib.use('Agg')
+
 
 # Create your views here.
 
@@ -537,8 +544,8 @@ class GroupBaseMixin(LoginRequiredMixin, object):
                     print('group_pk=', obj.pk)
                     print('event.group', event.group)
                     event.save()
-#            return redirect('ptop:group_detail', pk=obj.pk)
-            return redirect('ptop:unapproved_event_list')
+            return redirect('ptop:group_detail', pk=obj.pk)
+#            return redirect('ptop:unapproved_event_list')
             
         else:
             return super().post(request, *args, **kwargs)
@@ -966,6 +973,19 @@ class EventAdvancedSearchView(ListView):
         sort_by = self.request.GET.get('sort_by', default='-start_time')
         object_list = queryset.order_by(sort_by, '-start_time')
         return object_list
+
+    def export_csv(request):
+        
+        queryset=EventAdvancedSearchView.get_queryset()
+        df = read_frame(queryset)
+
+        response = HttpResponse(content_type='text/csv; charset=cp932')
+        filename = 'EventAdvancedSearchResult_%s.csv' % (datetime.today().strftime('%Y%m%d-%H%M'))
+        print(filename)
+        response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+        df.to_csv(path_or_buf=response, encoding='utf_8_sig')
+        print(response)
+        return response
  
 class OperationListView(ListView):
     """OperationList画面"""
@@ -1224,7 +1244,7 @@ def event_classify_execute(request):
             group.first_datetime = event.start_time
             group.save()
 
-    return HttpResponseRedirect("/unapproved_event_list/")
+    return HttpResponseRedirect(reverse_lazy('ptop:group_detail', kwargs={'pk': group.pk}))
 
 def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     print(start_datetime, end_datetime)
@@ -1279,14 +1299,14 @@ def statistics_create_view(request):
         subtotal_frequency = request.POST['subtotal_frequency']
         if start and end:
             events = TroubleEvent.objects.filter(
-                Q(start_time__gt=start_t) & Q(end_time__lt=end_t)
+                Q(start_time__gt=start_t) & Q(start_time__lt=end_t)
                 ).order_by('start_time')
             operations = Operation.objects.filter(
                 ~Q(operation_type__name__iexact='装置停止')
                 & Q(start_time__gt=start_t) & Q(end_time__lt=end_t)
             ).order_by('start_time')
         else:
-            events = TroubleGroup.objects.all()
+            events = TroubleEvent.objects.all()
             operations = Operation.objects.all()
 
         tz_jp = pytz.timezone('Asia/Tokyo')
@@ -1294,6 +1314,8 @@ def statistics_create_view(request):
         start_localized = tz_jp.localize(start_datetime)
         end_datetime = timezone.datetime.strptime(end, '%Y-%m-%d')
         end_localized = tz_jp.localize(end_datetime)
+#        print(events.count())
+#        print(events)
         # troubleevent
         statistics_event = events.annotate(index=Trunc('start_time', kind=subtotal_frequency)) \
             .values('index') \
@@ -1301,7 +1323,43 @@ def statistics_create_view(request):
             .annotate(subtotal_downtime=Sum('downtime')) \
             .annotate(subtotal_delaytime=Sum('delaytime')) \
             .order_by('index')
+        print('annotate kasokuki')
+#        statistics_event = statistics_event.filter(device__section__super_section__name='加速器').annotate(num_acc=Count('id'))
+#        statistics_event = statistics_event.filter(device__section__super_section__name='照射系').annotate(num_irr=Count('id'))
+#        statistics_event = statistics_event.filter(device__section__super_section__name='治療計画').annotate(num_tps=Count('id'))
+#        statistics_event = statistics_event.filter(device__section__super_section__name='建屋').annotate(num_bld=Count('id'))
+        print(statistics_event)
         df_event = make_dataframe(statistics_event, start_localized, end_localized, subtotal_frequency)
+ #       print(df_event['num_acc'],df_event['num_irr'])
+        # trouble statistics(section)
+        for section in Section.objects.all():
+            print(section.name, events.filter(device__section=section).count())
+
+        # trouble statistics(supersection)
+        keys=[]
+        values=[]
+        for s_section in SuperSection.objects.all():
+            print(s_section.name)
+            keys.append(s_section.name)
+            values.append(events.filter(device__section__super_section__name=s_section.name).count())
+        dict_ss={
+            'count':values,
+        }
+        df_ss=pd.DataFrame(dict_ss,index=keys)
+        
+        print(df_ss)
+        plt.clf()
+        ax1=plt.subplot(111)
+#        print(df_event.loc[:,'num_acc':'num_bld'])
+        df_ss.plot.pie(subplots=True)
+#        df_event.plot.bar(y=['num_acc', 'num_irr', 'num_tps', 'num_bld'], stacked=True)
+
+        buffer = io.BytesIO()
+        plt.savefig(buffer, dpi=100, bbox_inches='tight', format='png')
+        image_png = buffer.getvalue()
+        graph_ss = base64.b64encode(image_png)
+        graph_ss = graph_ss.decode('utf-8')
+        buffer.close()
 
         #operation
         statistics_operation = operations.annotate(index=Trunc('start_time', kind=subtotal_frequency)) \
@@ -1354,6 +1412,7 @@ def statistics_create_view(request):
                     'subtotal_frequency':subtotal_frequency,
                     'df':df,
                     's_summary':s_summary,
+                    'graph_ss':graph_ss
                 }
                 )
     else:
