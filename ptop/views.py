@@ -1378,11 +1378,18 @@ def statistics_create_view(request):
         keys=['Accelerator','Irradiation','TPS','Building','Other']
         df_ss=pd.DataFrame(dict_ss,index=keys)
         
+        def make_autopct(values):
+            def my_autopct(pct):
+                total = sum(values)
+                val = int(round(pct*total/100.0))
+                return '{p:.1f}%  ({v:d})'.format(p=pct,v=val)
+            return my_autopct
+
         print(df_ss)
         plt.clf()
         ax1=plt.subplot(111)
 #        print(df_event.loc[:,'num_acc':'num_bld'])
-        df_ss.plot.pie(subplots=True)
+        df_ss.plot.pie(subplots=True, autopct=make_autopct(values))
 #        df_event.plot.bar(y=['num_acc', 'num_irr', 'num_tps', 'num_bld'], stacked=True)
 
         buffer = io.BytesIO()
