@@ -208,6 +208,7 @@ class Attachment(models.Model):
     def __str__(self):
         return self.title
 
+
 class OperationMetaType(models.Model):
     """Operationのメタ型。OperationTypeをさらに集約する。"""
 
@@ -531,3 +532,21 @@ class Announcement(models.Model):
                 value = getattr(self, field.name)
                 if value:
                     setattr(self, field.name, standardize_character(value))
+
+class TroubleCommunicationSheet(models.Model):
+    """不具合連絡票モデル"""
+    group = models.ForeignKey(
+        TroubleGroup, verbose_name='トラブル類型', null=False, blank=False,
+        on_delete=models.CASCADE)
+    version = models.PositiveIntegerField(null=False, blank=False)
+
+    user = models.ForeignKey(
+        User, verbose_name='発行者', null=True, on_delete=models.SET_NULL)
+    file = models.FileField(upload_to='trouble_communication_sheet/', null=True)
+
+    created_on = models.DateTimeField(auto_now_add=True)
+    modified_on = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+

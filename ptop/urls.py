@@ -34,6 +34,7 @@ urlpatterns = [
     path('event_detail/<int:pk>/', views.EventDetailView.as_view(), name='event_detail'),
     path('trouble_communication_sheet/<int:pk>/', views.TroubleCommunicationSheetView.as_view(), name='trouble_communication_sheet'),
     path('trouble_communication_sheet_pdf/<int:pk>/', views.TroubleCommunicationSheetPDFView.as_view(), name='trouble_communication_sheet_pdf'),
+    path('trouble_communication_sheet_dispatch/<int:pk>/', views.TroubleCommunicationSheetDispatchView.as_view(), name='trouble_communication_sheet_dispatch'),
     path('lognote_sheet/<int:pk>/', views.LognoteSheetView.as_view(), name='lognote_sheet'),
     path('recurrent_event_create_from_event/<int:pk>/', views.RecurrentEventCreateFromEventView.as_view(), name='recurrent_event_create_from_event'),
     path('update_event/<int:pk>/', views.EventUpdateView.as_view(), name='update_event'),

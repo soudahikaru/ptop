@@ -161,7 +161,10 @@
       </div>
       <div class="col-sm-4 text-center">
         <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_comment_create' object.pk %}', 'subwin','width=500,height=500');" class="btn btn-info">コメント作成</a>
-        <a href="{% url 'ptop:trouble_communication_sheet_pdf' object.pk %}" class="btn btn-danger">不具合連絡票発行</a>
+        <a href="{% url 'ptop:trouble_communication_sheet_pdf' object.pk %}" class="btn btn-danger">不具合連絡票</a>
+<!--
+        <a href="{% url 'ptop:trouble_communication_sheet_dispatch' object.pk %}" class="btn btn-danger">不具合連絡票発行</a>
+-->
       </div>
       <div class="col-sm-4 text-right">
         <a href="{% url 'ptop:update_group' object.pk %}" class="btn btn-primary">編集</a>

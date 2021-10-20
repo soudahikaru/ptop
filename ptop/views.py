@@ -322,8 +322,8 @@ class TroubleCommunicationSheetPDFView(DetailView):
     def get(self, request, *args, **kwargs):
 
         obj = self.get_object()
-        filename = '装置不具合連絡票TR%s(%s).pdf' % (obj.id, obj.title)  # 出力ファイル名
-        title = '装置不具合連絡票TR%s(%s).pdf' % (obj.id, obj.title)
+        filename = '装置不具合連絡票TR%s(%s).pdf' % (obj.classify_id, obj.title)  # 出力ファイル名
+        title = '装置不具合連絡票TR%s(%s).pdf' % (obj.classify_id, obj.title)
         font_name = 'HeiseiKakuGo-W5'  # フォント
         is_bottomup = True
 
@@ -410,7 +410,7 @@ class TroubleCommunicationSheetPDFView(DetailView):
         ]))
 #        elements.append(Paragraph('山形大学医学部東日本重粒子センター　重粒子線治療装置', style_title))
         elements.append(Paragraph('装置不具合連絡票', style_title))
-        elements.append(Paragraph('連絡票ID: TR%s' % obj.id, style_title))
+        elements.append(Paragraph('連絡票ID: TR%s' % obj.classify_id, style_title))
         elements.append(Paragraph('山形大学医学部東日本重粒子センター', style_signature))
         elements.append(Paragraph('発行者: %s' %  obj.classify_operator.fullname(), style_signature))
         elements.append(Paragraph('発行日時: %s' % datetime.now().strftime('%Y/%m/%d %H:%M'), style_signature))
@@ -441,6 +441,133 @@ class TroubleCommunicationSheetPDFView(DetailView):
 
     def _draw(self, p):
         pass
+
+class TroubleCommunicationSheetDispatchView(DetailView):
+    '''不具合連絡票PDF発行画面'''
+    template_name = 'trouble_communication_sheet_dispatch.html'
+    model = TroubleGroup
+
+#    def get(self, request, *args, **kwargs):
+    def get_context_data(self, **kwargs):
+
+        obj = self.get_object()
+        filename = '装置不具合連絡票TR%s(%s).pdf' % (obj.classify_id, obj.title)  # 出力ファイル名
+        title = '装置不具合連絡票TR%s(%s).pdf' % (obj.classify_id, obj.title)
+        font_name = 'HeiseiKakuGo-W5'  # フォント
+        is_bottomup = True
+
+        # PDF出力
+        response = HttpResponse(status=200, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)  # ダウンロードする場合
+        # response['Content-Disposition'] = 'filename="{}"'.format(filename)  # 画面に表示する場合
+        # A4縦書きのpdfを作る
+        size = portrait(A4)
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer,
+                                rightMargin=20*mm,
+                                leftMargin=20*mm,
+                                topMargin=20*mm,
+                                bottomMargin=20*mm,
+                                pagesize=size,
+                                title=filename[:-4])
+        elements = []
+        # pdfを描く場所を作成：位置を決める原点は左上にする(bottomup)
+        # デフォルトの原点は左下
+        p = canvas.Canvas(response, pagesize=size, bottomup=is_bottomup)
+        pdfmetrics.registerFont(UnicodeCIDFont(font_name))
+        p.setFont(font_name, 16)  # フォントを設定
+        # pdfのタイトルを設定
+        p.setTitle(title)
+        if obj.first_event() is not None:
+            first_datetime = timezone.localtime(obj.first_event().start_time)
+            if obj.first_event().downtime is not None:
+                first_downtime = obj.first_event().downtime
+            else:
+                first_downtime = 0
+            if obj.first_event().downtime is not None:
+                first_delaytime = obj.first_event().delaytime
+            else:
+                first_delaytime = 0
+        else:
+            first_datetime = None
+            first_downtime = 0
+            first_delaytime = 0
+            
+        errorcode_str = ', '.join(list(obj.errors.values_list('error_code', flat=True)))
+        if first_datetime is not None:
+            first_datetime_str = first_datetime.strftime('%Y/%m/%d %H:%M')
+        else:
+            first_datetime_str = ''
+
+        style_title = ParagraphStyle(name='Normal', fontName=font_name, fontSize=18, leading=24, alignment=TA_CENTER)
+        style_signature = ParagraphStyle(name='Normal', fontName=font_name, fontSize=12, leading=16, alignment=TA_RIGHT)
+        style_table = ParagraphStyle(name='Normal', fontName=font_name, fontSize=12, leading=14, alignment=TA_LEFT)
+
+        # 表の情報
+        data = [
+            ['題名', obj.title],
+            ['治療可否の状態', obj.treatment_status.name if obj.treatment_status is not None else '未入力'],
+            ['影響範囲', obj.effect_scope.name if obj.effect_scope is not None else '未入力'],
+            ['対処緊急度', obj.urgency.name if obj.urgency is not None else '未入力'],
+            ['初発日時', first_datetime_str],
+            ['発生回数', '%d回' % obj.num_events()],
+            ['初回停止時間', '%d分(遅延%d分)' % (first_downtime, first_delaytime)],
+            ['平均停止時間', '%.1f分' % obj.average_downtime() if obj.average_downtime() is not None else '未入力'],
+            ['デバイスID', '%s (%s)' % (obj.device.device_id, obj.device.name)],
+            ['内容', Paragraph(obj.description, style_table)],
+            ['エラーコード', errorcode_str],
+            ['直前の操作', Paragraph(obj.trigger, style_table)],
+            ['原因', Paragraph(obj.cause, style_table)],
+            ['応急処置', Paragraph(obj.common_action, style_table)],
+            ['要望項目', ', '.join(list(obj.require_items.values_list('name', flat=True)))],
+            ['要望詳細', Paragraph(obj.require_detail if obj.require_detail is not None else '', style_table)],
+        ]
+        table = Table(data, (35 * mm, 130 * mm), None, hAlign='LEFT')
+        
+        # TableStyleを使って、Tableの装飾をします。
+        table.setStyle(TableStyle([
+            # 表で使うフォントとそのサイズを設定
+            ('FONT', (0, 0), (-1, -1), font_name, 12),
+            # 四角に罫線を引いて、0.5の太さで、色は黒
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            # 四角の内側に格子状の罫線を引いて、0.25の太さで、色は黒
+            ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+            # セルの縦文字位置
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ("ALIGN", (0, 0), (-1, -1), 'LEFT'),
+        ]))
+#        elements.append(Paragraph('山形大学医学部東日本重粒子センター　重粒子線治療装置', style_title))
+        elements.append(Paragraph('装置不具合連絡票', style_title))
+        elements.append(Paragraph('連絡票ID: TR%s' % obj.classify_id, style_title))
+        elements.append(Paragraph('山形大学医学部東日本重粒子センター', style_signature))
+        elements.append(Paragraph('発行者: %s' %  obj.classify_operator.fullname(), style_signature))
+        elements.append(Paragraph('発行日時: %s' % datetime.now().strftime('%Y/%m/%d %H:%M'), style_signature))
+        elements.append(table)
+        table.canv = p
+        w, h = table.wrap(0, 0)
+        print(w / mm, h / mm)
+
+        table.wrapOn(p, 25 * mm, 260 * mm)
+        table.drawOn(p, 25 * mm, 260 * mm - h)
+        p.drawString(25 * mm, 280 * mm, '山形大学医学部東日本重粒子センター　重粒子線治療装置')
+        p.drawString(25 * mm, 272 * mm, '装置不具合連絡票')
+        p.drawString(25 * mm, 264 * mm, '連絡票ID: TR%s' % obj.id)
+
+
+        doc.build(elements)
+        buffer.seek(0)
+
+        pdf_bytes = buffer.getvalue()
+        pdf_b64 = base64.b64encode(pdf_bytes)
+        pdf_b64 = pdf_b64.decode('utf-8')
+
+#        print(pdf_b64)
+        context = super().get_context_data(**kwargs)
+        context['pdf_file'] = pdf_b64
+        return context
+
+
 
 class TroubleCommunicationSheetView(DetailView):
     """不具合連絡票詳細画面"""
@@ -1255,6 +1382,7 @@ def event_classify(request, pk_):
         {'event':event, 'object_list':object_list, 'group':group}
         )
 
+
 def event_classify_execute(request):
     """イベント分類実行"""
     event_pk = request.GET.get('event_pk')
@@ -1315,6 +1443,10 @@ def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     df = df.sort_index().asfreq(freq_str, fill_value=0).fillna(0)
     print(df)
     return df
+
+def draw_availability(df):
+    
+    return graph
 
 def statistics_create_view(request):
     form = StatisticsForm()
