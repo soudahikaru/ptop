@@ -198,7 +198,7 @@ class PopupErrorCreate(ErrorCreate):
         }
         return render(self.request, 'close.html', context)
 
-class CommentCreateView(CreateView):
+class CommentCreateView(LoginRequiredMixin, CreateView):
     """新規Commentの作成"""
     model = Comment
     template_name = 'comment_create.html'
@@ -1445,7 +1445,7 @@ def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     return df
 
 def draw_availability(df):
-    
+
     return graph
 
 def statistics_create_view(request):
