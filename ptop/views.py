@@ -1653,19 +1653,20 @@ def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
 def draw_availability(df, interval):
     print(interval)
     df=df[:-1]
-    df.index = pd.to_datetime(df.index, utc=True)
+    df.index = pd.to_datetime(df.index)
     plt.clf()
     ax1=plt.subplot(111)
     df.plot(ax=ax1, y='treatment_availability', style='ro-', label='')
     print(df.index)
     plt.ylabel('Machine Availability for Treatment')
-    plt.xticks(rotation=0)
     if interval=='month':
         plt.xlabel('Month')
-        ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y\n%m'))
-    if interval=='week':
+        plt.xticks(df.index.to_list(), df.index.strftime('%Y\n%m').to_list(), rotation=0)
+#        ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y\n%m'))
+    if interval=='week' or interval=='day':
         plt.xlabel('Date')
-        ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%m/%d'))
+        plt.xticks(df.index.to_list(), df.index.strftime('%m/%d').to_list(), rotation=0)
+#        ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%m/%d'))
     ax1.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1))
     ax1.get_legend().remove()
 
