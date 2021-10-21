@@ -43,6 +43,7 @@ import numpy as np
 import re
 import jaconv
 import matplotlib
+import matplotlib.dates
 import matplotlib.pyplot as plt
 #from django.shortcuts import get_list_or_404
 from dal import autocomplete
@@ -1654,6 +1655,8 @@ def draw_availability(df):
     ax1=plt.subplot(111)
     df.plot(ax=ax1, y='treatment_availability', style='ro-', label='')
     plt.ylabel('Machine Availability for Treatment')
+    ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%y-%m'))
+    ax1.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1))
     ax1.get_legend().remove()
 
     buffer = io.BytesIO()
