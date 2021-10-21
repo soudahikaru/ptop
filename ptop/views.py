@@ -1650,14 +1650,22 @@ def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     print(df)
     return df
 
-def draw_availability(df):
+def draw_availability(df, interval):
+    print(interval)
+    df=df[:-1]
+    df.index = pd.to_datetime(df.index, utc=True)
     plt.clf()
     ax1=plt.subplot(111)
     df.plot(ax=ax1, y='treatment_availability', style='ro-', label='')
     print(df.index)
-    plt.ylabel('')
     plt.ylabel('Machine Availability for Treatment')
-    ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%y-%m'))
+    plt.xticks(rotation=0)
+    if interval=='month':
+        plt.ylabel('Month')
+        ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y\n%m'))
+    if interval=='week':
+        plt.ylabel('Date')
+        ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%m/%d'))
     ax1.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1))
     ax1.get_legend().remove()
 
@@ -1788,7 +1796,7 @@ def statistics_create_view(request):
 #        s_summary['treatment_availability'] = 1.0 - (s_summary['subtotal_delaytime'].divide(s_summary['subtotal_treatment_time']))
         print(df)
 
-        graph_avail = draw_availability(df)
+        graph_avail = draw_availability(df, subtotal_frequency)
 
         if request.POST.get('next', '') == 'CSV出力':
             response = HttpResponse(content_type='text/csv; charset=cp932')
