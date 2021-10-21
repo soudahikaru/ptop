@@ -69,6 +69,7 @@ from .models import Attachment
 from .models import Comment
 from .models import Operation
 from .models import Announcement
+from .models import EmailAddress
 
 matplotlib.use('Agg')
 
@@ -76,7 +77,8 @@ matplotlib.use('Agg')
 # Create your views here.
 
 def get_tcs_address_list():
-    return [user.email for user in User.objects.filter(is_tcs_destination=True, email__isnull=False)]
+#    return [user.email for user in User.objects.filter(is_tcs_destination=True, email__isnull=False)]
+    return [item.email for item in EmailAddress.objects.filter(is_tcs_destination=True, email__isnull=False).order_by('display_order')]
 
 def standardize_character(str):
     """文字表記ゆれを統一する関数(カナは全角、英数字と記号は半角に変換)"""

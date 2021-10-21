@@ -539,6 +539,18 @@ class Announcement(models.Model):
                 if value:
                     setattr(self, field.name, standardize_character(value))
 
+class EmailAddress(models.Model):
+    email = models.EmailField(blank=False, validators=[EmailValidator('Invalid email address.')])
+    is_tcs_destination = models.BooleanField(
+        default=True,
+        help_text='不具合連絡票送信先に含める'
+    )
+    display_order = models.IntegerField(null=False, blank=False)
+
+    def __str__(self):
+        return self.email
+
+
 class TroubleCommunicationSheet(models.Model):
     """不具合連絡票モデル"""
     group = models.ForeignKey(

@@ -30,6 +30,7 @@ from .models import EffectScope
 from .models import TreatmentStatusType
 from .models import Urgency
 from .models import TroubleCommunicationSheet
+from .models import EmailAddress
 
 #@admin.register(User)
 
@@ -237,6 +238,7 @@ admin.site.register(TroubleGroup, SimpleHistoryAdmin)
 admin.site.register(TroubleEvent, SimpleHistoryAdmin)
 admin.site.register(Device, DeviceAdmin)
 admin.site.register(Error, ErrorAdmin)
+admin.site.register(EmailAddress)
 admin.site.register(CauseType, CauseTypeAdmin)
 admin.site.register(RequireType, RequireTypeAdmin)
 admin.site.register(VendorStatusType, VendorStatusTypeAdmin)
