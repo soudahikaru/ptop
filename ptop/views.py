@@ -1802,8 +1802,8 @@ def statistics_create_view(request):
                     'subtotal_frequency':subtotal_frequency,
                     'df':df,
                     's_summary':s_summary,
-                    'graph_ss':graph_ss
-                    'graph_avail':graph_avail
+                    'graph_ss':graph_ss,
+                    'graph_avail':graph_avail,
                 }
                 )
     else:
