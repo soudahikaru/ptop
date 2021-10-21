@@ -1653,10 +1653,9 @@ def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
 def draw_availability(df):
     plt.clf()
     ax1=plt.subplot(111)
-    df.plot(ax=ax1, x='index', y='treatment_availability', style='ro-', label='')
+    df.plot(ax=ax1, y='treatment_availability', style='ro-', label='')
     plt.ylabel('')
     plt.ylabel('Machine Availability for Treatment')
-    ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%y-%m'))
     ax1.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1))
     ax1.get_legend().remove()
 
