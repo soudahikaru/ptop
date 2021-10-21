@@ -1661,10 +1661,10 @@ def draw_availability(df, interval):
     plt.ylabel('Machine Availability for Treatment')
     plt.xticks(rotation=0)
     if interval=='month':
-        plt.ylabel('Month')
+        plt.xlabel('Month')
         ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y\n%m'))
     if interval=='week':
-        plt.ylabel('Date')
+        plt.xlabel('Date')
         ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%m/%d'))
     ax1.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1))
     ax1.get_legend().remove()
