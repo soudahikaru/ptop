@@ -1663,10 +1663,13 @@ def draw_availability(df, interval):
         plt.xlabel('Month')
         plt.xticks(df.index.to_list(), df.index.strftime('%Y\n%m').to_list(), rotation=0)
 #        ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y\n%m'))
-    if interval=='week' or interval=='day':
-        plt.xlabel('Date')
+    elif interval=='week':
+        plt.xlabel('Week')
         plt.xticks(df.index.to_list(), df.index.strftime('%m/%d').to_list(), rotation=0)
 #        ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%m/%d'))
+    elif interval=='day':
+        plt.xlabel('Day')
+        plt.xticks(df.index.to_list(), df.index.strftime('%m/%d\n%a').to_list(), rotation=0)
     ax1.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1))
     ax1.get_legend().remove()
 
