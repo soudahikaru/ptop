@@ -564,7 +564,7 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
         elements.append(Paragraph(f'発行者: {self.request.user.fullname()}', style_signature))
         elements.append(Paragraph(f'発行日時: {datetime.now().strftime("%Y/%m/%d %H:%M")}', style_signature))
         elements.append(table)
-        if obj.comments.count > 0:
+        if obj.comments.count() > 0:
             elements.append(Paragraph('コメント', style_table))
             for comment in obj.comments.order_by('posted_on'):
                 elements.append(Paragraph(f'・{comment.description} - {comment.posted_on.strftime("%Y/%m/%d %H:%M")} {comment.user.fullname()}', style_table))
