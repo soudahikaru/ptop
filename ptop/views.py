@@ -561,7 +561,7 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
         elements.append(Paragraph('装置不具合連絡票', style_title))
         elements.append(Paragraph(f'連絡票ID: TR{obj.classify_id} 第{version}版', style_title))
         elements.append(Paragraph('山形大学医学部東日本重粒子センター', style_signature))
-        elements.append(Paragraph(f'発行者: {obj.classify_operator.fullname()}', style_signature))
+        elements.append(Paragraph(f'発行者: {self.request.user.fullname()}', style_signature))
         elements.append(Paragraph(f'発行日時: {datetime.now().strftime("%Y/%m/%d %H:%M")}', style_signature))
         elements.append(table)
         if obj.comments:
