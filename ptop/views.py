@@ -1650,7 +1650,18 @@ def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     return df
 
 def draw_availability(df):
-    graph = 1
+    plt.clf()
+    ax1=plt.subplot(111)
+    df.plot(ax=ax1, y='treatment_availability', style='ro-', label='')
+    plt.ylabel('Machine Availability for Treatment')
+    ax1.get_legend().remove()
+
+    buffer = io.BytesIO()
+    plt.savefig(buffer, dpi=100, bbox_inches='tight', format='png')
+    image_png = buffer.getvalue()
+    graph = base64.b64encode(image_png)
+    graph = graph.decode('utf-8')
+    buffer.close()
     return graph
 
 def statistics_create_view(request):
@@ -1771,6 +1782,9 @@ def statistics_create_view(request):
 #        s_summary['total_availability'] = 1.0 - (s_summary['subtotal_downtime'].divide(s_summary['subtotal_operation_time']))
 #        s_summary['treatment_availability'] = 1.0 - (s_summary['subtotal_delaytime'].divide(s_summary['subtotal_treatment_time']))
         print(df)
+
+        graph_avail = draw_availability(df)
+
         if request.POST.get('next', '') == 'CSV出力':
             response = HttpResponse(content_type='text/csv; charset=cp932')
             filename = 'stat%s.csv' % (datetime.today().strftime('%Y%m%d-%H%M'))
@@ -1789,6 +1803,7 @@ def statistics_create_view(request):
                     'df':df,
                     's_summary':s_summary,
                     'graph_ss':graph_ss
+                    'graph_avail':graph_avail
                 }
                 )
     else:

@@ -77,6 +77,12 @@ td {text-align:right}
     {% endif %}
     </div>
 
+    {% if graph_avail %}
+    <div class="container">
+        <img src="data:image/png;base64, {{ graph_avail | safe }} " alt="運転統計グラフ">
+    </div>
+    {% endif %}
+
     {% if graph_ss %}
     <div class="container">
         <h4>トラブル集計</h4>
