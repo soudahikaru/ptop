@@ -621,6 +621,9 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
 
 　装置不具合連絡票 TR{group.classify_id} (第{obj.version}版) を添付の通り発行いたします。
 
+PT-DOM URL:
+http://133.24.154.31/group_detail/{group.id}/
+
 題名: {group.title}
 初発日時: {first_datetime_str}
 内容: {group.description}
