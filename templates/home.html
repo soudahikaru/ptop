@@ -21,13 +21,13 @@
       <div class="col-sm-6">
         <div class="card">
           <h2 class="card-header">トラブル検索</h2>
-          <form action="{% url 'ptop:eventlist' %}">
             <div class="bg-event">
-              トラブル事象 <input name="query" value="{{ request.GET.query }}" type="text">
-              <button type="submit" class="btn btn-primary">検索</button>
-              <a href="{% url 'ptop:event_advanced_search' %}" class="btn btn-primary">詳細検索</a>
+              <form action="{% url 'ptop:eventlist' %}">
+                トラブル事象 <input name="query" value="{{ request.GET.query }}" type="text">
+                <button type="submit" class="btn btn-primary">検索</button>
+                <a href="{% url 'ptop:event_advanced_search' %}" class="btn btn-primary">詳細検索</a>
+              </form>
             </div>
-          </form>
           <form action="{% url 'ptop:group_list' %}">
             <div class="bg-group">
               トラブル類型 <input name="query" value="{{ request.GET.query }}" type="text">

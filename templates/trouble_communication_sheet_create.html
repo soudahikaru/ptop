@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<title>装置不具合連絡票 - {{object.title}} - Particle Therapy Database of Operation and Maintenance</title>
+<style>
+    body{padding-top: 32px;}
+    h1 {text-align: center;}
+    h2 {text-align: center;}
+    table {width:800px; table-layout: fixed; margin: auto;}
+    .center {text-align: center;}
+    .warning {color: red;}
+    .label {width: 10em;}
+    .date {text-align: right;}
+    .facility {text-align: right;}
+    .footer {text-align: right;}
+    .counterperson {text-align: right;}
+</style>
+
+{% endblock header %}
+
+{% block content %}
+<h1>装置不具合連絡票発行 確認画面</h1>
+
+<div class="container" class="center">
+    <div class="card">
+        <h5 class="card-header">対象トラブル類型</h5>
+        <div class="card-body">
+            <div class="col-sm-12 text-left">
+                <p>分類ID: {{group.classify_id}}</p>
+                <p>題名: {{group.title}}</p>
+                <p>連絡票ver: 第{{version}}版</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container" class="center">
+    <div class="card">
+        <h5 class="card-header">PDFプレビュー</h5>
+        <div class="card-body">
+            <div class="col-sm-12 text-center">
+                <embed src="data:application/pdf;base64,{{pdf_file}}" name="{{pdf_filename}}" type="application/pdf" height="700px" width="800px"> 
+                </div>
+        </div>
+    </div>
+</div>
+
+
+<form action="" method="POST">
+    {% csrf_token %}
+<table border>
+    {% for field in form %}
+    {{ field.as_hidden }}
+    {% endfor %}
+</table>
+
+<div class="container" class="center">
+    <div class="card">
+        <h5 class="card-header">送信先アドレス</h5>
+        <div class="card-body">
+            <div class="col-sm-12 text-left">
+                <ul>
+                    {% for address in mailto_list %}
+                        <li>{{address}}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container" class="center">
+    <div class="card">
+        <h5 class="card-header">発行前チェック</h5>
+        <div class="card-body">
+            <div class="col-sm-12 text-left">
+                <ul>
+                    {% if group.treatment_status %}
+                    {% else %}
+                        <li class='warning'>治療可否の状況が入力されていません。</li>
+                    {% endif %}
+                    {% if group.effect_scope %}
+                    {% else %}
+                        <li class='warning'>影響範囲が入力されていません。</li>
+                    {% endif %}
+                    {% if group.urgency %}
+                    {% else %}
+                        <li class='warning'>対処緊急度が入力されていません。</li>
+                    {% endif %}
+                    {% if group.require_items.count %}
+                    {% else %}
+                        <li class='warning'>要望項目が選択されていません。</li>
+                    {% endif %}
+                    {% if group.require_detail %}
+                    {% else %}
+                        <li class='warning'>要望詳細が入力されていません。</li>
+                    {% endif %}
+                    </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-4 text-left">
+            <a href="#" onclick="window.history.back(); return false;" class="btn btn-secondary">戻る</a>
+        </div>
+        <div class="col-sm-4 text-center">
+            <input class="btn btn-danger" type="submit" value="発行する">
+        </div>
+        <div class="col-sm-4 text-right">
+        </div>
+    </div>
+</div>
+</form>
+
+{% endblock content %}

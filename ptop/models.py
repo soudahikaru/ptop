@@ -97,6 +97,12 @@ class User(AbstractBaseUser, PermissionsMixin):
             Unselect this instead of deleting accounts.'
     )
 
+    # 不具合連絡票送信先かどうかのフラグ
+    is_tcs_destination = models.BooleanField(
+        default=False,
+        help_text='不具合連絡票送信先に含める'
+    )
+
     objects = CustomUserManager()
 
     # 平たくいうと上からメールドレスフィールド、ユーザー名として使うフィールド、スーパーユーザーを作る際に必ず入力するべきフィールドを指定している。
@@ -548,5 +554,5 @@ class TroubleCommunicationSheet(models.Model):
     modified_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.title
+        return f'{self.group.classify_id}-ver{self.version}'
 

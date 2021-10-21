@@ -29,6 +29,7 @@ from .models import Announcement
 from .models import EffectScope
 from .models import TreatmentStatusType
 from .models import Urgency
+from .models import TroubleCommunicationSheet
 
 #@admin.register(User)
 
@@ -36,7 +37,7 @@ class AdminUserAdmin(UserAdmin):
     """ user admin class """
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        (_('Personal info'), {'fields': ('last_name', 'first_name', 'phs_number', 'email', 'display_order')}),
+        (_('Personal info'), {'fields': ('last_name', 'first_name', 'phs_number', 'email', 'is_tcs_destination','display_order')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser',
                                        'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
@@ -244,6 +245,7 @@ admin.site.register(Operation)
 admin.site.register(OperationType, OperationTypeAdmin)
 admin.site.register(OperationMetaType, OperationMetaTypeAdmin)
 admin.site.register(Comment)
+admin.site.register(TroubleCommunicationSheet)
 admin.site.register(CommentType, CommentTypeAdmin)
 admin.site.register(Section, SectionAdmin)
 admin.site.register(SuperSection, SuperSectionAdmin)

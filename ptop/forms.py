@@ -8,7 +8,7 @@ from django.core import validators
 from django import forms
 from django.urls import reverse_lazy
 from django.utils import timezone
-from .models import TroubleEvent, Device, Error
+from .models import TroubleCommunicationSheet, TroubleEvent, Device, Error
 from .models import TroubleGroup
 from .models import User
 from .models import Attachment
@@ -507,3 +507,23 @@ class CommentCreateForm(forms.ModelForm):
         model = Comment
         fields = (
             'posted_group', 'parent', 'description', 'comment_type', 'user', 'attachments')
+
+class TroubleCommunicationSheetCreateForm(forms.ModelForm):
+    group = forms.ModelChoiceField(
+        TroubleGroup.objects.all(),
+        #widget=forms.HiddenInput()
+        )
+    version = forms.IntegerField(
+        #widget=forms.HiddenInput()
+        )
+    user = forms.ModelChoiceField(
+        User.objects.all(),
+        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+        label='作成者', help_text='自動的にログインユーザとなります。', required=False)
+    file_base64 = forms.CharField(required=False)
+    filename = forms.CharField(required=False)
+
+    class Meta:
+        model = TroubleCommunicationSheet
+        fields = (
+            'group', 'version','user')

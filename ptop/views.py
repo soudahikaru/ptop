@@ -8,6 +8,8 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.views.generic.edit import FormMixin
 from django.utils import timezone
 #from django.utils.translation import gettext_lazy as _
+from django.core.files.base import ContentFile
+from django.core.mail import send_mail, EmailMessage
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -55,10 +57,13 @@ from .forms import ChangeOperationForm
 from .forms import OperationCreateForm
 from .forms import StatisticsForm
 from .forms import CommentCreateForm
+from .forms import TroubleCommunicationSheetCreateForm
 from .forms import GroupDetailForm
 from .forms import AnnouncementCreateForm
+from .models import User
 from .models import Device, Error, Section, SuperSection
 from .models import TroubleEvent, TroubleGroup
+from .models import TroubleCommunicationSheet
 from .models import Attachment
 from .models import Comment
 from .models import Operation
@@ -68,6 +73,9 @@ matplotlib.use('Agg')
 
 
 # Create your views here.
+
+def get_tcs_address_list():
+    return [user.email for user in User.objects.filter(is_tcs_destination=True, email__isnull=False)]
 
 def standardize_character(str):
     """文字表記ゆれを統一する関数(カナは全角、英数字と記号は半角に変換)"""
@@ -442,6 +450,199 @@ class TroubleCommunicationSheetPDFView(DetailView):
     def _draw(self, p):
         pass
 
+class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
+    '''不具合連絡票作成画面'''
+    template_name = 'trouble_communication_sheet_create.html'
+    model = TroubleCommunicationSheet
+    form_class = TroubleCommunicationSheetCreateForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:group_detail', kwargs={'pk': self.request.GET.get('group')})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        obj = get_object_or_404(TroubleGroup, pk=self.request.GET.get('group'))
+
+        # versionの決定
+        version = 0
+        sheets = obj.troublecommunicationsheet_set.all()
+        if sheets.count() == 0:
+            version = 1
+        else:
+            version = sheets.order_by('-created_on')[0].version + 1
+
+        filename = f'装置不具合連絡票TR{obj.classify_id}({obj.title})ver{version}.pdf'  # 出力ファイル名
+        title = filename
+        font_name = 'HeiseiKakuGo-W5'  # フォント
+        is_bottomup = True
+
+        # PDF出力
+        response = HttpResponse(status=200, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="{}"'.format(filename)  # ダウンロードする場合
+        # response['Content-Disposition'] = 'filename="{}"'.format(filename)  # 画面に表示する場合
+        # A4縦書きのpdfを作る
+        size = portrait(A4)
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer,
+                                rightMargin=20*mm,
+                                leftMargin=20*mm,
+                                topMargin=20*mm,
+                                bottomMargin=20*mm,
+                                pagesize=size,
+                                title=filename[:-4])
+        elements = []
+        # pdfを描く場所を作成：位置を決める原点は左上にする(bottomup)
+        # デフォルトの原点は左下
+        p = canvas.Canvas(response, pagesize=size, bottomup=is_bottomup)
+        pdfmetrics.registerFont(UnicodeCIDFont(font_name))
+        p.setFont(font_name, 16)  # フォントを設定
+        # pdfのタイトルを設定
+        p.setTitle(title)
+        if obj.first_event() is not None:
+            first_datetime = timezone.localtime(obj.first_event().start_time)
+            if obj.first_event().downtime is not None:
+                first_downtime = obj.first_event().downtime
+            else:
+                first_downtime = 0
+            if obj.first_event().downtime is not None:
+                first_delaytime = obj.first_event().delaytime
+            else:
+                first_delaytime = 0
+        else:
+            first_datetime = None
+            first_downtime = 0
+            first_delaytime = 0
+            
+        errorcode_str = ', '.join(list(obj.errors.values_list('error_code', flat=True)))
+        if first_datetime is not None:
+            first_datetime_str = first_datetime.strftime('%Y/%m/%d %H:%M')
+        else:
+            first_datetime_str = ''
+
+        style_title = ParagraphStyle(name='Normal', fontName=font_name, fontSize=18, leading=24, alignment=TA_CENTER)
+        style_signature = ParagraphStyle(name='Normal', fontName=font_name, fontSize=12, leading=16, alignment=TA_RIGHT)
+        style_table = ParagraphStyle(name='Normal', fontName=font_name, fontSize=12, leading=14, alignment=TA_LEFT)
+
+        # 表の情報
+        data = [
+            ['題名', obj.title],
+            ['治療可否の状態', obj.treatment_status.name if obj.treatment_status is not None else '未入力'],
+            ['影響範囲', obj.effect_scope.name if obj.effect_scope is not None else '未入力'],
+            ['対処緊急度', obj.urgency.name if obj.urgency is not None else '未入力'],
+            ['初発日時', first_datetime_str],
+            ['発生回数', '%d回' % obj.num_events()],
+            ['初回停止時間', '%d分(遅延%d分)' % (first_downtime, first_delaytime)],
+            ['平均停止時間', '%.1f分' % obj.average_downtime() if obj.average_downtime() is not None else '未入力'],
+            ['デバイスID', '%s (%s)' % (obj.device.device_id, obj.device.name)],
+            ['内容', Paragraph(obj.description, style_table)],
+            ['エラーコード', errorcode_str],
+            ['直前の操作', Paragraph(obj.trigger, style_table)],
+            ['原因', Paragraph(obj.cause, style_table)],
+            ['応急処置', Paragraph(obj.common_action, style_table)],
+            ['要望項目', ', '.join(list(obj.require_items.values_list('name', flat=True)))],
+            ['要望詳細', Paragraph(obj.require_detail if obj.require_detail is not None else '', style_table)],
+        ]
+        table = Table(data, (35 * mm, 130 * mm), None, hAlign='LEFT')
+        
+        # TableStyleを使って、Tableの装飾をします。
+        table.setStyle(TableStyle([
+            # 表で使うフォントとそのサイズを設定
+            ('FONT', (0, 0), (-1, -1), font_name, 12),
+            # 四角に罫線を引いて、0.5の太さで、色は黒
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            # 四角の内側に格子状の罫線を引いて、0.25の太さで、色は黒
+            ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+            # セルの縦文字位置
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ("ALIGN", (0, 0), (-1, -1), 'LEFT'),
+        ]))
+#        elements.append(Paragraph('山形大学医学部東日本重粒子センター　重粒子線治療装置', style_title))
+        elements.append(Paragraph('装置不具合連絡票', style_title))
+        elements.append(Paragraph(f'連絡票ID: TR{obj.classify_id} 第{version}版', style_title))
+        elements.append(Paragraph('山形大学医学部東日本重粒子センター', style_signature))
+        elements.append(Paragraph(f'発行者: {obj.classify_operator.fullname()}', style_signature))
+        elements.append(Paragraph(f'発行日時: {datetime.now().strftime("%Y/%m/%d %H:%M")}', style_signature))
+        elements.append(table)
+        if obj.comments:
+            elements.append(Paragraph('コメント', style_table))
+            for comment in obj.comments.order_by('posted_on'):
+                elements.append(Paragraph(f'・{comment.description} - {comment.posted_on.strftime("%Y/%m/%d %H:%M")} {comment.user.fullname()}', style_table))
+
+        doc.build(elements)
+        buffer.seek(0)
+
+        pdf_bytes = buffer.getvalue()
+        pdf_b64 = base64.b64encode(pdf_bytes)
+        pdf_b64 = pdf_b64.decode('utf-8')
+
+#        print(pdf_b64)
+        context = super().get_context_data(**kwargs)
+        context['group'] = obj
+        context['pdf_file'] = pdf_b64
+        context['pdf_filename'] = filename
+        context['version'] = version
+        context['form'] = TroubleCommunicationSheetCreateForm(initial={
+            'group':obj,
+            'version':version,
+            'file_base64':pdf_b64,
+            'filename':filename,
+            'user':self.request.user,
+        })
+        context['mailto_list'] = get_tcs_address_list()
+#        print(context['form'])
+        return context
+        
+    def post(self, request, *args, **kwargs):
+
+        group = get_object_or_404(TroubleGroup, pk=request.POST['group'])
+        form = self.form_class(request.POST)
+        print(self.request.GET.get('pdf_filename'))
+        pdf_b64=request.POST['file_base64']
+        filename=request.POST['filename']
+
+        if group.first_event() is not None:
+            first_datetime = timezone.localtime(group.first_event().start_time)
+        else:
+            first_datetime = None
+        if first_datetime is not None:
+            first_datetime_str = first_datetime.strftime('%Y/%m/%d %H:%M')
+        else:
+            first_datetime_str = ''
+
+        if form.is_valid():
+            obj = form.save(commit=False)
+            obj.file = ContentFile(base64.b64decode(pdf_b64), name=filename)
+            obj.save()
+
+            mail = EmailMessage(
+                f'EJHIC装置不具合連絡票 TR{group.classify_id} 第{obj.version}版 発行({group.title})',
+                f'''皆様
+
+　装置不具合連絡票 TR{group.classify_id} (第{obj.version}版) を添付の通り発行いたします。
+
+題名: {group.title}
+初発日時: {first_datetime_str}
+内容: {group.description}
+要望項目: {', '.join(list(group.require_items.values_list('name', flat=True)))}
+要望詳細: {group.require_detail if group.require_detail is not None else ''}
+
+-- 
+本メールはPT-DOMからの自動送信メールです。
+問い合わせは
+想田光 souda@med.id.yamagata-u.ac.jp
+までお願いいたします。
+''',
+                self.request.user.email,
+                get_tcs_address_list(),
+            )
+
+            mail.attach(filename, base64.b64decode(pdf_b64), 'application/pdf')
+
+            mail.send()
+
+            return redirect('ptop:group_detail', pk=group.pk)
+
 class TroubleCommunicationSheetDispatchView(DetailView):
     '''不具合連絡票PDF発行画面'''
     template_name = 'trouble_communication_sheet_dispatch.html'
@@ -565,6 +766,7 @@ class TroubleCommunicationSheetDispatchView(DetailView):
 #        print(pdf_b64)
         context = super().get_context_data(**kwargs)
         context['pdf_file'] = pdf_b64
+        context['pdf_filename'] = filename
         return context
 
 
@@ -1445,7 +1647,7 @@ def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     return df
 
 def draw_availability(df):
-
+    graph = 1
     return graph
 
 def statistics_create_view(request):

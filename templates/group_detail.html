@@ -46,6 +46,9 @@
       <tr><td>FMEA致命度スコア</td><td>{{object.criticality_score}}</td></tr>
       <tr><td>FMEA発生頻度スコア</td><td>{{object.frequency_score}}</td></tr>
       <tr><td>FMEA対処難度スコア</td><td>{{object.difficulty_score}}</td></tr>
+      <tr><td>不具合連絡票</td><td>{% for tcs in object.troublecommunicationsheet_set.all %}
+        <a href="{{tcs.file.url}}">第{{tcs.version}}版</a>{% endfor %}
+      </td></tr>
       <tr><td>添付ファイル</td><td>{% spaceless %}{% for attachment in object.attachments.all %}
 {% if '.png' in attachment.title or '.PNG' in attachment.title or '.jpg' in attachment.title or '.JPG' in attachment.title %}
 <a href="{{attachment.file.url}}"><img src="{{attachment.file.url}}" alt="{{attachment.title}}" width="200" /></a>
@@ -161,10 +164,7 @@
       </div>
       <div class="col-sm-4 text-center">
         <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_comment_create' object.pk %}', 'subwin','width=500,height=500');" class="btn btn-info">コメント作成</a>
-        <a href="{% url 'ptop:trouble_communication_sheet_pdf' object.pk %}" class="btn btn-danger">不具合連絡票</a>
-<!--
-        <a href="{% url 'ptop:trouble_communication_sheet_dispatch' object.pk %}" class="btn btn-danger">不具合連絡票発行</a>
--->
+        <a href="{% url 'ptop:trouble_communication_sheet_create'%}?group={{ object.pk }}" class="btn btn-danger">不具合連絡票発行</a>
 </div>
       <div class="col-sm-4 text-right">
         <a href="{% url 'ptop:update_group' object.pk %}" class="btn btn-primary">編集</a>
