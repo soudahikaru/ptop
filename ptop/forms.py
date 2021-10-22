@@ -511,17 +511,20 @@ class CommentCreateForm(forms.ModelForm):
 class TroubleCommunicationSheetCreateForm(forms.ModelForm):
     group = forms.ModelChoiceField(
         TroubleGroup.objects.all(),
-        #widget=forms.HiddenInput()
+        widget=forms.HiddenInput(),
         )
     version = forms.IntegerField(
-        #widget=forms.HiddenInput()
+        widget=forms.HiddenInput(),
         )
     user = forms.ModelChoiceField(
         User.objects.all(),
-        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
-        label='作成者', help_text='自動的にログインユーザとなります。', required=False)
-    file_base64 = forms.CharField(required=False)
-    filename = forms.CharField(required=False)
+#        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+        label='作成者', help_text='自動的にログインユーザとなります。', required=False,
+        widget=forms.HiddenInput(),
+    )
+    file_base64 = forms.CharField(required=False, widget=forms.HiddenInput())
+    filename = forms.CharField(required=False, widget=forms.HiddenInput())
+    is_sendmail = forms.BooleanField(initial=True, label='一斉メール送信する', required=False)
 
     class Meta:
         model = TroubleCommunicationSheet

@@ -600,9 +600,13 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
 
         group = get_object_or_404(TroubleGroup, pk=request.POST['group'])
         form = self.form_class(request.POST)
-        print(self.request.GET.get('pdf_filename'))
-        pdf_b64=request.POST['file_base64']
-        filename=request.POST['filename']
+        #print(self.request.GET.get('pdf_filename'))
+        pdf_b64 = request.POST['file_base64']
+        filename = request.POST['filename']
+        if 'is_sendmail' in request.POST:
+            is_sendmail = True
+        else:
+            is_sendmail = False
 
         if group.first_event() is not None:
             first_datetime = timezone.localtime(group.first_event().start_time)
@@ -618,9 +622,10 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
             obj.file = ContentFile(base64.b64decode(pdf_b64), name=filename)
             obj.save()
 
-            mail = EmailMessage(
-                f'EJHIC装置不具合連絡票 TR{group.classify_id} 第{obj.version}版 発行({group.title})',
-                f'''皆様
+            if is_sendmail == True:
+                mail = EmailMessage(
+                    f'EJHIC装置不具合連絡票 TR{group.classify_id} 第{obj.version}版 発行({group.title})',
+                    f'''皆様
 
 　装置不具合連絡票 TR{group.classify_id} (第{obj.version}版) を添付の通り発行いたします。
 
@@ -633,19 +638,21 @@ http://133.24.154.31/group_detail/{group.id}/
 要望項目: {', '.join(list(group.require_items.values_list('name', flat=True)))}
 要望詳細: {group.require_detail if group.require_detail is not None else ''}
 
+発行者: {self.request.user}
+
 -- 
 本メールはPT-DOMからの自動送信メールです。
 問い合わせは
 想田光 souda@med.id.yamagata-u.ac.jp
 までお願いいたします。
 ''',
-                self.request.user.email,
-                get_tcs_address_list(),
-            )
+                    self.request.user.email,
+                    get_tcs_address_list(),
+                )
 
-            mail.attach(filename, base64.b64decode(pdf_b64), 'application/pdf')
+                mail.attach(filename, base64.b64decode(pdf_b64), 'application/pdf')
 
-            mail.send()
+                mail.send()
 
             return redirect('ptop:group_detail', pk=group.pk)
 

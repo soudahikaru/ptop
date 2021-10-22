@@ -48,11 +48,6 @@
 
 <form action="" method="POST">
     {% csrf_token %}
-<table border>
-    {% for field in form %}
-    {{ field.as_hidden }}
-    {% endfor %}
-</table>
 
 <div class="container" class="center">
     <div class="card">
@@ -60,6 +55,15 @@
         <div class="card-body">
             <div class="col-sm-12 text-left">
                 <ul>
+                    <table>
+                        {% for field in form %}
+                            {% if not field.is_hidden %}
+                                {{ field.label_tag }}{{ field }}
+                            {% else %}
+                                {{ field.as_hidden }}
+                            {% endif %}
+                        {% endfor %}
+                    </table>
                     {% for address in mailto_list %}
                         <li>{{address}}</li>
                     {% endfor %}
