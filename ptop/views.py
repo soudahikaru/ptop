@@ -618,6 +618,11 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
             first_datetime_str = ''
 
         if form.is_valid():
+            ver_form = request.POST['version']
+            if TroubleCommunicationSheet.objects.filter(group=group, version=ver_form):
+                print(f'TR{group.classify_id}-{ver_form} already exists.')
+                return redirect('ptop:group_detail', pk=group.pk)
+
             obj = form.save(commit=False)
             obj.file = ContentFile(base64.b64decode(pdf_b64), name=filename)
             obj.save()

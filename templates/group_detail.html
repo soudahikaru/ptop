@@ -71,7 +71,7 @@
       <div class="card-body">
     {% endif %}
         <div class="comment">
-          <p><span class="comment_type">{{comment.comment_type}}</span> {{comment.description}}</p>
+          <p><span class="comment_type">{{comment.comment_type}}</span> {{comment.description | linebreaksbr}}</p>
           <div class="anchor" id="comment_{{comment.id}}">{% spaceless %}{% for attachment in comment.attachments.all %}
             {% if '.png' in attachment.title or '.PNG' in attachment.title or '.jpg' in attachment.title or '.JPG' in attachment.title %}
             <a href="{{attachment.file.url}}"><img src="{{attachment.file.url}}" alt="{{attachment.title}}" width="100" /></a>
