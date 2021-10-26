@@ -38,8 +38,8 @@
           {% endif %}
         </td>
         
-        <td><a href="{% url 'ptop:event_detail' item.pk %}" class="btn btn-primary">詳細</a>
-         <a href="{% url 'ptop:recurrent_event_create_from_event' item.pk %}" class="btn btn-secondary">再発</a></td>
+        <td><a href="{% url 'ptop:update_event' item.pk %}" class="btn btn-primary">編集</a>
+          <a href="{% url 'ptop:recurrent_event_create_from_event' item.pk %}" class="btn btn-warning">再発</a></td>
        </tr>
     {% endfor %}
     </table>
