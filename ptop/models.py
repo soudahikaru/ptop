@@ -1,5 +1,7 @@
 """PTOP Model Module"""
 
+import datetime
+
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import PermissionsMixin, UserManager
@@ -509,6 +511,14 @@ class Comment(models.Model):
     modified_on = models.DateTimeField('更新時刻', auto_now=True)
     
     attachments = models.ManyToManyField(Attachment, verbose_name='添付ファイル', blank=True)
+
+    @property
+    def is_modified(self):
+        delta = self.modified_on - self.posted_on
+        if delta > datetime.timedelta(minutes=1):
+            return True
+        else:
+            return False
 
     def clean(self):
         for field in self._meta.fields:

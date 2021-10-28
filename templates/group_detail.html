@@ -82,7 +82,7 @@
                   {% endfor %}{% endspaceless %}</div>
           <div class="comment_info"> 
             {{comment.posted_on|date:"Y/m/d(D) H:i"}}
-            {% if comment.posted_on != comment.modified_on %}
+            {% if comment.is_modified %}
               ({{comment.modified_on|date:"Y/m/d(D) H:i"}}更新)
             {% endif %}
             {{comment.user}} 
