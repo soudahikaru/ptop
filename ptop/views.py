@@ -852,10 +852,13 @@ class TroubleEventList(ListView):
 
     def get(self, request, *args, **kwargs):
         q_word = request.GET.get('query')
-        p = re.compile('^(#|ID:|Id:|id:)(\d+)')
-        m = p.match(q_word)
-        if m:
-            return redirect(f'../event_detail/{m.group(2)}/')
+        if q_word:
+            p = re.compile('^(#|ID:|Id:|id:)(\d+)')
+            m = p.match(q_word)
+            if m:
+                return redirect(f'../event_detail/{m.group(2)}/')
+            else:
+                return super().get(request, **kwargs)
         else:
             return super().get(request, **kwargs)
 
