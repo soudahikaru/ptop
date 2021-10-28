@@ -1522,6 +1522,15 @@ class AnnouncementDetailView(DetailView):
     template_name = 'announcement_detail.html'
     model = Announcement
 
+class AnnouncementUpdateView(LoginRequiredMixin, UpdateView):
+    """Announcement作成画面"""
+    template_name = 'announcement_create.html'
+    model = Announcement
+    form_class = AnnouncementCreateForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:announcement_detail', kwargs={'pk': self.object.id})
+
 class AnnouncementCreateView(LoginRequiredMixin, CreateView):
     """Announcement作成画面"""
     template_name = 'announcement_create.html'
@@ -1537,6 +1546,51 @@ class AnnouncementCreateView(LoginRequiredMixin, CreateView):
             'user':self.request.user,
             })
         return context
+
+class CommentBaseMixin(LoginRequiredMixin, object):
+    """Comment作成/更新画面"""
+    template_name = 'comment_create.html'
+    model = Comment
+    form_class = CommentCreateForm
+
+    def get_success_url(self):
+#        print(self.object.posted_group.id)
+        return reverse_lazy('ptop:group_detail', kwargs={'pk': self.object.posted_group.id})
+
+    def post(self, request, *args, **kwargs):
+        if self.request.FILES:
+            print(self.request.FILES)
+            form = AttachmentForm(self.request.POST, self.request.FILES)
+            if form.is_valid():
+                attachment_form = form.instance
+                attachment = Attachment.objects.create(
+                    title=attachment_form.file.name,
+                    file=attachment_form.file,
+                    description='',
+                    uploaded_datetime=datetime.now()
+                    )
+                data = {
+                    'is_valid': True,
+                    'pk': attachment.pk,
+                    'title': attachment.title,
+                    }
+                print(data)
+            else:
+                data = {'is_valid': False}
+            return JsonResponse(data)
+        else:
+            form = CommentCreateForm(self.request.POST)
+#            form.fields['attachments'].queryset = Attachment.objects.all().order_by('id')
+#            print(self.request.POST)
+#            print(form.fields['attachments'].queryset.reverse())
+            return super().post(request, *args, **kwargs)
+
+class CommentUpdateView(CommentBaseMixin, UpdateView):
+    """Comment更新画面"""
+    template_name = 'comment_create.html'
+    model = Comment
+    form_class = CommentCreateForm
+
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
     """Comment作成画面"""

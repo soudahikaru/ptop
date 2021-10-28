@@ -80,7 +80,15 @@
             {% endif %}
             {% if forloop.last %}{% else %},{% endif %}
                   {% endfor %}{% endspaceless %}</div>
-          <div class="comment_info"> {{comment.posted_on|date:"Y/m/d(D) H:i"}} {{comment.user}} 
+          <div class="comment_info"> 
+            {{comment.posted_on|date:"Y/m/d(D) H:i"}}
+            {% if comment.posted_on != comment.modified_on %}
+              ({{comment.modified_on|date:"Y/m/d(D) H:i"}}更新)
+            {% endif %}
+            {{comment.user}} 
+            {% if comment.user == request.user %}
+              <a href="{% url 'ptop:comment_update' comment.id %}" class="btn btn-primary">編集</a>
+            {% endif %}
             <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_comment_create' object.pk %}?parent={{comment.id}}', 'subwin','width=800,height=500');" class="btn btn-info">返信</a>
           </div>
           {% with reply_list=comment.comment_set.all %}
