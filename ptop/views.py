@@ -22,6 +22,7 @@ from django.http import HttpResponseRedirect
 from django.http import HttpResponse
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect
 from django_pandas.io import read_frame
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
@@ -170,6 +171,14 @@ class TroubleGroupListView(ListView):
         object_list=object_list.order_by(self.request.GET.get('sort_by', '-first_datetime')).distinct()
         return object_list
 
+    def get(self, request, *args, **kwargs):
+        q_word = request.GET.get('query')
+        p = re.compile('^(#|ID:|Id:|id:)(\d+)')
+        m = p.match(q_word)
+        if m:
+            return redirect(f'../group_detail/{m.group(2)}/')
+        else:
+            return super().get(request, **kwargs)
 
 class DeviceCreate(CreateView):
     """新規Deviceの作成"""
@@ -840,6 +849,15 @@ class TroubleEventList(ListView):
             object_list = TroubleEvent.objects.all()
         object_list=object_list.order_by(self.request.GET.get('sort_by', '-start_time')).distinct()
         return object_list
+
+    def get(self, request, *args, **kwargs):
+        q_word = request.GET.get('query')
+        p = re.compile('^(#|ID:|Id:|id:)(\d+)')
+        m = p.match(q_word)
+        if m:
+            return redirect(f'../event_detail/{m.group(2)}/')
+        else:
+            return super().get(request, **kwargs)
 
 class GroupBaseMixin(LoginRequiredMixin, object):
     """各種Group作成/更新画面のベースとなる処理"""
