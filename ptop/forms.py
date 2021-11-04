@@ -620,7 +620,7 @@ class SupplyItemExchangeForm(forms.ModelForm):
     )
     next_storage = forms.ModelChoiceField(
         Storage.objects.all(), initial=None,
-        label='保管場所', help_text='', required=True,
+        label='保管場所', help_text='', required=False,
         widget=forms.HiddenInput()
         # widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
     )
