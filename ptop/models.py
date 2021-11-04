@@ -682,7 +682,7 @@ class SupplyItem(models.Model):
     stock_date = models.DateTimeField('納品日', null=True, blank=True)
     install_date = models.DateTimeField('使用開始日', null=True, blank=True)
     uninstall_date = models.DateTimeField('使用終了日', null=True, blank=True)
-    dispose_date = models.DateTimeField('使用終了日', null=True, blank=True)
+    dispose_date = models.DateTimeField('廃棄日', null=True, blank=True)
 
     is_installed = models.BooleanField('使用中フラグ', default=False)
     is_available = models.BooleanField('使用可能フラグ', default=False)
