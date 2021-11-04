@@ -1868,7 +1868,7 @@ class SupplyRecordCreateView(LoginRequiredMixin, CreateView):
         supplyitem = get_object_or_404(SupplyItem, pk=self.request.GET.get('supplyitem'))
         context['type'] = supplyitem.supplytype.name
         context['item'] = supplyitem.serial_number
-        context['device'] = supplyitem.installed_device.name
+        context['device'] = supplyitem.installed_device
         context['form'] = SupplyRecordCreateForm(initial={
             'item': supplyitem,
             'device': supplyitem.installed_device,
