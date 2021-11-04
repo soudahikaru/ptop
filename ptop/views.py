@@ -392,7 +392,7 @@ class TroubleCommunicationSheetPDFView(DetailView):
                 first_downtime = obj.first_event().downtime
             else:
                 first_downtime = 0
-            if obj.first_event().downtime is not None:
+            if obj.first_event().delaytime is not None:
                 first_delaytime = obj.first_event().delaytime
             else:
                 first_delaytime = 0
