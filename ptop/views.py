@@ -386,6 +386,9 @@ class TroubleCommunicationSheetPDFView(DetailView):
         p.setFont(font_name, 16)  # フォントを設定
         # pdfのタイトルを設定
         p.setTitle(title)
+        first_datetime = None
+        first_downtime = 0
+        first_delaytime = 0
         if obj.first_event() is not None:
             first_datetime = timezone.localtime(obj.first_event().start_time)
             if obj.first_event().downtime is not None:
@@ -396,10 +399,6 @@ class TroubleCommunicationSheetPDFView(DetailView):
                 first_delaytime = obj.first_event().delaytime
             else:
                 first_delaytime = 0
-        else:
-            first_datetime = None
-            first_downtime = 0
-            first_delaytime = 0
 
         errorcode_str = ', '.join(list(obj.errors.values_list('error_code', flat=True)))
         if first_datetime is not None:
