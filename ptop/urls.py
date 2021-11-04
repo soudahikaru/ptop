@@ -13,8 +13,8 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-#from django.contrib import admin
-from django.urls import path, include
+# from django.contrib import admin
+from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from ptop import views
@@ -64,6 +64,14 @@ urlpatterns = [
     path('popup_comment_create/<int:pk>/', views.PopupCommentCreateView.as_view(), name='popup_comment_create'),
     path('comment_create/<int:pk>/', views.CommentCreateView.as_view(), name='comment_create'),
     path('comment_update/<int:pk>/', views.CommentUpdateView.as_view(), name='comment_update'),
+    path('supply_item_list/', views.SupplyItemListView.as_view(), name='supply_item_list'),
+    path('supply_item_create/', views.SupplyItemCreateView.as_view(), name='supply_item_create'),
+    path('supply_item_stock/', views.SupplyItemStockView.as_view(), name='supply_item_stock'),
+    path('supply_item_exchange/<int:pk>/', views.SupplyItemExchangeView.as_view(), name='supply_item_exchange'),
+    path('supply_item_update/<int:pk>/', views.SupplyItemUpdateView.as_view(), name='supply_item_update'),
+    path('supply_item_detail/<int:pk>/', views.SupplyItemDetailView.as_view(), name='supply_item_detail'),
+    path('supply_record_create/', views.SupplyRecordCreateView.as_view(), name='supply_record_create'),
+    path('supply_record_update/<int:pk>/', views.SupplyRecordUpdateView.as_view(), name='supply_record_update'),
     path('statistics_create/', views.statistics_create_view, name='statistics_create'),
     path('trouble_statistics_create/', views.trouble_statistics_create_view, name='trouble_statistics_create'),
     path('error_autocomplete/', views.ErrorAutoComplete.as_view(), name='error_autocomplete'),

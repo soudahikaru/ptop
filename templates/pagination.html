@@ -73,7 +73,8 @@ var nexthref = "#";
 
 //キーボードの操作をトリガーに動作する
 $(window).keyup(function(e){
-  if(event.ctrlKey){
+  var current = document.activeElement;
+  if(event.ctrlKey || current==document.body){
     if(e.keyCode == 37){
       if(prevhref) {
         window.location.href = prevhref;

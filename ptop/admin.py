@@ -31,14 +31,17 @@ from .models import TreatmentStatusType
 from .models import Urgency
 from .models import TroubleCommunicationSheet
 from .models import EmailAddress
+from .models import Room, Storage
+from .models import SupplyType, SupplyItem, SupplyRecord
 
-#@admin.register(User)
+# @admin.register(User)
+
 
 class AdminUserAdmin(UserAdmin):
     """ user admin class """
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        (_('Personal info'), {'fields': ('last_name', 'first_name', 'phs_number', 'email', 'is_tcs_destination','display_order')}),
+        (_('Personal info'), {'fields': ('last_name', 'first_name', 'phs_number', 'email', 'is_tcs_destination', 'display_order')}),
         (_('Permissions'), {'fields': ('is_active', 'is_staff', 'is_superuser',
                                        'groups', 'user_permissions')}),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
@@ -46,6 +49,7 @@ class AdminUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'last_name', 'first_name', 'display_order')
     search_fields = ('username', 'last_name', 'first_name', 'email')
     filter_horizontal = ('groups', 'user_permissions')
+
 
 class DeviceResource(resources.ModelResource):
     """ Resource for Device model """
@@ -60,6 +64,7 @@ class DeviceAdmin(ImportExportModelAdmin):
     """ Admin for Device model """
     resource_class = DeviceResource
 
+
 class ErrorResource(resources.ModelResource):
     """ Resource for Error model """
     class Meta:
@@ -68,9 +73,11 @@ class ErrorResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class ErrorAdmin(ImportExportModelAdmin):
     """ Admin for Error model """
     resource_class = ErrorResource
+
 
 class OperationTypeResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -80,9 +87,11 @@ class OperationTypeResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class OperationTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = OperationTypeResource
+
 
 class OperationMetaTypeResource(resources.ModelResource):
     """ Resource for Operation Meta Type """
@@ -92,9 +101,11 @@ class OperationMetaTypeResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class OperationMetaTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = OperationMetaTypeResource
+
 
 class CommentTypeResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -104,9 +115,11 @@ class CommentTypeResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class CommentTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = CommentTypeResource
+
 
 class CauseTypeResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -116,9 +129,11 @@ class CauseTypeResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class CauseTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = CauseTypeResource
+
 
 class VendorStatusTypeResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -128,9 +143,11 @@ class VendorStatusTypeResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class VendorStatusTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = VendorStatusTypeResource
+
 
 class HandlingStatusTypeResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -140,9 +157,11 @@ class HandlingStatusTypeResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class HandlingStatusTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = HandlingStatusTypeResource
+
 
 class RequireTypeResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -152,9 +171,11 @@ class RequireTypeResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class RequireTypeAdmin(ImportExportModelAdmin):
     """ Admin for Require_items """
     resource_class = RequireTypeResource
+
 
 class SectionResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -164,9 +185,11 @@ class SectionResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class SectionAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = SectionResource
+
 
 class SuperSectionResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -176,9 +199,11 @@ class SuperSectionResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class SuperSectionAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = SuperSectionResource
+
 
 class DeviceTypeResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -187,6 +212,7 @@ class DeviceTypeResource(resources.ModelResource):
         model = DeviceType
         skip_unchanged = True
         report_skipped = False
+
 
 class DeviceTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
@@ -201,9 +227,11 @@ class TreatmentStatusTypeResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class TreatmentStatusTypeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = TreatmentStatusTypeResource
+
 
 class EffectScopeResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -213,9 +241,11 @@ class EffectScopeResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class EffectScopeAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = EffectScopeResource
+
 
 class UrgencyResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -225,9 +255,24 @@ class UrgencyResource(resources.ModelResource):
         skip_unchanged = True
         report_skipped = False
 
+
 class UrgencyAdmin(ImportExportModelAdmin):
     """ Admin for Operation Type """
     resource_class = UrgencyResource
+
+
+class SupplyRecordResource(resources.ModelResource):
+    """ Resource for SupplyRecord """
+    class Meta:
+        """ Resource for SupplyRecord model Meta"""
+        model = SupplyRecord
+        skip_unchanged = True
+        report_skipped = False
+
+
+class SupplyRecordAdmin(ImportExportModelAdmin):
+    """ Admin for Operation Type """
+    resource_class = SupplyRecordResource
 
 
 # Register your models here.
@@ -255,3 +300,8 @@ admin.site.register(DeviceType, DeviceTypeAdmin)
 admin.site.register(EffectScope, EffectScopeAdmin)
 admin.site.register(TreatmentStatusType, TreatmentStatusTypeAdmin)
 admin.site.register(Urgency, UrgencyAdmin)
+admin.site.register(Room)
+admin.site.register(Storage)
+admin.site.register(SupplyType)
+admin.site.register(SupplyItem)
+admin.site.register(SupplyRecord, SupplyRecordAdmin)

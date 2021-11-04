@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block header %}
+
+{% load static %}
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+{% load bootstrap4 %}{% bootstrap_css %}{% bootstrap_javascript jquery='full' %}
+
+<style>
+.input-inline { display: inline-block; width: 150px; }
+.helptext {font-size: small;}
+.required {color: red;}
+</style>
+
+{% endblock header %}
+
+{% block content %}
+<div class="container">
+  <div class="card">
+
+    {% if 'update' in request.path %}
+    <h5 class="card-header">消耗品測定記録の編集</h5>
+    {% else %}
+    <h5 class="card-header">消耗品測定記録の入力</h5>
+    {% endif %}
+
+    <div class="card-body">
+      <form action="" method="POST">
+        {% csrf_token %}
+        <table border>
+        {% for field in form %}
+        {% spaceless %}
+        <tr><th>{% if field.field.required %}<span class="required">*</span>{% endif %}{{ field.label_tag }}</th><td>{{ field }}
+          {% if "item" in field.id_for_label %}
+            {{ type }}{{ item }}
+          {% endif %}
+          {% if "device" in field.id_for_label %}
+            {{ device }}
+          {% endif %}
+          {% if field.help_text %}
+            <span class="helptext">{{ field.help_text|safe }}</span>
+          {% endif %}
+          {% if "level" in field.id_for_label %}
+            <br /><span class="helptext">前回測定値: {{ previous_record.level|safe }} ({{ previous_record.date|date:"Y/m/d(D) H:i" }})</span>
+          {% endif %}
+        </td></tr>
+        {% endspaceless %}
+        {% endfor %}
+        </table>
+
+        {% if 'update' in request.path %}
+        <input class="btn btn-primary" type="submit" value="更新する">
+        {% else %}
+        <input class="btn btn-primary" type="submit" value="入力を確定する">
+        {% endif %}
+      </form>
+      
+    </div>
+  </div>
+  <a href="{% url 'ptop:home' %}" class="btn btn-secondary">戻る</a>
+
+</div>
+
+<script src="{% static 'ptop/js/jquery-3.1.1.min.js' %}"></script>
+<script src="{% static 'ptop/js/bootstrap.min.js' %}"></script>
+
+{{form.media}}
+
+{% endblock content %}
+
+{% block javascript %}
+{% endblock javascript %}

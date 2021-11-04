@@ -94,6 +94,41 @@
   <div class="container">
     <div class="col-sm-12">
       <div class="card">
+        <h2 class="card-header">消耗品管理</h2>
+
+          {% for type in supply_type_list %}
+            <div><b>{{type.name}}</b> 
+              在庫数{{type.num_stock}}<a href="{% url 'ptop:supply_item_create'%}?supplytype={{type.id}}" class="btn btn-sm btn-info">発注</a> 
+              発注済数{{type.num_ordered}}{% if type.num_ordered > 0 %}<a href="{% url 'ptop:supply_item_stock'%}?supplytype={{type.id}}" class="btn btn-sm btn-info">納品</a>{% endif %}
+              {% if type.num_stock <= type.num_recommend and type.num_ordered == 0 %}<span style="color:red">在庫が少なくなりました</span>{% endif %}
+            </div>
+            <table border>
+              <tr><th>設置場所</th><th>S/N</th><th>{{type.level_name}}</th><th>残量ゲージ</th><th>使用開始日</th><th>予想交換日</th></tr>
+            {% for item in instelled_supply_list %}
+              {% if item.supplytype == type %}
+              <tr>
+                <td>{{item.installed_device.name}}</td>
+              <td><a href="{% url 'ptop:supply_item_detail' item.pk %}"><b>{{item.serial_number}}</b></a></td>
+              <td>{{item.current_level|default_if_none:'-'}} {{item.supplytype.level_unit}}</td>
+              <td><a href="{% url 'ptop:supply_item_detail' item.pk %}"><progress value="{{item.percent_level}}" max="100">0%</progress></a></td>
+              
+              <td>{{item.install_date|date:"m/d"}}</td>
+              <td>{{item.estimated_expire_date|date:"m/d"}}</td>
+              <td><a href="{% url 'ptop:supply_record_create' %}?supplyitem={{item.id}}" class="btn btn-info">残量入力</a>
+                <a href="{% url 'ptop:supply_item_exchange' item.id %}" class="btn btn-primary">交換</a></td>
+              </tr>
+              {% endif %}
+            {% endfor %}
+            </table>
+          {% endfor %}
+          <div style="text-align:right"><a href="{% url 'ptop:supply_item_list' %}">消耗品一覧</a></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="col-sm-12">
+      <div class="card">
         <h2 class="card-header">情報が更新されたトラブル事象</h2>
         <table border>
           <tr><th>更新日時</th><td>発生日時</td><th class="bg-event">題名</th><th>デバイスID</th><th>故障時間</th><th class="bg-group">トラブル類型</th></tr>

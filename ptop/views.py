@@ -1,33 +1,34 @@
 """ PTOP view module """
 import io
-from django.db.models.expressions import Subquery
+# from django.db.models.expressions import Subquery
 import pytz
 from datetime import datetime, timedelta
-from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.views.generic.edit import FormMixin
 from django.utils import timezone
-#from django.utils.translation import gettext_lazy as _
+from django.utils.dateparse import parse_datetime
+# from django.utils.translation import gettext_lazy as _
 from django.core.files.base import ContentFile
-from django.core.mail import send_mail, EmailMessage
+from django.core.mail import EmailMessage
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.db.models import Q
-from django.db.models import IntegerField, DurationField, FloatField
-from django.db.models import Sum, F, Func, Count, ExpressionWrapper
-from django.db.models.functions import Cast, TruncDay, TruncMonth, TruncYear, Trunc, Extract
+# from django.db.models import IntegerField, DurationField, FloatField
+from django.db.models import Sum, F, Count
+# from django.db.models.functions import Cast, TruncDay, TruncMonth, TruncYear, Trunc, Extract
+from django.db.models.functions import Trunc
 from django.http import JsonResponse
 from django.http import HttpResponseRedirect
 from django.http import HttpResponse
 from django.http import FileResponse
+from django.shortcuts import render, redirect
 from django.shortcuts import get_object_or_404
-from django.shortcuts import redirect
 from django_pandas.io import read_frame
 from reportlab.pdfgen import canvas
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
 from reportlab.pdfbase import pdfmetrics
-from reportlab.lib.utils import ImageReader
+# from reportlab.lib.utils import ImageReader
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.pagesizes import portrait
 from reportlab.lib.units import mm
@@ -37,7 +38,7 @@ from reportlab.platypus import Paragraph
 from reportlab.platypus import SimpleDocTemplate
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.enums import TA_JUSTIFY, TA_LEFT, TA_CENTER, TA_RIGHT
+from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
 import base64
 import pandas as pd
 import numpy as np
@@ -46,7 +47,7 @@ import jaconv
 import matplotlib
 import matplotlib.dates
 import matplotlib.pyplot as plt
-#from django.shortcuts import get_list_or_404
+# from django.shortcuts import get_list_or_404
 from dal import autocomplete
 from .forms import AttachmentForm
 from .forms import EventCreateForm
@@ -62,8 +63,13 @@ from .forms import CommentCreateForm
 from .forms import TroubleCommunicationSheetCreateForm
 from .forms import GroupDetailForm
 from .forms import AnnouncementCreateForm
-from .models import User
-from .models import Device, Error, Section, SuperSection
+from .forms import SupplyItemCreateForm
+from .forms import SupplyItemStockForm
+from .forms import SupplyRecordCreateForm
+from .forms import SupplyItemUpdateForm
+from .forms import SupplyItemExchangeForm
+# from .models import User
+from .models import Device, Error, Section
 from .models import TroubleEvent, TroubleGroup
 from .models import TroubleCommunicationSheet
 from .models import Attachment
@@ -71,6 +77,7 @@ from .models import Comment
 from .models import Operation
 from .models import Announcement
 from .models import EmailAddress
+from .models import SupplyType, SupplyItem, SupplyRecord
 
 matplotlib.use('Agg')
 
@@ -78,8 +85,9 @@ matplotlib.use('Agg')
 # Create your views here.
 
 def get_tcs_address_list():
-#    return [user.email for user in User.objects.filter(is_tcs_destination=True, email__isnull=False)]
+    # return [user.email for user in User.objects.filter(is_tcs_destination=True, email__isnull=False)]
     return [item.email for item in EmailAddress.objects.filter(is_tcs_destination=True, email__isnull=False).order_by('display_order')]
+
 
 def standardize_character(str):
     """文字表記ゆれを統一する関数(カナは全角、英数字と記号は半角に変換)"""
@@ -87,17 +95,16 @@ def standardize_character(str):
     str = jaconv.h2z(str, kana=True, digit=False, ascii=False)
     return str
 
+
 def api_devices_get(request):
     """（不使用）サジェスト候補のデバイスIDをJSONで返す。"""
     keyword = request.GET.get('keyword')
     if keyword:
-        post_list = [
-            {'pk': item.pk, 'name': item.device_id} for item in Device.objects.filter(
-                device_id__icontains=keyword)
-            ]
+        post_list = [{'pk': item.pk, 'name': item.device_id} for item in Device.objects.filter(device_id__icontains=keyword)]
     else:
         post_list = []
     return JsonResponse({'object_list': post_list})
+
 
 def ajax_search_operation_from_datetime(request):
     """OperationTypeのIDをJSONで返す関数。"""
@@ -110,11 +117,12 @@ def ajax_search_operation_from_datetime(request):
                 print('newest operation')
                 ope = Operation.objects.order_by('start_time').last()
             print(ope.operation_type.id)
-            return JsonResponse({'operation_type':ope.operation_type.id})
+            return JsonResponse({'operation_type': ope.operation_type.id})
         else:
-            return JsonResponse({'operation_type':None})
+            return JsonResponse({'operation_type': None})
     else:
         return JsonResponse({})
+
 
 class DeviceAutoComplete(autocomplete.Select2QuerySetView):
     """Deviceを部分一致検索して入力"""
@@ -127,6 +135,7 @@ class DeviceAutoComplete(autocomplete.Select2QuerySetView):
     def get_result_label(self, item):
         return '%s(%s)' % (item.device_id, item.name)
 
+
 class ErrorAutoComplete(autocomplete.Select2QuerySetView):
     """Errorを部分一致検索して入力"""
     def get_queryset(self):
@@ -134,6 +143,7 @@ class ErrorAutoComplete(autocomplete.Select2QuerySetView):
         if self.q:
             qs = qs.filter(error_code__icontains=self.q)
         return qs
+
 
 class TroubleGroupListView(ListView):
     """TroubleGroupList画面"""
@@ -149,11 +159,11 @@ class TroubleGroupListView(ListView):
         ctx = super().get_context_data(**kwargs)
         ctx['q'] = self.request.GET.get('query', '')
         default_data = {
-            'query' : self.request.GET.get('query'),
-            'sort_by' : self.request.GET.get('sort_by'),
-            'paginate_by' : self.request.GET.get('paginate_by'),
+            'query': self.request.GET.get('query'),
+            'sort_by': self.request.GET.get('sort_by'),
+            'paginate_by': self.request.GET.get('paginate_by'),
         }
-        search_form = GroupSearchForm(initial=default_data) # 検索フォーム
+        search_form = GroupSearchForm(initial=default_data)  # 検索フォーム
         ctx['search_form'] = search_form
         return ctx
 
@@ -161,14 +171,14 @@ class TroubleGroupListView(ListView):
         q_word = self.request.GET.get('query')
         if q_word:
             object_list = TroubleGroup.objects.filter(
-                Q(title__icontains=q_word) 
+                Q(title__icontains=q_word)
                 | Q(device__device_id__icontains=q_word)
                 | Q(description__icontains=q_word)
                 | Q(errors__error_code__icontains=q_word)
             )
         else:
             object_list = TroubleGroup.objects.all()
-        object_list=object_list.order_by(self.request.GET.get('sort_by', '-first_datetime')).distinct()
+        object_list = object_list.order_by(self.request.GET.get('sort_by', '-first_datetime')).distinct()
         return object_list
 
     def get(self, request, *args, **kwargs):
@@ -180,12 +190,14 @@ class TroubleGroupListView(ListView):
         else:
             return super().get(request, **kwargs)
 
+
 class DeviceCreate(CreateView):
     """新規Deviceの作成"""
     model = Device
     template_name = 'device_form.html'
     fields = '__all__'
     success_url = reverse_lazy('ptop:home')
+
 
 class PopupDeviceCreate(DeviceCreate):
     """ポップアップでのDevice作成"""
@@ -199,12 +211,14 @@ class PopupDeviceCreate(DeviceCreate):
         }
         return render(self.request, 'close.html', context)
 
+
 class ErrorCreate(CreateView):
     """新規Errorの作成"""
     model = Error
     template_name = 'error_form.html'
     fields = '__all__'
     success_url = reverse_lazy('ptop:home')
+
 
 class PopupErrorCreate(ErrorCreate):
     """ポップアップでのError作成"""
@@ -217,6 +231,7 @@ class PopupErrorCreate(ErrorCreate):
             'function_name': 'add_error'
         }
         return render(self.request, 'close.html', context)
+
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
     """新規Commentの作成"""
@@ -237,14 +252,14 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
             parent = None
         context['base_group'] = self.kwargs.get('pk')
         context['form'] = CommentCreateForm(initial={
-            'posted_group':posted_group,
-            'parent':parent,
-            'user':self.request.user,
+            'posted_group': posted_group,
+            'parent': parent,
+            'user': self.request.user,
         })
         return context
 
     def post(self, request, *args, **kwargs):
-#        print(request)
+        # print(request)
         if self.request.FILES:
             print(self.request.FILES)
             form = AttachmentForm(self.request.POST, self.request.FILES)
@@ -255,21 +270,21 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
                     file=attachment_form.file,
                     description='',
                     uploaded_datetime=datetime.now()
-                    )
+                )
                 data = {
                     'is_valid': True,
                     'pk': attachment.pk,
                     'title': attachment.title,
-                    }
+                }
                 print(data)
             else:
                 data = {'is_valid': False}
             return JsonResponse(data)
         else:
-#            form = CommentCreateForm(self.request.POST)
-#            form.fields['attachments'].queryset = Attachment.objects.all().order_by('id')
-#            print(self.request.POST)
-#            print(form.fields['attachments'].queryset.reverse())
+            # form = CommentCreateForm(self.request.POST)
+            # form.fields['attachments'].queryset = Attachment.objects.all().order_by('id')
+            # print(self.request.POST)
+            # print(form.fields['attachments'].queryset.reverse())
             return super().post(request, *args, **kwargs)
 
 
@@ -288,6 +303,7 @@ class PopupCommentCreateView(CommentCreateView):
         comment.posted_group.save()
 
         return render(self.request, 'close_reload.html')
+
 
 class GroupDetailView(FormMixin, DetailView):
     """TroubleGroup詳細画面"""
@@ -308,32 +324,32 @@ class GroupDetailView(FormMixin, DetailView):
             context['events'] = TroubleEvent.objects.filter(group__path__startswith=context.get('object').path).order_by('-start_time')
         else:
             context['events'] = TroubleEvent.objects.filter(group__path__startswith=startpath).order_by('-start_time')
-        
+
         context['child_group'] = TroubleGroup.objects.filter(path__startswith=startpath)
         context['parent_comments'] = context.get('object').comments.filter(parent__isnull=True)
-        context['frequency_week_1'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=7), timezone.now())).count()
-        context['frequency_week_2'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=14), timezone.now()-timezone.timedelta(days=7))).count()
-        context['frequency_week_3'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=21), timezone.now()-timezone.timedelta(days=14))).count()
-        context['frequency_week_4'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=28), timezone.now()-timezone.timedelta(days=21))).count()
-        context['frequency_month_1'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=30), timezone.now())).count()
-        context['frequency_month_2'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=60), timezone.now()-timezone.timedelta(days=30))).count()
-        context['frequency_month_3'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=90), timezone.now()-timezone.timedelta(days=60))).count()
-        context['frequency_month_4'] = context['events'].filter(start_time__range=(timezone.now()-timezone.timedelta(days=120), timezone.now()-timezone.timedelta(days=90))).count()
+        context['frequency_week_1'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=7), timezone.now())).count()
+        context['frequency_week_2'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=14), timezone.now() - timezone.timedelta(days=7))).count()
+        context['frequency_week_3'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=21), timezone.now() - timezone.timedelta(days=14))).count()
+        context['frequency_week_4'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=28), timezone.now() - timezone.timedelta(days=21))).count()
+        context['frequency_month_1'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=30), timezone.now())).count()
+        context['frequency_month_2'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=60), timezone.now() - timezone.timedelta(days=30))).count()
+        context['frequency_month_3'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=90), timezone.now() - timezone.timedelta(days=60))).count()
+        context['frequency_month_4'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=120), timezone.now() - timezone.timedelta(days=90))).count()
 
         default_data = {
-            'display_range' : self.request.GET.get('display_range'),
+            'display_range': self.request.GET.get('display_range'),
         }
-        form = GroupDetailForm(initial=default_data) # 検索フォーム
+        form = GroupDetailForm(initial=default_data)  # 検索フォーム
         context['form'] = form
-#        print(context['frequency_week_3'])
-        
-#		print(events)
+        # print(context['frequency_week_3'])
         return context
+
 
 class EventDetailView(DetailView):
     """TroubleEvent詳細画面"""
     template_name = 'event_detail.html'
     model = TroubleEvent
+
 
 class TroubleCommunicationSheetPDFView(DetailView):
     """不具合連絡票PDF作成画面"""
@@ -356,10 +372,10 @@ class TroubleCommunicationSheetPDFView(DetailView):
 
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer,
-                                rightMargin=20*mm,
-                                leftMargin=20*mm,
-                                topMargin=20*mm,
-                                bottomMargin=20*mm,
+                                rightMargin=20 * mm,
+                                leftMargin=20 * mm,
+                                topMargin=20 * mm,
+                                bottomMargin=20 * mm,
                                 pagesize=size,
                                 title=filename[:-4])
         elements = []
@@ -384,7 +400,7 @@ class TroubleCommunicationSheetPDFView(DetailView):
             first_datetime = None
             first_downtime = 0
             first_delaytime = 0
-            
+
         errorcode_str = ', '.join(list(obj.errors.values_list('error_code', flat=True)))
         if first_datetime is not None:
             first_datetime_str = first_datetime.strftime('%Y/%m/%d %H:%M')
@@ -415,7 +431,7 @@ class TroubleCommunicationSheetPDFView(DetailView):
             ['要望詳細', Paragraph(obj.require_detail if obj.require_detail is not None else '', style_table)],
         ]
         table = Table(data, (35 * mm, 130 * mm), None, hAlign='LEFT')
-        
+
         # TableStyleを使って、Tableの装飾をします。
         table.setStyle(TableStyle([
             # 表で使うフォントとそのサイズを設定
@@ -432,7 +448,7 @@ class TroubleCommunicationSheetPDFView(DetailView):
         elements.append(Paragraph('装置不具合連絡票', style_title))
         elements.append(Paragraph('連絡票ID: TR%s' % obj.classify_id, style_title))
         elements.append(Paragraph('山形大学医学部東日本重粒子センター', style_signature))
-        elements.append(Paragraph('発行者: %s' %  obj.classify_operator.fullname(), style_signature))
+        elements.append(Paragraph('発行者: %s' % obj.classify_operator.fullname(), style_signature))
         elements.append(Paragraph('発行日時: %s' % datetime.now().strftime('%Y/%m/%d %H:%M'), style_signature))
         elements.append(table)
         table.canv = p
@@ -445,7 +461,6 @@ class TroubleCommunicationSheetPDFView(DetailView):
         p.drawString(25 * mm, 272 * mm, '装置不具合連絡票')
         p.drawString(25 * mm, 264 * mm, '連絡票ID: TR%s' % obj.id)
 
-
         doc.build(elements)
 #        doc.title(filemame)
         response = HttpResponse(status=200, content_type='application/pdf')
@@ -456,11 +471,12 @@ class TroubleCommunicationSheetPDFView(DetailView):
         buffer.seek(0)
         return FileResponse(buffer, as_attachment=True, filename='{}'.format(filename))
 #        response.write(buffer.getvalue())
-#        buffer.close()        
+#        buffer.close()
 #        return response
 
     def _draw(self, p):
         pass
+
 
 class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
     '''不具合連絡票作成画面'''
@@ -497,10 +513,10 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
 
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer,
-                                rightMargin=20*mm,
-                                leftMargin=20*mm,
-                                topMargin=20*mm,
-                                bottomMargin=20*mm,
+                                rightMargin=20 * mm,
+                                leftMargin=20 * mm,
+                                topMargin=20 * mm,
+                                bottomMargin=20 * mm,
                                 pagesize=size,
                                 title=filename[:-4])
         elements = []
@@ -525,7 +541,7 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
             first_datetime = None
             first_downtime = 0
             first_delaytime = 0
-            
+
         errorcode_str = ', '.join(list(obj.errors.values_list('error_code', flat=True)))
         if first_datetime is not None:
             first_datetime_str = first_datetime.strftime('%Y/%m/%d %H:%M')
@@ -556,7 +572,7 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
             ['要望詳細', Paragraph(obj.require_detail if obj.require_detail is not None else '', style_table)],
         ]
         table = Table(data, (35 * mm, 130 * mm), None, hAlign='LEFT')
-        
+
         # TableStyleを使って、Tableの装飾をします。
         table.setStyle(TableStyle([
             # 表で使うフォントとそのサイズを設定
@@ -595,21 +611,21 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
         context['pdf_filename'] = filename
         context['version'] = version
         context['form'] = TroubleCommunicationSheetCreateForm(initial={
-            'group':obj,
-            'version':version,
-            'file_base64':pdf_b64,
-            'filename':filename,
-            'user':self.request.user,
+            'group': obj,
+            'version': version,
+            'file_base64': pdf_b64,
+            'filename': filename,
+            'user': self.request.user,
         })
         context['mailto_list'] = get_tcs_address_list()
 #        print(context['form'])
         return context
-        
+
     def post(self, request, *args, **kwargs):
 
         group = get_object_or_404(TroubleGroup, pk=request.POST['group'])
         form = self.form_class(request.POST)
-        #print(self.request.GET.get('pdf_filename'))
+        # print(self.request.GET.get('pdf_filename'))
         pdf_b64 = request.POST['file_base64']
         filename = request.POST['filename']
         if 'is_sendmail' in request.POST:
@@ -636,7 +652,7 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
             obj.file = ContentFile(base64.b64decode(pdf_b64), name=filename)
             obj.save()
 
-            if is_sendmail == True:
+            if is_sendmail is True:
                 mail = EmailMessage(
                     f'EJHIC装置不具合連絡票 TR{group.classify_id} 第{obj.version}版 発行({group.title})',
                     f'''皆様
@@ -670,6 +686,7 @@ http://133.24.154.31/group_detail/{group.id}/
 
             return redirect('ptop:group_detail', pk=group.pk)
 
+
 class TroubleCommunicationSheetDispatchView(DetailView):
     '''不具合連絡票PDF発行画面'''
     template_name = 'trouble_communication_sheet_dispatch.html'
@@ -693,10 +710,10 @@ class TroubleCommunicationSheetDispatchView(DetailView):
 
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer,
-                                rightMargin=20*mm,
-                                leftMargin=20*mm,
-                                topMargin=20*mm,
-                                bottomMargin=20*mm,
+                                rightMargin=20 * mm,
+                                leftMargin=20 * mm,
+                                topMargin=20 * mm,
+                                bottomMargin=20 * mm,
                                 pagesize=size,
                                 title=filename[:-4])
         elements = []
@@ -721,7 +738,7 @@ class TroubleCommunicationSheetDispatchView(DetailView):
             first_datetime = None
             first_downtime = 0
             first_delaytime = 0
-            
+
         errorcode_str = ', '.join(list(obj.errors.values_list('error_code', flat=True)))
         if first_datetime is not None:
             first_datetime_str = first_datetime.strftime('%Y/%m/%d %H:%M')
@@ -752,7 +769,7 @@ class TroubleCommunicationSheetDispatchView(DetailView):
             ['要望詳細', Paragraph(obj.require_detail if obj.require_detail is not None else '', style_table)],
         ]
         table = Table(data, (35 * mm, 130 * mm), None, hAlign='LEFT')
-        
+
         # TableStyleを使って、Tableの装飾をします。
         table.setStyle(TableStyle([
             # 表で使うフォントとそのサイズを設定
@@ -765,11 +782,11 @@ class TroubleCommunicationSheetDispatchView(DetailView):
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ("ALIGN", (0, 0), (-1, -1), 'LEFT'),
         ]))
-#        elements.append(Paragraph('山形大学医学部東日本重粒子センター　重粒子線治療装置', style_title))
+        # elements.append(Paragraph('山形大学医学部東日本重粒子センター　重粒子線治療装置', style_title))
         elements.append(Paragraph('装置不具合連絡票', style_title))
         elements.append(Paragraph('連絡票ID: TR%s' % obj.classify_id, style_title))
         elements.append(Paragraph('山形大学医学部東日本重粒子センター', style_signature))
-        elements.append(Paragraph('発行者: %s' %  obj.classify_operator.fullname(), style_signature))
+        elements.append(Paragraph('発行者: %s' % obj.classify_operator.fullname(), style_signature))
         elements.append(Paragraph('発行日時: %s' % datetime.now().strftime('%Y/%m/%d %H:%M'), style_signature))
         elements.append(table)
         table.canv = p
@@ -782,7 +799,6 @@ class TroubleCommunicationSheetDispatchView(DetailView):
         p.drawString(25 * mm, 272 * mm, '装置不具合連絡票')
         p.drawString(25 * mm, 264 * mm, '連絡票ID: TR%s' % obj.id)
 
-
         doc.build(elements)
         buffer.seek(0)
 
@@ -790,18 +806,18 @@ class TroubleCommunicationSheetDispatchView(DetailView):
         pdf_b64 = base64.b64encode(pdf_bytes)
         pdf_b64 = pdf_b64.decode('utf-8')
 
-#        print(pdf_b64)
+        # print(pdf_b64)
         context = super().get_context_data(**kwargs)
         context['pdf_file'] = pdf_b64
         context['pdf_filename'] = filename
         return context
 
 
-
 class TroubleCommunicationSheetView(DetailView):
     """不具合連絡票詳細画面"""
     template_name = 'trouble_communication_sheet.html'
     model = TroubleEvent
+
 
 class LognoteSheetView(DetailView):
     """ログノート帳票画面"""
@@ -813,6 +829,7 @@ class TroubleEventDetail(DetailView):
     """TroubleEvent詳細画面(旧ver)"""
     template_name = 'event.html'
     model = TroubleEvent
+
 
 class TroubleEventList(ListView):
     """TroubleEventList画面"""
@@ -828,11 +845,11 @@ class TroubleEventList(ListView):
         ctx = super().get_context_data(**kwargs)
         ctx['q'] = self.request.GET.get('query', '')
         default_data = {
-            'query' : self.request.GET.get('query'),
-            'sort_by' : self.request.GET.get('sort_by'),
-            'paginate_by' : self.request.GET.get('paginate_by'),
+            'query': self.request.GET.get('query'),
+            'sort_by': self.request.GET.get('sort_by'),
+            'paginate_by': self.request.GET.get('paginate_by'),
         }
-        search_form = EventSearchForm(initial=default_data) # 検索フォーム
+        search_form = EventSearchForm(initial=default_data)  # 検索フォーム
         ctx['search_form'] = search_form
         return ctx
 
@@ -840,14 +857,14 @@ class TroubleEventList(ListView):
         q_word = self.request.GET.get('query')
         if q_word:
             object_list = TroubleEvent.objects.filter(
-                Q(title__icontains=q_word) 
-                | Q(device__device_id__icontains=q_word) 
+                Q(title__icontains=q_word)
+                | Q(device__device_id__icontains=q_word)
                 | Q(description__icontains=q_word)
                 | Q(errors__error_code__icontains=q_word)
             )
         else:
             object_list = TroubleEvent.objects.all()
-        object_list=object_list.order_by(self.request.GET.get('sort_by', '-start_time')).distinct()
+        object_list = object_list.order_by(self.request.GET.get('sort_by', '-start_time')).distinct()
         return object_list
 
     def get(self, request, *args, **kwargs):
@@ -861,6 +878,7 @@ class TroubleEventList(ListView):
                 return super().get(request, **kwargs)
         else:
             return super().get(request, **kwargs)
+
 
 class GroupBaseMixin(LoginRequiredMixin, object):
     """各種Group作成/更新画面のベースとなる処理"""
@@ -889,12 +907,12 @@ class GroupBaseMixin(LoginRequiredMixin, object):
                     file=attachment_form.file,
                     description='',
                     uploaded_datetime=datetime.now()
-                    )
+                )
                 data = {
                     'is_valid': True,
                     'pk': attachment.pk,
                     'title': attachment.title,
-                    }
+                }
                 print(data)
             else:
                 data = {'is_valid': False}
@@ -936,7 +954,7 @@ class GroupBaseMixin(LoginRequiredMixin, object):
                     return redirect('ptop:group_detail', pk=obj.pk)
 
             return redirect('ptop:home')
-            
+
         else:
             return super().post(request, *args, **kwargs)
 #            form = self.form_class(request.POST)
@@ -947,6 +965,7 @@ class GroupBaseMixin(LoginRequiredMixin, object):
 #                return redirect('ptop:group_detail', pk=self.kwargs['pk'])
 #            else:
 #                return render(request, 'create_group.html', {'form': form})
+
 
 class EventBaseMixin(LoginRequiredMixin, object):
     """各種Event作成/更新画面のベースとなる処理"""
@@ -968,12 +987,12 @@ class EventBaseMixin(LoginRequiredMixin, object):
                     file=attachment_form.file,
                     description='',
                     uploaded_datetime=datetime.now()
-                    )
+                )
                 data = {
                     'is_valid': True,
                     'pk': attachment.pk,
                     'title': attachment.title,
-                    }
+                }
                 print(data)
             else:
                 data = {'is_valid': False}
@@ -985,6 +1004,7 @@ class EventBaseMixin(LoginRequiredMixin, object):
 #            print(form.fields['attachments'].queryset.reverse())
             return super().post(request, *args, **kwargs)
 
+
 class GroupCreateFromEventView(GroupBaseMixin, CreateView):
     """Event情報から新しいGroupを作る画面"""
 
@@ -993,21 +1013,21 @@ class GroupCreateFromEventView(GroupBaseMixin, CreateView):
         event = get_object_or_404(TroubleEvent, pk=self.kwargs.get('pk'))
         context['base_event'] = self.kwargs.get('pk')
         context['form'] = GroupCreateForm(initial={
-            'title':event.title,
-            'device':event.device,
-            'description':event.description,
-            'cause':event.cause,
-            'trigger':event.trigger,
-            'errors':event.errors.all(),
-            'first_datetime':event.start_time,
-            'common_action':event.temporary_action,
-            'urgency':event.urgency,
-            'treatment_status':event.treatment_status,
-            'effect_scope':event.effect_scope,
-            'urgency':event.urgency,
-            'classify_operator':self.request.user,
+            'title': event.title,
+            'device': event.device,
+            'description': event.description,
+            'cause': event.cause,
+            'trigger': event.trigger,
+            'errors': event.errors.all(),
+            'first_datetime': event.start_time,
+            'common_action': event.temporary_action,
+            'urgency': event.urgency,
+            'treatment_status': event.treatment_status,
+            'effect_scope': event.effect_scope,
+            'classify_operator': self.request.user,
         })
         return context
+
 
 class ChildGroupCreateView(GroupBaseMixin, CreateView):
     """あるGroupから子Groupを作る画面"""
@@ -1015,26 +1035,46 @@ class ChildGroupCreateView(GroupBaseMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         parent_group = get_object_or_404(TroubleGroup, pk=self.kwargs.get('pk'))
-        context['form'] = GroupCreateForm(initial={
-            'title':parent_group.title + '(sub)',
-            'device':parent_group.device,
-            'description':parent_group.description,
-            'trigger':parent_group.trigger,
-            'cause':parent_group.cause,
-            'causetype':parent_group.causetype,
-            'errors':parent_group.errors.all(),
-            'common_action':parent_group.common_action,
-            'first_datetime':parent_group.first_datetime,
-            'permanent_action':parent_group.permanent_action,
-            'urgency':parent_group.urgency,
-            'treatment_status':parent_group.treatment_status,
-            'effect_scope':parent_group.effect_scope,
-            'urgency':parent_group.urgency,
-            'classify_operator':self.request.user,
-            'path':parent_group.path,
-            'classify_operator':self.request.user,
+        event_pk = self.request.GET.get('event_pk', '')
+
+        if event_pk:
+            event = get_object_or_404(TroubleEvent, pk=event_pk)
+            context['form'] = GroupCreateForm(initial={
+                'title': parent_group.title + '(sub)',
+                'device': event.device,
+                'description': event.description,
+                'trigger': event.trigger,
+                'cause': event.cause,
+                'causetype': parent_group.causetype,
+                'errors': event.errors.all(),
+                'common_action': event.temporary_action,
+                'first_datetime': event.start_time,
+                'urgency': event.urgency,
+                'treatment_status': event.treatment_status,
+                'effect_scope': event.effect_scope,
+                'classify_operator': self.request.user,
+                'path': parent_group.path,
+            })
+        else:
+            context['form'] = GroupCreateForm(initial={
+                'title': parent_group.title + '(sub)',
+                'device': parent_group.device,
+                'description': parent_group.description,
+                'trigger': parent_group.trigger,
+                'cause': parent_group.cause,
+                'causetype': parent_group.causetype,
+                'errors': parent_group.errors.all(),
+                'common_action': parent_group.common_action,
+                'first_datetime': parent_group.first_datetime,
+                'permanent_action': parent_group.permanent_action,
+                'urgency': parent_group.urgency,
+                'treatment_status': parent_group.treatment_status,
+                'effect_scope': parent_group.effect_scope,
+                'classify_operator': self.request.user,
+                'path': parent_group.path,
             })
         return context
+
 
 class RecurrentEventCreateFromEventView(EventBaseMixin, CreateView):
     """Eventから再発Eventを入力する画面"""
@@ -1046,17 +1086,18 @@ class RecurrentEventCreateFromEventView(EventBaseMixin, CreateView):
         context = super().get_context_data(**kwargs)
         event = get_object_or_404(TroubleEvent, pk=self.kwargs.get('pk'))
         context['form'] = EventCreateForm(initial={
-            'title':event.title,
-            'group':event.group,
-            'device':event.device,
-            'description':event.description,
-            'cause':event.cause,
-            'trigger':event.trigger,
-            'temporary_action':event.temporary_action,
-            'input_operator':self.request.user,
-            'errors':[i.id for i in event.errors.all()],
-            })
+            'title': event.title,
+            'group': event.group,
+            'device': event.device,
+            'description': event.description,
+            'cause': event.cause,
+            'trigger': event.trigger,
+            'temporary_action': event.temporary_action,
+            'input_operator': self.request.user,
+            'errors': [i.id for i in event.errors.all()],
+        })
         return context
+
 
 class RecurrentEventCreateFromGroupView(CreateView):
     """Groupから再発Eventを入力する画面"""
@@ -1069,16 +1110,17 @@ class RecurrentEventCreateFromGroupView(CreateView):
         context = super().get_context_data(**kwargs)
         group = get_object_or_404(TroubleGroup, pk=self.kwargs.get('pk'))
         context['form'] = EventCreateForm(initial={
-            'title':group.title,
-            'group':group,
-            'device':group.device,
-            'description':group.description,
-            'cause':group.cause,
-            'input_operator':self.request.user,
-            'temporary_action':group.common_action,
-            'errors':[i.id for i in group.errors.all()],
-            })
+            'title': group.title,
+            'group': group,
+            'device': group.device,
+            'description': group.description,
+            'cause': group.cause,
+            'input_operator': self.request.user,
+            'temporary_action': group.common_action,
+            'errors': [i.id for i in group.errors.all()],
+        })
         return context
+
 
 class EventCreateView(EventBaseMixin, CreateView):
     """Event新規入力画面"""
@@ -1089,9 +1131,10 @@ class EventCreateView(EventBaseMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form'] = EventCreateForm(initial={
-            'input_operator':self.request.user,
-            })
+            'input_operator': self.request.user,
+        })
         return context
+
 
 class EventUpdateView(EventBaseMixin, UpdateView):
     """Event編集画面"""
@@ -1116,6 +1159,7 @@ class GroupUpdateView(GroupBaseMixin, UpdateView):
         return reverse_lazy('ptop:group_detail', kwargs={'pk': self.object.id})
 #    success_url = reverse_lazy('ptop:eventlist')
 
+
 class AdvancedSearchView(ListView):
     """Group詳細検索画面"""
     template_name = 'advanced_search.html'
@@ -1128,40 +1172,30 @@ class AdvancedSearchView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # sessionに値がある場合、その値をセットする。（ページングしてもform値が変わらないように）
-#		title = ''
-#		text = ''
-#		if 'form_value' in self.request.session:
-#			form_value = self.request.session['form_value']
-#			title = form_value[0]
-#			text = form_value[1]
-#		default_data = {'title': title,  # タイトル
-#						'text': text,  # 内容
-#						}
         if not self.request.GET.get('date_type'):
             date_type = '0'
         else:
             date_type = self.request.GET.get('date_type'),
         default_data = {
-            'classify_id' : self.request.GET.get('classify_id'),
-            'title' : self.request.GET.get('title'),
-            'description' : self.request.GET.get('description'),
-            'cause' : self.request.GET.get('cause'),
-            'device' : self.request.GET.get('device'),
-            'error' : self.request.GET.get('error'),
-            'date_type' : date_type,
-            'date_delta1' : self.request.GET.get('date_delta1'),
-            'date2' : self.request.GET.get('date2'),
-            'date_delta2' : self.request.GET.get('date_delta2'),
-            'date3s' : self.request.GET.get('date3s'),
-            'date3e' : self.request.GET.get('date3e'),
-            'causetype' : self.request.GET.get('causetype'),
-            'vendor_status' : self.request.GET.get('vendor_status'),
-            'handling_status' : self.request.GET.get('handling_status'),
-            'sort_by' : self.request.GET.get('sort_by'),
-            'paginate_by' : self.request.GET.get('paginate_by'),
+            'classify_id': self.request.GET.get('classify_id'),
+            'title': self.request.GET.get('title'),
+            'description': self.request.GET.get('description'),
+            'cause': self.request.GET.get('cause'),
+            'device': self.request.GET.get('device'),
+            'error': self.request.GET.get('error'),
+            'date_type': date_type,
+            'date_delta1': self.request.GET.get('date_delta1'),
+            'date2': self.request.GET.get('date2'),
+            'date_delta2': self.request.GET.get('date_delta2'),
+            'date3s': self.request.GET.get('date3s'),
+            'date3e': self.request.GET.get('date3e'),
+            'causetype': self.request.GET.get('causetype'),
+            'vendor_status': self.request.GET.get('vendor_status'),
+            'handling_status': self.request.GET.get('handling_status'),
+            'sort_by': self.request.GET.get('sort_by'),
+            'paginate_by': self.request.GET.get('paginate_by'),
         }
-        search_form = AdvancedSearchForm(initial=default_data) # 検索フォーム
+        search_form = AdvancedSearchForm(initial=default_data)  # 検索フォーム
         context['search_form'] = search_form
         return context
 
@@ -1215,15 +1249,15 @@ class AdvancedSearchView(ListView):
                 queryset = queryset.filter(
                     Q(
                         start_time__range=(
-                            date2-timedelta(days=date_delta2),
-                            date2+timedelta(days=date_delta2 + 1)
+                            date2 - timedelta(days=date_delta2),
+                            date2 + timedelta(days=date_delta2 + 1)
                         )
                     )
                 )
             elif date_type == '3':
                 date3s = form.cleaned_data.get('date3s')
                 if not date3s:
-                    date3s = datetime(2019,4,1)
+                    date3s = datetime(2019, 4, 1)
                 date3e = form.cleaned_data.get('date3e')
                 if not date3e:
                     date3e = timezone.now()
@@ -1240,6 +1274,7 @@ class AdvancedSearchView(ListView):
         object_list = queryset.order_by(self.request.GET.get('sort_by', '-first_datetime'))
         return object_list
 
+
 class EventAdvancedSearchView(ListView):
     """Event詳細検索画面"""
     template_name = 'event_advanced_search.html'
@@ -1252,48 +1287,37 @@ class EventAdvancedSearchView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # sessionに値がある場合、その値をセットする。（ページングしてもform値が変わらないように）
-#		title = ''
-#		text = ''
-#		if 'form_value' in self.request.session:
-#			form_value = self.request.session['form_value']
-#			title = form_value[0]
-#			text = form_value[1]
-#		default_data = {'title': title,  # タイトル
-#						'text': text,  # 内容
-#						}
 
         if not self.request.GET.get('date_type'):
             date_type = '0'
         else:
             date_type = self.request.GET.get('date_type'),
         default_data = {
-            'id' : self.request.GET.get('id'),
-            'title' : self.request.GET.get('title'),
-            'description' : self.request.GET.get('description'),
-            'cause' : self.request.GET.get('cause'),
-            'device' : self.request.GET.get('device'),
-            'error' : self.request.GET.get('error'),
-            'date_type' : date_type,
-            'date_delta1' : self.request.GET.get('date_delta1'),
-            'date2' : self.request.GET.get('date2'),
-            'date_delta2' : self.request.GET.get('date_delta2'),
-            'date3s' : self.request.GET.get('date3s'),
-            'date3e' : self.request.GET.get('date3e'),
-            'downtime_low' : self.request.GET.get('downtime_low'),
-            'downtime_high' : self.request.GET.get('downtime_high'),
-            'delaytime_low' : self.request.GET.get('delaytime_low'),
-            'delaytime_high' : self.request.GET.get('delaytime_high'),
-            'sort_by' : self.request.GET.get('sort_by'),
-            'paginate_by' : self.request.GET.get('paginate_by'),
+            'id': self.request.GET.get('id'),
+            'title': self.request.GET.get('title'),
+            'description': self.request.GET.get('description'),
+            'cause': self.request.GET.get('cause'),
+            'device': self.request.GET.get('device'),
+            'error': self.request.GET.get('error'),
+            'date_type': date_type,
+            'date_delta1': self.request.GET.get('date_delta1'),
+            'date2': self.request.GET.get('date2'),
+            'date_delta2': self.request.GET.get('date_delta2'),
+            'date3s': self.request.GET.get('date3s'),
+            'date3e': self.request.GET.get('date3e'),
+            'downtime_low': self.request.GET.get('downtime_low'),
+            'downtime_high': self.request.GET.get('downtime_high'),
+            'delaytime_low': self.request.GET.get('delaytime_low'),
+            'delaytime_high': self.request.GET.get('delaytime_high'),
+            'sort_by': self.request.GET.get('sort_by'),
+            'paginate_by': self.request.GET.get('paginate_by'),
         }
-        search_form = EventAdvancedSearchForm(initial=default_data) # 検索フォーム
+        search_form = EventAdvancedSearchForm(initial=default_data)  # 検索フォーム
         context['search_form'] = search_form
         return context
 
     def get_queryset(self):
         queryset = super().get_queryset()
-#		print(queryset)
         form = self.search_form = EventAdvancedSearchForm(self.request.GET or None)
         if form.is_valid():
             id = form.cleaned_data.get('id')
@@ -1342,15 +1366,15 @@ class EventAdvancedSearchView(ListView):
                 queryset = queryset.filter(
                     Q(
                         start_time__range=(
-                            date2-timedelta(days=date_delta2),
-                            date2+timedelta(days=date_delta2 + 1)
+                            date2 - timedelta(days=date_delta2),
+                            date2 + timedelta(days=date_delta2 + 1)
                         )
                     )
                 )
             elif date_type == '3':
                 date3s = form.cleaned_data.get('date3s')
                 if not date3s:
-                    date3s = datetime(2019,4,1)
+                    date3s = datetime(2019, 4, 1)
                 date3e = form.cleaned_data.get('date3e')
                 if not date3e:
                     date3e = timezone.now()
@@ -1366,14 +1390,14 @@ class EventAdvancedSearchView(ListView):
                 queryset = queryset.filter(Q(delaytime__gte=int(form.cleaned_data.get('delaytime_low'))))
             if form.cleaned_data.get('delaytime_high'):
                 queryset = queryset.filter(Q(delaytime__lte=int(form.cleaned_data.get('delaytime_high'))))
-        
+
         sort_by = self.request.GET.get('sort_by', default='-start_time')
         object_list = queryset.order_by(sort_by, '-start_time')
         return object_list
 
     def export_csv(request):
-        
-        queryset=EventAdvancedSearchView.get_queryset()
+
+        queryset = EventAdvancedSearchView.get_queryset()
         df = read_frame(queryset)
 
         response = HttpResponse(content_type='text/csv; charset=cp932')
@@ -1383,7 +1407,8 @@ class EventAdvancedSearchView(ListView):
         df.to_csv(path_or_buf=response, encoding='utf_8_sig')
         print(response)
         return response
- 
+
+
 class OperationListView(ListView):
     """OperationList画面"""
     template_name = 'operation_list.html'
@@ -1420,19 +1445,19 @@ class OperationBaseMixin(LoginRequiredMixin, object):
         # には作成を受け付けない
         print(kwargs.get('pk'))
         query_set = Operation.objects.filter(
-            ~Q(id__exact=kwargs.get('pk')) 
-                & ~Q(operation_type__name__exact='装置停止')
-                & ((Q(start_time__lt=start) & Q(end_time__gt=start))
-                    |(Q(start_time__lt=end) & Q(end_time__gt=end)))
-            )
+            ~Q(id__exact=kwargs.get('pk'))
+            & ~Q(operation_type__name__exact='装置停止')
+            & ((Q(start_time__lt=start) & Q(end_time__gt=start)) | (Q(start_time__lt=end) & Q(end_time__gt=end)))
+        )
         if query_set.first():
             print(query_set)
             return render(
                 request,
                 'create_operation.html',
-                {'form': OperationCreateForm(request.POST), 'overlapped_oparations':query_set}
-                )
+                {'form': OperationCreateForm(request.POST), 'overlapped_oparations': query_set}
+            )
         return super().post(request, *args, **kwargs)
+
 
 class OperationUpdateView(OperationBaseMixin, UpdateView):
     """過去のOperationの編集"""
@@ -1440,11 +1465,13 @@ class OperationUpdateView(OperationBaseMixin, UpdateView):
     model = Operation
     form_class = OperationCreateForm
 
+
 class OperationCreateView(OperationBaseMixin, CreateView):
     """過去のOperationの作成"""
     template_name = 'create_operation.html'
     model = Operation
     form_class = OperationCreateForm
+
 
 @login_required
 def change_operation(request):
@@ -1455,24 +1482,25 @@ def change_operation(request):
     if current_operation:
         if current_operation.operation_type.name == '治療':
             treat_flag = True
-        elif  current_operation.operation_type.name == '患者QA':
+        elif current_operation.operation_type.name == '患者QA':
             pqa_flag = True
         return render(
             request,
             'change_operation.html',
             {
-                'current_operation':current_operation,
-                'change_form':ChangeOperationForm,
-                'treat_flag':treat_flag,
-                'pqa_flag':pqa_flag,
+                'current_operation': current_operation,
+                'change_form': ChangeOperationForm,
+                'treat_flag': treat_flag,
+                'pqa_flag': pqa_flag,
             }
-            )
+        )
     else:
         return render(
             request,
             'change_operation.html',
-            {'current_operation':None, 'change_form':ChangeOperationForm}
-            )
+            {'current_operation': None, 'change_form': ChangeOperationForm}
+        )
+
 
 def change_operation_execute(request):
     """Operation変更実行"""
@@ -1499,17 +1527,18 @@ def change_operation_execute(request):
         new_operation = Operation.objects.create(
             operation_type=form.cleaned_data.get('operation_type'),
             start_time=form.cleaned_data.get('change_time'),
-#            num_treat_hc1=form.cleaned_data.get('num_treat_hc1'),
-#            num_treat_gc2=form.cleaned_data.get('num_treat_gc2'),
-#            num_qa_hc1=form.cleaned_data.get('num_qa_hc1'),
-#            num_qa_gc2=form.cleaned_data.get('num_qa_gc2'),
-            )
+            # num_treat_hc1=form.cleaned_data.get('num_treat_hc1'),
+            # num_treat_gc2=form.cleaned_data.get('num_treat_gc2'),
+            # num_qa_hc1=form.cleaned_data.get('num_qa_hc1'),
+            # num_qa_gc2=form.cleaned_data.get('num_qa_gc2'),
+        )
     else:
         current_operation = Operation.objects.create(
             operation_type=form.cleaned_data.get('operation_type'),
             start_time=form.cleaned_data.get('change_time'),
-            )
+        )
     return HttpResponseRedirect("/change_operation/")
+
 
 class AnnouncementListView(ListView):
     """AnnouncementList画面"""
@@ -1520,10 +1549,12 @@ class AnnouncementListView(ListView):
     def get_queryset(self):
         return Announcement.objects.all().order_by('-posted_time')
 
+
 class AnnouncementDetailView(DetailView):
     """Announcement詳細画面"""
     template_name = 'announcement_detail.html'
     model = Announcement
+
 
 class AnnouncementUpdateView(LoginRequiredMixin, UpdateView):
     """Announcement作成画面"""
@@ -1533,6 +1564,7 @@ class AnnouncementUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse_lazy('ptop:announcement_detail', kwargs={'pk': self.object.id})
+
 
 class AnnouncementCreateView(LoginRequiredMixin, CreateView):
     """Announcement作成画面"""
@@ -1546,9 +1578,10 @@ class AnnouncementCreateView(LoginRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['form'] = AnnouncementCreateForm(initial={
-            'user':self.request.user,
-            })
+            'user': self.request.user,
+        })
         return context
+
 
 class CommentBaseMixin(LoginRequiredMixin, object):
     """Comment作成/更新画面"""
@@ -1557,7 +1590,7 @@ class CommentBaseMixin(LoginRequiredMixin, object):
     form_class = CommentCreateForm
 
     def get_success_url(self):
-#        print(self.object.posted_group.id)
+        # print(self.object.posted_group.id)
         return reverse_lazy('ptop:group_detail', kwargs={'pk': self.object.posted_group.id})
 
     def post(self, request, *args, **kwargs):
@@ -1571,12 +1604,12 @@ class CommentBaseMixin(LoginRequiredMixin, object):
                     file=attachment_form.file,
                     description='',
                     uploaded_datetime=datetime.now()
-                    )
+                )
                 data = {
                     'is_valid': True,
                     'pk': attachment.pk,
                     'title': attachment.title,
-                    }
+                }
                 print(data)
             else:
                 data = {'is_valid': False}
@@ -1587,6 +1620,7 @@ class CommentBaseMixin(LoginRequiredMixin, object):
 #            print(self.request.POST)
 #            print(form.fields['attachments'].queryset.reverse())
             return super().post(request, *args, **kwargs)
+
 
 class CommentUpdateView(CommentBaseMixin, UpdateView):
     """Comment更新画面"""
@@ -1608,9 +1642,9 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
         group = get_object_or_404(TroubleGroup, pk=self.kwargs.get('pk'))
         context['form'] = CommentCreateForm(initial={
-            'posted_group':group,
-            'user':self.request.user,
-            })
+            'posted_group': group,
+            'user': self.request.user,
+        })
         return context
 
     def post(self, request, *args, **kwargs):
@@ -1624,12 +1658,12 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
                     file=attachment_form.file,
                     description='',
                     uploaded_datetime=datetime.now()
-                    )
+                )
                 data = {
                     'is_valid': True,
                     'pk': attachment.pk,
                     'title': attachment.title,
-                    }
+                }
                 print(data)
             else:
                 data = {'is_valid': False}
@@ -1641,10 +1675,240 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 #            print(form.fields['attachments'].queryset.reverse())
             return super().post(request, *args, **kwargs)
 
+
+class SupplyItemListView(ListView):
+    """消耗品List画面"""
+    template_name = 'supply_item_list.html'
+    model = SupplyItem
+    paginate_by = 10
+
+    def get_queryset(self):
+        q_word = self.request.GET.get('query')
+        if q_word:
+            object_list = SupplyItem.objects.filter(
+                Q(serial_number__icontains=q_word)
+                | Q(installed_device__name__icontains=q_word)
+                | Q(supplytype__name__icontains=q_word)
+            ).order_by('-order_date')
+        else:
+            object_list = SupplyItem.objects.all().order_by('-order_date')
+        return object_list
+
+
+class SupplyItemCreateView(LoginRequiredMixin, CreateView):
+    """SupplyItem作成画面"""
+    template_name = 'supply_item_create.html'
+    model = SupplyItem
+    form_class = SupplyItemCreateForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:supply_item_detail', kwargs={'pk': self.object.id})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.GET.get('supplytype'):
+            supplytype = get_object_or_404(SupplyType, pk=self.request.GET.get('supplytype'))
+            context['form'] = SupplyItemCreateForm(initial={
+                'supplytype': supplytype,
+            })
+        return context
+
+
+class SupplyItemStockView(LoginRequiredMixin, CreateView):
+    """SupplyItem納品登録画面"""
+    template_name = 'supply_item_create.html'
+    model = SupplyItem
+    form_class = SupplyItemCreateForm
+
+    def get(self, request, *args, **kwargs):
+        if self.request.GET.get('supplytype'):
+            supplytype = get_object_or_404(SupplyType, pk=self.request.GET.get('supplytype'))
+            item = SupplyItem.objects.all().filter(supplytype=supplytype, stock_date=None).first()
+            if item:
+                return redirect(f'../supply_item_update/{item.id}/?operation=stock')
+            else:
+                return super().get(request, **kwargs)
+        else:
+            return super().get(request, **kwargs)
+
+
+class SupplyItemExchangeView(LoginRequiredMixin, UpdateView):
+    """SupplyItem使用開始画面"""
+    template_name = 'supply_item_exchange.html'
+    model = SupplyItem
+    form_class = SupplyItemExchangeForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:supply_item_detail', kwargs={'pk': self.request.POST['next_item']})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        item = get_object_or_404(SupplyItem, pk=self.kwargs.get('pk'))
+        context['item'] = item
+        context['form'] = SupplyItemExchangeForm(initial={
+            'installed_device': None,
+            'next_device': item.installed_device,
+        })
+        context['form'].fields['storage'].queryset = item.supplytype.candidate_storage
+        context['form'].fields['next_item'].queryset = SupplyItem.objects.filter(is_available=True)
+#        print(context['previous_record'])
+        return context
+
+    def post(self, request, *args, **kwargs):
+        next_item = get_object_or_404(SupplyItem, pk=self.request.POST['next_item'])
+        device = get_object_or_404(Device, pk=self.request.POST['next_device'])
+        date = timezone.make_aware(parse_datetime(self.request.POST['uninstall_date']))
+        level = float(self.request.POST['measured_level'])
+        print(next_item, date, level)
+        next_item.install_date = date
+        next_item.installed_device = device
+        next_item.is_installed = True
+        next_item.is_available = False
+        next_item.save()
+        first_record = SupplyRecord(item=next_item, device=device, level=level, date=date)
+        print(first_record)
+        first_record.save()
+        return super().post(request, *args, **kwargs)
+
+
+class SupplyItemUpdateView(LoginRequiredMixin, UpdateView):
+    """SupplyItem一般更新画面"""
+    template_name = 'supply_item_create.html'
+    model = SupplyItem
+    form_class = SupplyItemUpdateForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:supply_item_detail', kwargs={'pk': self.object.id})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        item = get_object_or_404(SupplyItem, pk=self.kwargs.get('pk'))
+        if self.request.GET.get('operation') == 'stock':
+            context['form'] = SupplyItemStockForm(initial={
+                'supplytype': item.supplytype,
+                'serial_number': item.serial_number,
+                'order_date': item.order_date,
+                'due_date': item.due_date,
+            })
+            context['form'].fields['storage'].queryset = item.supplytype.candidate_storage
+        return context
+
+
+class SupplyItemDetailView(LoginRequiredMixin, DetailView):
+    """SupplyItem詳細画面"""
+    template_name = 'supply_item_detail.html'
+    model = SupplyItem
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        item = get_object_or_404(SupplyItem, pk=self.kwargs.get('pk'))
+        qs = item.supplyrecord_set.all().order_by('date')
+        context['record_list'] = qs
+
+#        print(context['previous_record'])
+        if qs:
+            df = read_frame(qs)
+            df['days'] = (df['date'] - df.at[0, 'date']) / timedelta(days=1)
+            print(df)
+            plt.clf()
+            ax1 = plt.subplot(111)
+            ax2 = ax1.twiny()
+
+            exp_date = item.estimated_expire_date()
+            if exp_date is None:
+                exp_date = df.iloc[-1]['date'] + timedelta(days=1)
+
+            exp_days = (exp_date - df.iloc[0]['date']) / timedelta(days=1)
+    #        ax1.set_xlim(df.iloc[0]['date'], df.iloc[-1]['date'])
+            print(df.iloc[0]['date'], exp_date + timedelta(days=1))
+            ax1.set_xlim(df.iloc[0]['date'], exp_date + timedelta(days=1))
+    #        ax2.set_xlim(df.iloc[0]['days'], df.iloc[-1]['days'])
+            ax2.set_xlim(df.iloc[0]['days'], exp_days + 1)
+    #        print(df_event.loc[:,'num_acc':'num_bld'])
+            (a, b) = item.calc_slope(qs)
+            x2 = np.linspace(df.iloc[0]['days'], exp_days + 1, 100)
+            y2 = a * x2 + b
+            # print(x2,y2)
+            df.plot(ax=ax1, x='date', y='level', style='bo', label='record')
+            if a != 0.0:
+                ax2.plot(x2, y2, 'b--', label='fit')
+                ax1.axvline(exp_date, c='red', ls='dashed')
+            ax2.text(0, item.supplytype.exchange_level * 1.05, 'exchange', c='red')
+            ax1.axhline(item.supplytype.exchange_level, c='red', ls='dashed')
+            ax1.set_xlabel('Date')
+            ax2.set_xlabel('Days from install')
+            ax1.set_ylabel(f'Remaining level [{item.supplytype.level_unit}]')
+            plt.ylim(0, max(item.supplytype.fault_level, item.supplytype.initial_level))
+            lines1, labels1 = ax1.get_legend_handles_labels()
+            lines2, labels2 = ax2.get_legend_handles_labels()
+            ax2.legend(lines1 + lines2, labels1 + labels2, loc=0)
+            ax1.get_legend().remove()
+
+            buffer = io.BytesIO()
+            plt.savefig(buffer, dpi=100, bbox_inches='tight', format='png')
+            image_png = buffer.getvalue()
+            graph = base64.b64encode(image_png)
+            graph = graph.decode('utf-8')
+            buffer.close()
+            context['graph'] = graph
+        return context
+
+
+class SupplyRecordCreateView(LoginRequiredMixin, CreateView):
+    """SupplyRecord作成画面"""
+    template_name = 'supply_record_create.html'
+    model = SupplyRecord
+    form_class = SupplyRecordCreateForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:supply_item_detail', kwargs={'pk': self.object.item.id})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        supplyitem = get_object_or_404(SupplyItem, pk=self.request.GET.get('supplyitem'))
+        context['type'] = supplyitem.supplytype.name
+        context['item'] = supplyitem.serial_number
+        context['device'] = supplyitem.installed_device.name
+        context['form'] = SupplyRecordCreateForm(initial={
+            'item': supplyitem,
+            'device': supplyitem.installed_device,
+        })
+        context['previous_record'] = supplyitem.supplyrecord_set.all().order_by('-date').first()
+        print(context['item'])
+        return context
+
+
+class SupplyRecordUpdateView(LoginRequiredMixin, UpdateView):
+    """SupplyRecord更新画面"""
+    template_name = 'supply_record_create.html'
+    model = SupplyRecord
+    form_class = SupplyRecordCreateForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:supply_item_detail', kwargs={'pk': self.object.item.id})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        supplyrecord = get_object_or_404(SupplyRecord, pk=self.kwargs.get('pk'))
+        context['type'] = supplyrecord.item.supplytype.name
+        context['item'] = supplyrecord.item.serial_number
+        context['device'] = supplyrecord.item.installed_device.name
+        context['form'] = SupplyRecordCreateForm(initial={
+            'item': supplyrecord.item,
+            'device': supplyrecord.device,
+            'level': supplyrecord.level,
+            'date': supplyrecord.date,
+        })
+        context['previous_record'] = supplyrecord.item.supplyrecord_set.all().order_by('-date').first()
+        print(context['item'])
+        return context
+
+
 class EventClassifyView(LoginRequiredMixin, ListView):
     """イベント分類View"""
     template_name = 'event_classify.html'
     model = TroubleEvent
+
 
 @login_required
 def event_classify(request, pk_):
@@ -1656,13 +1920,13 @@ def event_classify(request, pk_):
             Q(title__icontains=q_word)
             | Q(description__icontains=q_word)
             | Q(device__name__icontains=q_word)
-            )
+        )
     elif event.group:
         m = re.match('(/\d+/)', event.group.path)
         path_root = m.group(1)
         object_list = TroubleGroup.objects.filter(
             Q(path__startswith=path_root)
-            )
+        )
     else:
         object_list = TroubleGroup.objects.all()
 
@@ -1674,8 +1938,8 @@ def event_classify(request, pk_):
     return render(
         request,
         'event_classify.html',
-        {'event':event, 'object_list':object_list, 'group':group}
-        )
+        {'event': event, 'object_list': object_list, 'group': group}
+    )
 
 
 def event_classify_execute(request):
@@ -1697,7 +1961,8 @@ def event_classify_execute(request):
             group.save()
         return HttpResponseRedirect(reverse_lazy('ptop:group_detail', kwargs={'pk': group.pk}))
     else:
-        return HttpResponseRedirect(reverse_lazy('ptop:home'))        
+        return HttpResponseRedirect(reverse_lazy('ptop:home'))
+
 
 def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     print(start_datetime, end_datetime)
@@ -1719,19 +1984,19 @@ def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
         freq_str = 'Y'
         return df
     if not query_set.exists():
-        s = pd.Series([0]*len(df.columns), index=df.columns, name=start_datetime)
+        s = pd.Series([0] * len(df.columns), index=df.columns, name=start_datetime)
         df = df.append(s)
-        s = pd.Series([0]*len(df.columns), index=df.columns, name=end_datetime)
+        s = pd.Series([0] * len(df.columns), index=df.columns, name=end_datetime)
         df = df.append(s)
     else:
         first_index = df.index.array[0]
         last_index = df.index.array[-1]
         print("test")
-        if  first_index != start_datetime_trunc:
-            s = pd.Series([0]*len(df.columns), index=df.columns, name=start_datetime_trunc)
+        if first_index != start_datetime_trunc:
+            s = pd.Series([0] * len(df.columns), index=df.columns, name=start_datetime_trunc)
             df = df.append(s)
         if last_index != end_datetime_trunc:
-            s = pd.Series([0]*len(df.columns), index=df.columns, name=end_datetime_trunc)
+            s = pd.Series([0] * len(df.columns), index=df.columns, name=end_datetime_trunc)
             df = df.append(s)
     print(df)
 #    df = df.sort_index().asfreq(freq_str, fill_value=0).fillna(0)
@@ -1739,24 +2004,25 @@ def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     print(df)
     return df
 
+
 def draw_availability(df, interval):
     print(interval)
-    df=df[:-1]
+    df = df[:-1]
     df.index = pd.to_datetime(df.index)
     plt.clf()
-    ax1=plt.subplot(111)
+    ax1 = plt.subplot(111)
     df.plot(ax=ax1, y='treatment_availability', style='ro-', label='')
     print(df.index)
     plt.ylabel('Machine Availability for Treatment')
-    if interval=='month':
+    if interval == 'month':
         plt.xlabel('Month')
         plt.xticks(df.index.to_list(), df.index.strftime('%Y\n%m').to_list(), rotation=0)
 #        ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y\n%m'))
-    elif interval=='week':
+    elif interval == 'week':
         plt.xlabel('Week')
         plt.xticks(df.index.to_list(), df.index.strftime('%m/%d').to_list(), rotation=0)
 #        ax1.xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%m/%d'))
-    elif interval=='day':
+    elif interval == 'day':
         plt.xlabel('Day')
         plt.xticks(df.index.to_list(), df.index.strftime('%m/%d\n%a').to_list(), rotation=0)
     ax1.yaxis.set_major_formatter(matplotlib.ticker.PercentFormatter(1))
@@ -1769,6 +2035,7 @@ def draw_availability(df, interval):
     graph = graph.decode('utf-8')
     buffer.close()
     return graph
+
 
 def statistics_create_view(request):
     form = StatisticsForm()
@@ -1784,7 +2051,7 @@ def statistics_create_view(request):
         if start and end:
             events = TroubleEvent.objects.filter(
                 Q(start_time__gt=start_t) & Q(start_time__lt=end_t)
-                ).order_by('start_time')
+            ).order_by('start_time')
             operations = Operation.objects.filter(
                 ~Q(operation_type__name__iexact='装置停止')
                 & Q(start_time__gt=start_t) & Q(end_time__lt=end_t)
@@ -1814,34 +2081,34 @@ def statistics_create_view(request):
 #        statistics_event = statistics_event.filter(device__section__super_section__name='建屋').annotate(num_bld=Count('id'))
         print(statistics_event)
         df_event = make_dataframe(statistics_event, start_localized, end_localized, subtotal_frequency)
- #       print(df_event['num_acc'],df_event['num_irr'])
+        # print(df_event['num_acc'],df_event['num_irr'])
         # trouble statistics(section)
         for section in Section.objects.all():
             print(section.name, events.filter(device__section=section).count())
 
         # trouble statistics(supersection)
-        keys=[]
-        values=[]
-        for s_section in ['加速器','照射系','治療計画','建屋','不明']:
+        keys = []
+        values = []
+        for s_section in ['加速器', '照射系', '治療計画', '建屋', '不明']:
             print(s_section)
             keys.append(s_section)
             values.append(events.filter(device__section__super_section__name=s_section).count())
-        dict_ss={
-            'count':values,
+        dict_ss = {
+            'count': values,
         }
-        keys=['Accelerator','Irradiation','TPS','Building','Other']
-        df_ss=pd.DataFrame(dict_ss,index=keys)
-        
+        keys = ['Accelerator', 'Irradiation', 'TPS', 'Building', 'Other']
+        df_ss = pd.DataFrame(dict_ss, index=keys)
+
         def make_autopct(values):
             def my_autopct(pct):
                 total = sum(values)
-                val = int(round(pct*total/100.0))
-                return '{p:.1f}%  ({v:d})'.format(p=pct,v=val)
+                val = int(round(pct * total / 100.0))
+                return '{p:.1f}%  ({v:d})'.format(p=pct, v=val)
             return my_autopct
 
         print(df_ss)
         plt.clf()
-        ax1=plt.subplot(111)
+        ax1 = plt.subplot(111)
 #        print(df_event.loc[:,'num_acc':'num_bld'])
         df_ss.plot.pie(ax=ax1, subplots=True, autopct=make_autopct(values), startangle=0, counterclock=False)
 #        df_event.plot.bar(y=['num_acc', 'num_irr', 'num_tps', 'num_bld'], stacked=True)
@@ -1854,7 +2121,7 @@ def statistics_create_view(request):
         graph_ss = graph_ss.decode('utf-8')
         buffer.close()
 
-        #operation
+        # operation
         statistics_operation = operations.annotate(index=Trunc('start_time', kind=subtotal_frequency)) \
             .values('index') \
             .annotate(subtotal_operation_time=Sum('operation_time')) \
@@ -1881,9 +2148,9 @@ def statistics_create_view(request):
 #        print(df['subtotal_operation_time'])
 #        df['operation_time_minute'] = df['subtotal_operation_time'].dt.total_seconds()
 #        print(df)
-  #      total_downtime = events.aggregate(value=Sum('downtime'))
- #       operations_annotate = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField())))
-        #print(operations_annotate)
+#       total_downtime = events.aggregate(value=Sum('downtime'))
+#       operations_annotate = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField())))
+        # print(operations_annotate)
 #        total_operation_time = operations_annotate.aggregate(value=Sum('operation_time'))
 #        s_summary['total_availability'] = 1.0 - (s_summary['subtotal_downtime'].divide(s_summary['subtotal_operation_time']))
 #        s_summary['treatment_availability'] = 1.0 - (s_summary['subtotal_delaytime'].divide(s_summary['subtotal_treatment_time']))
@@ -1899,19 +2166,19 @@ def statistics_create_view(request):
             df.to_csv(path_or_buf=response, encoding='utf_8_sig')
             print(response)
             return response
-        else:    
+        else:
             return render(
                 request,
                 'statistics_create.html',
                 {
-                    'form':form, 
-                    'subtotal_frequency':subtotal_frequency,
-                    'df':df,
-                    's_summary':s_summary,
-                    'graph_ss':graph_ss,
-                    'graph_avail':graph_avail,
+                    'form': form,
+                    'subtotal_frequency': subtotal_frequency,
+                    'df': df,
+                    's_summary': s_summary,
+                    'graph_ss': graph_ss,
+                    'graph_avail': graph_avail,
                 }
-                )
+            )
     else:
         total_downtime = None
         total_operation_time = None
@@ -1920,12 +2187,12 @@ def statistics_create_view(request):
             request,
             'statistics_create.html',
             {
-                'form':form, 
-                'total_downtime':0, 
-                'total_operation_time':0,
-                'total_availability':0.0,
+                'form': form,
+                'total_downtime': 0,
+                'total_operation_time': 0,
+                'total_availability': 0.0,
             }
-            )
+        )
 
 
 def trouble_statistics_create_view(request):
@@ -1944,7 +2211,7 @@ def trouble_statistics_create_view(request):
         if start and end:
             events = TroubleEvent.objects.filter(
                 Q(start_time__gt=start_t) & Q(end_time__lt=end_t)
-                ).order_by('start_time')
+            ).order_by('start_time')
             operations = Operation.objects.filter(
                 ~Q(operation_type__name__iexact='装置停止')
                 & Q(start_time__gt=start_t) & Q(end_time__lt=end_t)
@@ -1967,7 +2234,7 @@ def trouble_statistics_create_view(request):
             .order_by('index')
         df_event = make_dataframe(statistics_event, start_localized, end_localized, subtotal_frequency)
 
-        #operation
+        # operation
         statistics_operation = operations.annotate(index=Trunc('start_time', kind=subtotal_frequency)) \
             .values('index') \
             .annotate(subtotal_operation_time=Sum('operation_time')) \
@@ -1994,9 +2261,6 @@ def trouble_statistics_create_view(request):
 #        print(df['subtotal_operation_time'])
 #        df['operation_time_minute'] = df['subtotal_operation_time'].dt.total_seconds()
 #        print(df)
-  #      total_downtime = events.aggregate(value=Sum('downtime'))
- #       operations_annotate = operations.annotate(time_diff=(ExpressionWrapper(F('end_time')-F('start_time'), output_field=DurationField())))
-        #print(operations_annotate)
 #        total_operation_time = operations_annotate.aggregate(value=Sum('operation_time'))
 #        s_summary['total_availability'] = 1.0 - (s_summary['subtotal_downtime'].divide(s_summary['subtotal_operation_time']))
 #        s_summary['treatment_availability'] = 1.0 - (s_summary['subtotal_delaytime'].divide(s_summary['subtotal_treatment_time']))
@@ -2009,54 +2273,49 @@ def trouble_statistics_create_view(request):
             df.to_csv(path_or_buf=response, encoding='utf_8_sig')
             print(response)
             return response
-        else:    
+        else:
             return render(
                 request,
                 'statistics_create.html',
                 {
-                    'form':form, 
-                    'subtotal_frequency':subtotal_frequency,
-                    'df':df,
-                    's_summary':s_summary,
+                    'form': form,
+                    'subtotal_frequency': subtotal_frequency,
+                    'df': df,
+                    's_summary': s_summary,
                 }
-                )
+            )
     else:
-        total_downtime = None
-        total_operation_time = None
-        total_availability = None
         return render(
             request,
             'statistics_create.html',
             {
-                'form':form, 
-                'total_downtime':0, 
-                'total_operation_time':0,
-                'total_availability':0.0,
+                'form': form,
+                'total_downtime': 0,
+                'total_operation_time': 0,
+                'total_availability': 0.0,
             }
-            )
+        )
 
 
 class UnapprovedEventListView(ListView):
     """未承認イベント一覧画面"""
     model = TroubleEvent
     template_name = "unapproved_event_list.html"
+
     def get_queryset(self):
         object_list = TroubleEvent.objects.filter(Q(approval_operator=None))
         return object_list
 
-    def sample(self, request):
-        """sample function"""
-        loggedin_userid = request.user.id
-
     def post(self, request, *args, **kwargs):
         """post時に呼ばれる関数"""
-        update_object_list = TroubleEvent.objects.filter(Q(approval_operator=None)&~Q(group=None))
+        update_object_list = TroubleEvent.objects.filter(Q(approval_operator=None) & ~Q(group=None))
         if request.user.groups.filter(name='Operator').exists():
             for item in update_object_list:
                 print(item.title)
                 item.approval_operator = request.user
                 item.save()
         return render(request, 'unapproved_event_list.html')
+
 
 class Home(ListView):
     """ホーム画面"""
@@ -2069,10 +2328,12 @@ class Home(ListView):
         context['announce_list'] = Announcement.objects.order_by('posted_time').reverse()[:5]
         context['updated_event_list'] = TroubleEvent.objects.exclude(modified_on=F('created_on')).order_by('modified_on').reverse()[:5]
         context['updated_group_list'] = TroubleGroup.objects.exclude(modified_on=F('created_on')).order_by('modified_on').reverse()[:5]
-#        print(context)
+        context['supply_type_list'] = SupplyType.objects.all()
+        context['instelled_supply_list'] = SupplyItem.objects.filter(is_installed=True).order_by('installed_device')
+        print(context['instelled_supply_list'])
         return context
 
     def get_queryset(self):
         object_list = TroubleEvent.objects.order_by('start_time').reverse()[:5]
-#	return render(request, 'home.html', {'current_operation':current_operation})
+        # return render(request, 'home.html', {'current_operation':current_operation})
         return object_list
