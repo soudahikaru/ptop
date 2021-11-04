@@ -399,6 +399,10 @@ class TroubleCommunicationSheetPDFView(DetailView):
                 first_delaytime = obj.first_event().delaytime
             else:
                 first_delaytime = 0
+        if first_downtime is None:
+            first_downtime = 0
+        if first_delaytime is None:
+            first_delaytime = 0
 
         errorcode_str = ', '.join(list(obj.errors.values_list('error_code', flat=True)))
         if first_datetime is not None:
