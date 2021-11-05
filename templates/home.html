@@ -97,9 +97,16 @@
         <h2 class="card-header">消耗品管理</h2>
 
           {% for type in supply_type_list %}
-            <div><b>{{type.name}}</b> 
-              在庫数{{type.num_stock}}<a href="{% url 'ptop:supply_item_create'%}?supplytype={{type.id}}" class="btn btn-sm btn-info">発注</a> 
-              発注済数{{type.num_ordered}}{% if type.num_ordered > 0 %}<a href="{% url 'ptop:supply_item_stock'%}?supplytype={{type.id}}" class="btn btn-sm btn-info">納品</a>{% endif %}
+            <div><b><a href="{% url 'ptop:supply_item_list'%}?supplytype={{type.id}}&status=未納品&status=使用前&status=使用中&status=使用済">{{type.name}}</a></b> 
+              <a href="{% url 'ptop:supply_item_list'%}?supplytype={{type.id}}&status=使用前">在庫数{{type.num_stock}}</a> <a href="{% url 'ptop:supply_item_create'%}?supplytype={{type.id}}" class="btn btn-sm btn-info">発注</a> 
+              {% if type.num_ordered > 0 %}
+                <a href="{% url 'ptop:supply_item_list'%}?supplytype={{type.id}}&status=未納品">発注済数{{type.num_ordered}}</a><a href="{% url 'ptop:supply_item_stock'%}?supplytype={{type.id}}" class="btn btn-sm btn-info">納品</a>
+              {% else %}
+                発注済数{{type.num_ordered}}
+              {% endif %}
+              {% if type.num_used > 0 %}
+                <a href="{% url 'ptop:supply_item_list'%}?supplytype={{type.id}}&status=使用済">使用済数{{type.num_used}}</a>
+              {% endif %}
               {% if type.num_stock <= type.num_recommend and type.num_ordered == 0 %}<span style="color:red">在庫が少なくなりました</span>{% endif %}
             </div>
             <table border>

@@ -547,6 +547,35 @@ class TroubleCommunicationSheetCreateForm(forms.ModelForm):
             'group', 'version', 'user')
 
 
+class SupplyItemListForm(forms.ModelForm):
+    """SupplyItemの検索Form"""
+    CHOICE_ITEM_STATUS = (
+        ('未納品', '未納品'),
+        ('使用前', '使用前'),
+        ('使用中', '使用中'),
+        ('使用済', '使用済'),
+        ('廃棄済', '廃棄済'),
+    )
+
+    supplytype = forms.ModelChoiceField(
+        SupplyType.objects.all(),
+        label='消耗品種類', help_text='', required=False,
+    )
+    status = forms.MultipleChoiceField(
+        choices=CHOICE_ITEM_STATUS,
+        label='状態', help_text='', required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'operator_checkbox'})
+    )
+    query = forms.CharField(label='フリーワード', max_length=100, required=False)
+
+
+    class Meta:
+        model = SupplyItem
+        fields = (
+            'supplytype',
+        )
+
+
 class SupplyItemCreateForm(forms.ModelForm):
     supplytype = forms.ModelChoiceField(
         SupplyType.objects.all(),

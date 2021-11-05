@@ -63,6 +63,7 @@ from .forms import CommentCreateForm
 from .forms import TroubleCommunicationSheetCreateForm
 from .forms import GroupDetailForm
 from .forms import AnnouncementCreateForm
+from .forms import SupplyItemListForm
 from .forms import SupplyItemCreateForm
 from .forms import SupplyItemStockForm
 from .forms import SupplyRecordCreateForm
@@ -1684,6 +1685,7 @@ class SupplyItemListView(ListView):
     template_name = 'supply_item_list.html'
     model = SupplyItem
     paginate_by = 10
+    form_class = SupplyItemListForm
 
     def get_queryset(self):
         q_word = self.request.GET.get('query')
@@ -1695,7 +1697,46 @@ class SupplyItemListView(ListView):
             ).order_by('-order_date')
         else:
             object_list = SupplyItem.objects.all().order_by('-order_date')
+        
+        supplytype = self.request.GET.get('supplytype')
+        if supplytype:
+            object_list = object_list.filter(supplytype=supplytype)
+        status_list = self.request.GET.getlist("status")
+        if status_list:
+            if not ('未納品' in status_list):
+                object_list = object_list.exclude(stock_date__isnull=True)
+            if not ('使用前' in status_list):
+                object_list = object_list.exclude(is_available=True)
+            if not ('使用中' in status_list):
+                object_list = object_list.exclude(is_installed=True)
+            if not ('使用済' in status_list):
+                object_list = object_list.exclude(stock_date__isnull=False, is_available=False, is_installed=False)
+            if not ('廃棄済' in status_list):
+                object_list = object_list.exclude(dispose_date__isnull=False)
         return object_list
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.GET.get('supplytype'):
+            supplytype = get_object_or_404(SupplyType, pk=self.request.GET.get('supplytype'))
+        else:
+            supplytype = None
+        if self.request.GET.getlist('status'):
+            status_list = self.request.GET.getlist('status')
+        else:
+            status_list = []
+        if self.request.GET.get('query'):
+            query = self.request.GET.get('query')
+        else:
+            query = ''
+
+        context['form'] = SupplyItemListForm(initial={
+            'supplytype': supplytype,
+            'status': status_list,
+            'query': query,
+
+        })
+        return context
 
 
 class SupplyItemCreateView(LoginRequiredMixin, CreateView):

@@ -1,6 +1,15 @@
 {% extends 'base.html' %}
 
 {% block header %}
+<style>
+  .input-inline { display: inline-block; width: 150px; }
+  .input-inline2 { display: inline-block; width: 16em; }
+  .helptext {font-size: small;}
+  .required {color: red;}
+  li {display: inline-block; margin-right: 1em}
+  ul.operator_checkbox{list-style-type: none; padding-left: 0;}
+</style>
+
 {% endblock header %}
 
 {% block content %}
@@ -11,8 +20,23 @@
     <div class="container">
       <div class="card">
         <form action="" method="get">
-          <input name="query" value="{{ request.GET.query }}" type="text">
-          <button type="submit">絞り込み</button>
+          <form action="" method="POST">
+            {% csrf_token %}
+            <table border>
+            {% for field in form %}
+            {% spaceless %}
+            <tr><th>{% if field.field.required %}<span class="required">*</span>{% endif %}{{ field.label_tag }}</th><td>{% if "_time" in field.id_for_label %}<div class="input-inline2">{% endif %}{{ field }}{% if "_time" in field.id_for_label %}</div>{% endif %} 
+              {% if field.help_text %}
+                <span class="helptext">{{ field.help_text|safe }}</span>
+              {% endif %}
+              {{ field.error }}
+            </td></tr>
+            {% endspaceless %}
+            {% endfor %}
+            </table>
+    
+          <!-- <input name="query" value="{{ request.GET.query }}" type="text"> -->
+          <button type="submit" class='btn btn-primary'>絞り込み</button>
         </form>
       </div>
     </div>
@@ -29,18 +53,7 @@
         <td>{{item.stock_date|date:"Y/m/d(D)"}}</td>
         <td>{{item.install_date|date:"Y/m/d(D)"}}</td>
         <td>{{item.uninstall_date|date:"Y/m/d(D)"}}</td>
-        <td>
-          {% if not item.stock_date %}
-            未納品
-          {% elif item.is_available %}
-            <span style="color:green">使用可</span>
-          {% elif item.is_installed %}
-            <span style="color:red">使用中</span>
-          {% elif item.dispose_date %}
-            廃棄済
-          {% else %}
-            使用済
-          {% endif %}</td>
+        <td>{{item.status_string}}</td>
         
         <td><a href="{% url 'ptop:supply_item_update' item.pk %}" class="btn btn-primary">編集</a></td>
        </tr>

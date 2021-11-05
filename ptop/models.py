@@ -665,6 +665,9 @@ class SupplyType(models.Model):
     def num_ordered(self):
         return self.supplyitem_set.filter(order_date__isnull=False, stock_date__isnull=True).count()
 
+    def num_used(self):
+        return self.supplyitem_set.filter(uninstall_date__isnull=False, dispose_date__isnull=True).count()
+
     def __str__(self):
         return self.name
 
@@ -743,6 +746,20 @@ class SupplyItem(models.Model):
             return None
 
         return queryset.first().date + datetime.timedelta(days=delta)
+
+    def status_string(self):
+        s='不定'
+        if self.stock_date is None:
+            s='未納品'
+        elif self.is_available:
+            s='使用前'
+        elif self.is_installed:
+            s='使用中'
+        elif self.dispose_date is None:
+            s='使用済'
+        else:
+            s='廃棄済'
+        return s
 
     def __str__(self):
         return self.serial_number
