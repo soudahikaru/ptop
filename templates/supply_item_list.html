@@ -49,10 +49,10 @@
         <td>{{item.supplytype.name}}</td>
         <td><a href="{% url 'ptop:supply_item_detail' item.pk %}">{{item.serial_number}}</td>
         <td>{{ item.installed_device.name }}{{ item.storage.fullname }}</td>
-        <td>{{item.order_date|date:"Y/m/d(D)"}}</td>
-        <td>{{item.stock_date|date:"Y/m/d(D)"}}</td>
-        <td>{{item.install_date|date:"Y/m/d(D)"}}</td>
-        <td>{{item.uninstall_date|date:"Y/m/d(D)"}}</td>
+        <td>{{item.order_date|date:"Y/m/d"}}</td>
+        <td>{{item.stock_date|date:"Y/m/d"}}</td>
+        <td>{{item.install_date|date:"Y/m/d"}}</td>
+        <td>{{item.uninstall_date|date:"Y/m/d"}}</td>
         <td>{{item.status_string}}</td>
         
         <td><a href="{% url 'ptop:supply_item_update' item.pk %}" class="btn btn-primary">編集</a></td>
