@@ -70,6 +70,7 @@ urlpatterns = [
     path('supply_item_exchange/<int:pk>/', views.SupplyItemExchangeView.as_view(), name='supply_item_exchange'),
     path('supply_item_update/<int:pk>/', views.SupplyItemUpdateView.as_view(), name='supply_item_update'),
     path('supply_item_detail/<int:pk>/', views.SupplyItemDetailView.as_view(), name='supply_item_detail'),
+    path('supply_item_printout/<int:pk>/', views.SupplyItemPrintoutView.as_view(), name='supply_item_printout'),
     path('supply_record_create/', views.SupplyRecordCreateView.as_view(), name='supply_record_create'),
     path('supply_record_update/<int:pk>/', views.SupplyRecordUpdateView.as_view(), name='supply_record_update'),
     path('statistics_create/', views.statistics_create_view, name='statistics_create'),

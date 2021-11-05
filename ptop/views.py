@@ -1799,7 +1799,7 @@ class SupplyItemUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
-class SupplyItemDetailView(LoginRequiredMixin, DetailView):
+class SupplyItemDetailView(DetailView):
     """SupplyItem詳細画面"""
     template_name = 'supply_item_detail.html'
     model = SupplyItem
@@ -1859,6 +1859,12 @@ class SupplyItemDetailView(LoginRequiredMixin, DetailView):
             buffer.close()
             context['graph'] = graph
         return context
+
+
+class SupplyItemPrintoutView(DetailView):
+    """SupplyItem帳票出力画面"""
+    template_name = 'supply_item_printout.html'
+    model = SupplyItem
 
 
 class SupplyRecordCreateView(LoginRequiredMixin, CreateView):

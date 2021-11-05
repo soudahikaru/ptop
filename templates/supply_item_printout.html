@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<style>
+  h1 {font-size: 36pt; text-align: center;}
+  table {font-size: 24pt;}
+</style>
+  
+{% endblock header %}
+
+{% block content %}
+<div class="container">
+  <div class="card">
+    <h1 class="card-header">消耗品管理帳票</h1>
+    <h1 class="card-header">{{object.supplytype.name}} {{object.serial_number}}</h1>
+    <div class="card-body">
+      <table border>
+        <tr><td>種類</td><td>{{object.supplytype.name}}</td></tr>
+        <tr><td>型番</td><td>{{object.supplytype.model_number}}</td></tr>
+        <tr><td>シリアル番号</td><td>{{object.serial_number}}</td></tr>
+        <tr><td>保管場所</td><td>{% for s in object.supplytype.candidate_storage.all %}・{{s.fullname}}<br /> {% endfor %}</td></tr>
+        <tr><td>発注日</td><td>{{object.order_date|date:'Y/n/j'}}</td></tr>
+        <tr><td>納品日</td><td>{{object.stock_date|date:'Y/n/j'}}</td></tr>
+        <tr><td>使用開始日</td><td>{{object.install_date|date:'Y/n/j G:i'}}</td></tr>
+        <tr><td>使用場所</td><td>{% for s in object.supplytype.candidate_devices.all %}・{{s.name}}<br /> {% endfor %}</td></tr>
+        <tr><td>使用終了日</td><td>{{object.uninstall_date|date:'Y/n/j G:i'}}</td></tr>
+        <tr><td>状態</td><td>使用前　使用中　使用済</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-sm-4 text-left">
+      <a href="#" onclick="window.history.back(); return false;" class="btn btn-secondary">戻る</a>
+    </div>
+  <div class="col-sm-4 text-center">
+  </div>
+  <div class="col-sm-4 text-right">
+  </div>
+</div>
+{% endblock content %}

@@ -55,6 +55,7 @@
       <a href="#" onclick="window.history.back(); return false;" class="btn btn-secondary">戻る</a>
     </div>
   <div class="col-sm-4 text-center">
+    <a href="{% url 'ptop:supply_item_printout' object.id %}" class="btn btn-info">帳票出力</a>
   </div>
   <div class="col-sm-4 text-right">
     <a href="{% url 'ptop:supply_item_update' object.id %}" class="btn btn-primary">編集</a>
