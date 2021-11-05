@@ -1753,7 +1753,7 @@ class SupplyItemExchangeView(LoginRequiredMixin, UpdateView):
             'next_device': item.installed_device,
         })
         context['form'].fields['storage'].queryset = item.supplytype.candidate_storage
-        context['form'].fields['next_item'].queryset = SupplyItem.objects.filter(is_available=True)
+        context['form'].fields['next_item'].queryset = SupplyItem.objects.filter(supplytype=item.supplytype).filter(is_available=True)
 #        print(context['previous_record'])
         return context
 
