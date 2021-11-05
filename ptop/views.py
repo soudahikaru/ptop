@@ -2383,7 +2383,7 @@ class Home(ListView):
         context['updated_event_list'] = TroubleEvent.objects.exclude(modified_on=F('created_on')).order_by('modified_on').reverse()[:5]
         context['updated_group_list'] = TroubleGroup.objects.exclude(modified_on=F('created_on')).order_by('modified_on').reverse()[:5]
         context['supply_type_list'] = SupplyType.objects.all()
-        context['instelled_supply_list'] = SupplyItem.objects.filter(is_installed=True).order_by('installed_device')
+        context['instelled_supply_list'] = SupplyItem.objects.filter(is_installed=True).order_by('installed_device__device_id')
         print(context['instelled_supply_list'])
         return context
 
