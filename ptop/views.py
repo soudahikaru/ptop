@@ -1820,23 +1820,25 @@ class SupplyItemDetailView(LoginRequiredMixin, DetailView):
             ax2 = ax1.twiny()
 
             exp_date = item.estimated_expire_date()
-            if exp_date is None:
-                exp_date = df.iloc[-1]['date'] + timedelta(days=1)
+            if exp_date is None or exp_date < df.iloc[-1]['date']:
+                xlim1_max = df.iloc[-1]['date'] + timedelta(days=1)
+            else:
+                xlim1_max = exp_date + timedelta(days=1)
 
-            exp_days = (exp_date - df.iloc[0]['date']) / timedelta(days=1)
+            xlim2_max = (xlim1_max - df.iloc[0]['date']) / timedelta(days=1)
             (a, b) = item.calc_slope(qs)
-            x2 = np.linspace(df.iloc[0]['days'], exp_days + 1, 100)
+            x2 = np.linspace(df.iloc[0]['days'], xlim2_max, 100)
             y2 = a * x2 + b
             # print(x2,y2)
             df.plot(ax=ax1, x='date', y='level', style='bo', label='record')
-            if a != 0.0:
+            if exp_date:
                 ax2.plot(x2, y2, 'b--', label='fit')
                 ax1.axvline(exp_date, c='red', ls='dashed')
         #        ax2.set_xlim(df.iloc[0]['days'], df.iloc[-1]['days'])
-                ax2.set_xlim(df.iloc[0]['days'], exp_days + 1)
+                ax2.set_xlim(df.iloc[0]['days'], xlim2_max)
     #        ax1.set_xlim(df.iloc[0]['date'], df.iloc[-1]['date'])
-            print(df.iloc[0]['date'], exp_date + timedelta(days=1))
-            ax1.set_xlim(df.iloc[0]['date'], exp_date + timedelta(days=1))
+            # print(df.iloc[0]['date'], exp_date + timedelta(days=1))
+            ax1.set_xlim(df.iloc[0]['date'], xlim1_max)
     #        print(df_event.loc[:,'num_acc':'num_bld'])
             ax2.text(0, item.supplytype.exchange_level * 1.05, 'exchange', c='red')
             ax1.axhline(item.supplytype.exchange_level, c='red', ls='dashed')
