@@ -739,6 +739,8 @@ class SupplyItem(models.Model):
         # print(a, b, delta)
         if delta < 0:
             return None
+        elif delta > 365:
+            return None
 
         return queryset.first().date + datetime.timedelta(days=delta)
 
