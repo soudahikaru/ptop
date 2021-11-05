@@ -1760,13 +1760,12 @@ class SupplyItemExchangeView(LoginRequiredMixin, UpdateView):
     def post(self, request, *args, **kwargs):
         next_item = get_object_or_404(SupplyItem, pk=self.request.POST['next_item'])
         device = get_object_or_404(Device, pk=self.request.POST['next_device'])
-        storage = get_object_or_404(Device, pk=self.request.POST['next_storage'])
         date = timezone.make_aware(parse_datetime(self.request.POST['uninstall_date']))
         level = float(self.request.POST['measured_level'])
         print(next_item, date, level)
         next_item.install_date = date
         next_item.installed_device = device
-        next_item.storage = storage
+        next_item.storage = None
         next_item.is_installed = True
         next_item.is_available = False
         next_item.save()
