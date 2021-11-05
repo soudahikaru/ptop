@@ -148,7 +148,7 @@
 {% spaceless %}
 {% if events %}
         <p>
-        <table border>
+        <table border class="bg-event">
           <tr><th>事象ID</th><th>分類ID</th><th>発生日時</th><th>題名</th></tr>
 {% for event in events %}
   {% if event.group.classify_id == object.classify_id %}
