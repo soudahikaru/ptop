@@ -3,7 +3,8 @@
 {% block header %}
 <style>
   h1 {font-size: 36pt; text-align: center;}
-  table {font-size: 24pt;}
+  table {font-size: 26pt;}
+  .large {height: 150px; font-size:36pt}
 </style>
   
 {% endblock header %}
@@ -21,10 +22,10 @@
         <tr><td>保管場所</td><td>{% for s in object.supplytype.candidate_storage.all %}・{{s.fullname}}<br /> {% endfor %}</td></tr>
         <tr><td>発注日</td><td>{{object.order_date|date:'Y/n/j'}}</td></tr>
         <tr><td>納品日</td><td>{{object.stock_date|date:'Y/n/j'}}</td></tr>
-        <tr><td>使用開始日</td><td>{{object.install_date|date:'Y/n/j G:i'}}</td></tr>
+        <tr><td>使用開始日</td><td class='large'>{{object.install_date|date:'Y/n/j'}}</td></tr>
         <tr><td>使用場所</td><td>{% for s in object.supplytype.candidate_devices.all %}・{{s.name}}<br /> {% endfor %}</td></tr>
-        <tr><td>使用終了日</td><td>{{object.uninstall_date|date:'Y/n/j G:i'}}</td></tr>
-        <tr><td>状態</td><td>使用前　使用中　使用済</td></tr>
+        <tr><td>使用終了日</td><td class='large'>{{object.uninstall_date|date:'Y/n/j'}}</td></tr>
+        <tr><td>状態</td><td class='large'>使用前　使用中　使用済</td></tr>
       </table>
     </div>
   </div>
