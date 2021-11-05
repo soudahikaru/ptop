@@ -13,12 +13,13 @@
         <tr><td>シリアル番号</td><td>{{object.serial_number}}</td></tr>
         <tr><td>設置デバイス</td><td>{{object.installed_device.name}}</td></tr>
         <tr><td>保管場所</td><td>{{object.storage.fullname}}</td></tr>
-        <tr><td>{{object.supplytype.level_name}}</td><td>{{object.remain_level}} {{object.supplytype.level_unit}}</td></tr>
+        <!-- <tr><td>{{object.supplytype.level_name}}</td><td>{{object.remain_level}} {{object.supplytype.level_unit}}</td></tr> -->
         <tr><td>発注日</td><td>{{object.order_date|date:'Y/n/j'}}</td></tr>
         <tr><td>納品予定日</td><td>{{object.due_date|date:'Y/n/j'}}</td></tr>
         <tr><td>納品日</td><td>{{object.stock_date|date:'Y/n/j'}}</td></tr>
         <tr><td>使用開始日時</td><td>{{object.install_date|date:'Y/n/j G:i'}}</td></tr>
         <tr><td>使用終了日時</td><td>{{object.uninstall_date|date:'Y/n/j G:i'}}</td></tr>
+        <tr><td>廃棄(リサイクル回収)日</td><td>{{object.dispose_date|date:'Y/n/j'}}</td></tr>
       </table>
     </div>
   </div>
