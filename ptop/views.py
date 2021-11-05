@@ -568,7 +568,7 @@ class TroubleCommunicationSheetCreateView(LoginRequiredMixin, CreateView):
             ['平均停止時間', '%.1f分' % obj.average_downtime() if obj.average_downtime() is not None else '未入力'],
             ['デバイスID', '%s (%s)' % (obj.device.device_id, obj.device.name)],
             ['内容', Paragraph(obj.description, style_table)],
-            ['エラーコード', errorcode_str],
+            ['エラーコード', Paragraph(errorcode_str, style_table)],
             ['直前の操作', Paragraph(obj.trigger, style_table)],
             ['原因', Paragraph(obj.cause, style_table)],
             ['応急処置', Paragraph(obj.common_action, style_table)],
