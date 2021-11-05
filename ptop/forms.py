@@ -668,7 +668,7 @@ class SupplyRecordCreateForm(forms.ModelForm):
     )
     device = forms.ModelChoiceField(
         Device.objects.all(),
-        label='設置場所', help_text='', required=True,
+        label='設置場所', help_text='', required=False,
         widget=forms.HiddenInput(),
     )
 
