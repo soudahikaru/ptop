@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block header %}
+{% load static %}
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+
 <style>
   .input-inline { display: inline-block; width: 150px; }
   .input-inline2 { display: inline-block; width: 16em; }
