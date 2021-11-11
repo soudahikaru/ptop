@@ -44,7 +44,7 @@ td {text-align:right}
     <h4>結果</h4>
     {% if df is not None %}
         <table border>
-        <tr><th>期間</th><th>運転時間[h]</th><th>治療時間[h]</th><th>治療ポート数</th><th>QAポート数</th><th>トラブル件数</th><th>故障時間[m]</th><th>治療遅延時間[m]</th><th>装置稼働率</th><th>治療稼働率</th></tr>
+        <tr><th>期間</th><th>運転時間[h]</th><th>治療時間[h]</th><th>治療ポート数</th><th>QAポート数</th><th>トラブル件数</th><th>故障時間[m]</th><th>治療遅延時間[m]</th><th>全体装置稼働率</th><th>治療時装置稼働率</th></tr>
         {% for index, row in df.iterrows %}
             {% if forloop.last%}
                 <tr style="font-weight:bold">

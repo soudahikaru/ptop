@@ -1697,7 +1697,7 @@ class SupplyItemListView(ListView):
             ).order_by('-order_date')
         else:
             object_list = SupplyItem.objects.all().order_by('-order_date')
-        
+
         supplytype = self.request.GET.get('supplytype')
         if supplytype:
             object_list = object_list.filter(supplytype=supplytype)
