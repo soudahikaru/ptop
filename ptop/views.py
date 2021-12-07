@@ -1985,7 +1985,7 @@ class ReminderCreateView(LoginRequiredMixin, CreateView):
             elif '対処予定' in vendor_status:
                 reminder_type = ReminderType.objects.filter(name__icontains='処置期限')[0]
             elif '経過観察' in handling_status:
-                reminder_type = ReminderType.objects.filter(name__icontains='経過観察期限')[0]
+                reminder_type = ReminderType.objects.filter(name__icontains='経過観察')[0]
             elif '重点監視' in handling_status:
                 reminder_type = ReminderType.objects.filter(name__icontains='重点監視')[0]
             elif '様子見' in handling_status:
