@@ -33,6 +33,7 @@ from .models import TroubleCommunicationSheet
 from .models import EmailAddress
 from .models import Room, Storage
 from .models import SupplyType, SupplyItem, SupplyRecord
+from .models import Reminder, ReminderType
 
 # @admin.register(User)
 
@@ -305,3 +306,5 @@ admin.site.register(Storage)
 admin.site.register(SupplyType)
 admin.site.register(SupplyItem)
 admin.site.register(SupplyRecord, SupplyRecordAdmin)
+admin.site.register(Reminder)
+admin.site.register(ReminderType)

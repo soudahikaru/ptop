@@ -10,6 +10,11 @@
 
     <title>{% if object %}{{object.title}} - {% endif %}Particle Therapy Database of Operation and Maintenance</title>
 
+    {% load static %}
+
+    <link rel="apple-touch-icon" type="image/png" href="{% static 'ptop/icon/apple-touch-icon-180x180.png' %}">
+    <link rel="icon" type="image/png" href="{% static 'ptop/icon/icon-192x192.png' %}">
+    
     <style>
       .navbar-toggler-icon {font-size: 0.8em;}
       .navbar-toggler{padding: 2px;}
@@ -24,7 +29,6 @@
 
     </style>
     
-    {% load static %}
   </head>
 
   <body>

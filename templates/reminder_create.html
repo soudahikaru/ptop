@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block header %}
+
+{% load static %}
+<script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+{% load bootstrap4 %}{% bootstrap_css %}{% bootstrap_javascript jquery='full' %}
+
+<style>
+.input-inline { display: inline-block; width: 150px; }
+.helptext {font-size: small;}
+.required {color: red;}
+.btn {margin-right: 5px;}
+</style>
+
+{% endblock header %}
+
+{% block content %}
+<div class="container">
+  <div class="card">
+
+    {% if 'update' in request.path %}
+    <h5 class="card-header">リマインダーの編集</h5>
+    {% elif 'done' in request.path %}
+    <h5 class="card-header">リマインダー処理完了入力</h5>
+    {% elif 'extend' in request.path %}
+    <h5 class="card-header">リマインダー期限延長</h5>
+    {% else %}
+    <h5 class="card-header">リマインダーの作成</h5>
+    {% endif %}
+
+    <div class="card-body">
+      <form action="" method="POST">
+        {% csrf_token %}
+        <table border>
+        {% for field in form %}
+        {% if not field.is_hidden %}
+        {% spaceless %}
+        <tr><th>{% if field.field.required %}<span class="required">*</span>{% endif %}{{ field.label_tag }}</th><td>{{ field }}
+          {% if field.help_text %}
+            <span class="helptext">{{ field.help_text|safe }}</span>
+          {% endif %}
+          {% if "due_date" in field.id_for_label %}
+          <a href="javascript:void(0);" id="id_duedate_tomorrow" class="btn btn-info btn-sm">明日</a> 
+          <a href="javascript:void(0);" id="id_duedate_1week" class="btn btn-info btn-sm">1週間後</a> 
+          <a href="javascript:void(0);" id="id_duedate_2week" class="btn btn-info btn-sm">2週間後</a> 
+          <a href="javascript:void(0);" id="id_duedate_1month" class="btn btn-info btn-sm">1ヶ月後</a> 
+          <a href="javascript:void(0);" id="id_duedate_2month" class="btn btn-info btn-sm">2ヶ月後</a> 
+          <a href="javascript:void(0);" id="id_duedate_3month" class="btn btn-info btn-sm">3ヶ月後</a> 
+          <a href="javascript:void(0);" id="id_duedate_6month" class="btn btn-info btn-sm">半年後</a> 
+          <a href="javascript:void(0);" id="id_duedate_1year" class="btn btn-info btn-sm">1年後</a> 
+          {% endif %}
+          </td></tr>
+        {% endspaceless %}
+        {% else %}
+          {{ field.as_hidden }}
+        {% endif %}
+        {% endfor %}
+        </table>
+
+      
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-sm-4 text-left">
+      <a href="#" onclick="window.history.back(); return false;" class="btn btn-secondary">戻る</a>
+    </div>
+  <div class="col-sm-4 text-center">
+  </div>
+  <div class="col-sm-4 text-right">
+    {% if 'update' in request.path %}
+    <input class="btn btn-primary" type="submit" value="更新する">
+    {% elif 'done' in request.path %}
+    <input class="btn btn-primary" type="submit" value="完了にする">
+    {% elif 'extend' in request.path %}
+    <input class="btn btn-primary" type="submit" value="延長する">
+    {% else %}
+    <input class="btn btn-primary" type="submit" value="作成する">
+    {% endif %}
+  </div>
+</div>
+
+</form>
+
+<script src="{% static 'ptop/js/jquery-3.1.1.min.js' %}"></script>
+<script src="{% static 'ptop/js/bootstrap.min.js' %}"></script>
+
+{{form.media}}
+
+{% endblock content %}
+
+{% block javascript %}
+<script>
+    /*
+    On focus out on input nickname,
+    call AJAX get request to check if the nickName
+    already exists or not.
+    */
+    function formatDate(dt) {
+      var y = dt.getFullYear();
+      var m = ('00' + (dt.getMonth()+1)).slice(-2);
+      var d = ('00' + dt.getDate()).slice(-2);
+      var h = ('00' + dt.getHours()).slice(-2);
+      var min = ('00' + dt.getMinutes()).slice(-2);
+      return (y + '-' + m + '-' + d);
+    }
+
+    $("#id_duedate_tomorrow").on("click", function () {
+      var due_date = new Date();
+      due_date.setDate(due_date.getDate() + 1);
+      $("#id_due_date").val(formatDate(due_date));
+    });
+
+    $("#id_duedate_1week").on("click", function () {
+      var due_date = new Date();
+      due_date.setDate(due_date.getDate() + 7);
+      $("#id_due_date").val(formatDate(due_date));
+    });
+
+    $("#id_duedate_2week").on("click", function () {
+      var due_date = new Date();
+      due_date.setDate(due_date.getDate() + 14);
+      $("#id_due_date").val(formatDate(due_date));
+    });
+
+    $("#id_duedate_1month").on("click", function () {
+      var due_date = new Date();
+      due_date.setMonth(due_date.getMonth() + 1);
+      $("#id_due_date").val(formatDate(due_date));
+    });
+
+    $("#id_duedate_2month").on("click", function () {
+      var due_date = new Date();
+      due_date.setMonth(due_date.getMonth() + 2);
+      $("#id_due_date").val(formatDate(due_date));
+    });
+
+    $("#id_duedate_3month").on("click", function () {
+      var due_date = new Date();
+      due_date.setMonth(due_date.getMonth() + 3);
+      $("#id_due_date").val(formatDate(due_date));
+    });
+
+    $("#id_duedate_6month").on("click", function () {
+      var due_date = new Date();
+      due_date.setMonth(due_date.getMonth() + 6);
+      $("#id_due_date").val(formatDate(due_date));
+    });
+
+    $("#id_duedate_1year").on("click", function () {
+      var due_date = new Date();
+      due_date.setFullYear(due_date.getFullYear() + 1);
+      $("#id_due_date").val(formatDate(due_date));
+    });
+
+</script>
+{% endblock javascript %}

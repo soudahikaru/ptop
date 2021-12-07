@@ -5,6 +5,7 @@ import numpy as np
 
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 from django.contrib.auth.models import PermissionsMixin, UserManager
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.core.validators import EmailValidator
@@ -748,17 +749,17 @@ class SupplyItem(models.Model):
         return queryset.first().date + datetime.timedelta(days=delta)
 
     def status_string(self):
-        s='不定'
+        s = '不定'
         if self.stock_date is None:
-            s='未納品'
+            s = '未納品'
         elif self.is_available:
-            s='使用前'
+            s = '使用前'
         elif self.is_installed:
-            s='使用中'
+            s = '使用中'
         elif self.dispose_date is None:
-            s='使用済'
+            s = '使用済'
         else:
-            s='廃棄済'
+            s = '廃棄済'
         return s
 
     def __str__(self):
@@ -777,3 +778,37 @@ class SupplyRecord(models.Model):
 
     def __str__(self):
         return f"{self.item.supplytype.name}{self.item.serial_number}={self.level}({self.date.strftime('%Y/%m/%d')})"
+
+
+class ReminderType(models.Model):
+    """リマインダー種類モデル"""
+    name = models.CharField('名称', max_length=100, null=False, blank=False)
+    display_order = models.IntegerField(default=0, null=False, blank=False)
+
+    def __str__(self):
+        return self.name
+
+
+class Reminder(models.Model):
+    """リマインダーモデル"""
+    group = models.ForeignKey(TroubleGroup, verbose_name='対象トラブル類型', null=False, blank=False, on_delete=models.CASCADE)
+    reminder_type = models.ForeignKey(ReminderType, verbose_name='種類', null=False, blank=False, on_delete=models.PROTECT)
+    due_date = models.DateField('期限日', null=False, blank=False)
+    description = models.TextField('内容', null=True, blank=True)
+    is_done = models.BooleanField('処理済みフラグ', default=False)
+    done_datetime = models.DateTimeField('完了日時', null=True, blank=True)
+    after_description = models.TextField('処置メモ', null=True, blank=True)
+
+    created_on = models.DateTimeField(auto_now_add=True)
+    modified_on = models.DateTimeField(auto_now=True)
+
+    def state(self):
+        if (self.due_date <= timezone.localdate()) and (self.is_done is True):
+            return '処理済'
+        elif (self.due_date <= timezone.localdate()) and (self.is_done is False):
+            return '要確認'
+        elif (self.due_date > timezone.localdate()):
+            return '期限前'
+
+    def __str__(self):
+        return f"{self.group.title}_{self.reminder_type}_{self.due_date.strftime('%Y/%m/%d')}"

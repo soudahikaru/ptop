@@ -49,6 +49,7 @@ import matplotlib.dates
 import matplotlib.pyplot as plt
 # from django.shortcuts import get_list_or_404
 from dal import autocomplete
+from ptop import forms
 from .forms import AttachmentForm
 from .forms import EventCreateForm
 from .forms import GroupCreateForm
@@ -69,6 +70,9 @@ from .forms import SupplyItemStockForm
 from .forms import SupplyRecordCreateForm
 from .forms import SupplyItemUpdateForm
 from .forms import SupplyItemExchangeForm
+from .forms import ReminderCreateForm
+from .forms import ReminderUpdateForm
+from .forms import ReminderDoneForm
 # from .models import User
 from .models import Device, Error, Section
 from .models import TroubleEvent, TroubleGroup
@@ -79,6 +83,7 @@ from .models import Operation
 from .models import Announcement
 from .models import EmailAddress
 from .models import SupplyType, SupplyItem, SupplyRecord
+from .models import Reminder, ReminderType
 
 matplotlib.use('Agg')
 
@@ -336,6 +341,8 @@ class GroupDetailView(FormMixin, DetailView):
         context['frequency_month_2'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=60), timezone.now() - timezone.timedelta(days=30))).count()
         context['frequency_month_3'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=90), timezone.now() - timezone.timedelta(days=60))).count()
         context['frequency_month_4'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=120), timezone.now() - timezone.timedelta(days=90))).count()
+
+        context['reminder_list'] = context.get('object').reminder_set.all()
 
         default_data = {
             'display_range': self.request.GET.get('display_range'),
@@ -1958,6 +1965,87 @@ class SupplyRecordUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
+class ReminderCreateView(LoginRequiredMixin, CreateView):
+    """Reminder作成画面"""
+    template_name = 'reminder_create.html'
+    model = Reminder
+    form_class = ReminderCreateForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:group_detail', kwargs={'pk': self.object.group.id})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.GET.get('group'):
+            group = get_object_or_404(TroubleGroup, pk=self.request.GET.get('group'))
+            vendor_status = group.vendor_status.name if group.vendor_status else ''
+            handling_status = group.handling_status.name if group.handling_status else ''
+            if '回答待ち' in vendor_status:
+                reminder_type = ReminderType.objects.filter(name__icontains='回答期限')[0]
+            elif '対処予定' in vendor_status:
+                reminder_type = ReminderType.objects.filter(name__icontains='処置期限')[0]
+            elif '経過観察' in handling_status:
+                reminder_type = ReminderType.objects.filter(name__icontains='経過観察期限')[0]
+            elif '重点監視' in handling_status:
+                reminder_type = ReminderType.objects.filter(name__icontains='重点監視')[0]
+            elif '様子見' in handling_status:
+                reminder_type = ReminderType.objects.filter(name__icontains='様子見')[0]
+            else:
+                reminder_type = None
+            context['form'] = ReminderCreateForm(initial={
+                'group': group,
+                'reminder_type': reminder_type,
+            })
+        return context
+
+
+class ReminderUpdateView(LoginRequiredMixin, UpdateView):
+    """Reminder更新画面"""
+    template_name = 'reminder_create.html'
+    model = Reminder
+    form_class = ReminderUpdateForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:group_detail', kwargs={'pk': self.object.group.id})
+
+
+class ReminderExtendView(LoginRequiredMixin, UpdateView):
+    """Reminder期限延長画面"""
+    template_name = 'reminder_create.html'
+    model = Reminder
+    form_class = forms.ReminderExtendForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:group_detail', kwargs={'pk': self.object.group.id})
+
+    def post(self, request, *args, **kwargs):
+        obj = self.get_object()
+        print(obj)
+        new_date = self.request.POST['due_date']
+        description_str = f'{obj.description}\n{timezone.localdate():%Y/%m/%d}期限延長: {obj.due_date:%Y/%m/%d}->{new_date}'
+        obj.description = description_str
+        obj.due_date = self.request.POST['due_date']
+        obj.save()
+        return HttpResponseRedirect(reverse_lazy('ptop:group_detail', kwargs={'pk': obj.group.pk}))
+
+class ReminderDoneView(LoginRequiredMixin, UpdateView):
+    """Reminder完了入力画面"""
+    template_name = 'reminder_create.html'
+    model = Reminder
+    form_class = ReminderDoneForm
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:group_detail', kwargs={'pk': self.object.group.id})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = ReminderDoneForm(initial={
+            'is_done': True,
+            'done_datetime': datetime.now().strftime('%Y-%m-%d %H:%M'),
+        })
+        return context
+
+
 class EventClassifyView(LoginRequiredMixin, ListView):
     """イベント分類View"""
     template_name = 'event_classify.html'
@@ -2379,12 +2467,13 @@ class Home(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['current_operation'] = Operation.objects.order_by('start_time').last()
-        context['announce_list'] = Announcement.objects.order_by('posted_time').reverse()[:5]
+        context['announce_list'] = Announcement.objects.order_by('posted_time').reverse()[:1]
         context['updated_event_list'] = TroubleEvent.objects.exclude(modified_on=F('created_on')).order_by('modified_on').reverse()[:5]
         context['updated_group_list'] = TroubleGroup.objects.exclude(modified_on=F('created_on')).order_by('modified_on').reverse()[:5]
         context['supply_type_list'] = SupplyType.objects.all()
+        context['reminder_list'] = Reminder.objects.filter(due_date__lte=timezone.localdate(), is_done=False)
         context['instelled_supply_list'] = SupplyItem.objects.filter(is_installed=True).order_by('installed_device__device_id')
-        print(context['instelled_supply_list'])
+        print(context['reminder_list'])
         return context
 
     def get_queryset(self):

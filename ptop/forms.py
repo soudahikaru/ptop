@@ -16,10 +16,12 @@ from .models import Announcement
 from .models import Comment, CommentType
 from .models import RequireType
 from .models import Storage
+from .models import Reminder
 from .models import Operation, OperationType
 from .models import CauseType, VendorStatusType, HandlingStatusType
 from .models import EffectScope, TreatmentStatusType, Urgency
 from .models import SupplyType, SupplyItem, SupplyRecord
+from .models import Reminder, ReminderType
 
 
 class AttachmentForm(forms.ModelForm):
@@ -372,6 +374,14 @@ class GroupCreateForm(forms.ModelForm):
         help_text='エラーメッセージを部分一致検索します。空白部をクリックまたはTab→キー入力で複数選択可能。',
         required=False)
 
+    first_datetime = forms.DateTimeField(
+        widget=datetimepicker.DateTimePickerInput(
+            options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
+        label='初発日時', required=False)
+    reminder_datetime = forms.DateTimeField(
+        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        label='フォロー期限', required=False)
+
     require_items = forms.ModelMultipleChoiceField(
         RequireType.objects.all().order_by('display_order'), label='要望項目', required=False,
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'operator_checkbox'}))
@@ -568,7 +578,6 @@ class SupplyItemListForm(forms.ModelForm):
     )
     query = forms.CharField(label='フリーワード', max_length=100, required=False)
 
-
     class Meta:
         model = SupplyItem
         fields = (
@@ -714,3 +723,75 @@ class SupplyRecordCreateForm(forms.ModelForm):
             'item', 'device',
             'level', 'date',
         )
+
+
+class ReminderCreateForm(forms.ModelForm):
+    group = forms.ModelChoiceField(
+        TroubleGroup.objects.all(),
+        label='トラブル類型', help_text='', required=True,
+        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+    )
+    reminder_type = forms.ModelChoiceField(
+        ReminderType.objects.all().order_by('display_order'),
+        label='リマインダー種類', help_text='', required=False,
+    )
+    due_date = forms.DateTimeField(
+        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        label='期限日', required=True
+    )
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 6, 'cols': 60}), label='内容', required=False)
+
+    class Meta:
+        model = Reminder
+        fields = (
+            'group', 'reminder_type', 'due_date', 'description',
+        )
+
+
+class ReminderUpdateForm(forms.ModelForm):
+    due_date = forms.DateTimeField(
+        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        label='期限日', required=True
+    )
+    done_datetime = forms.DateTimeField(
+        widget=datetimepicker.DateTimePickerInput(
+            options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
+        label='完了日時', required=False
+    )
+
+    class Meta:
+        model = Reminder
+        fields = '__all__'
+
+
+class ReminderExtendForm(forms.ModelForm):
+    description = forms.CharField(
+        widget=forms.HiddenInput())
+    due_date = forms.DateTimeField(
+        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        label='延長後期限日', required=True
+    )
+
+    class Meta:
+        model = Reminder
+        fields = (
+            'due_date', 'description',
+        )
+
+
+class ReminderDoneForm(forms.ModelForm):
+    after_description = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 6, 'cols': 60}), label='完了時メモ', required=False)
+    done_datetime = forms.DateTimeField(
+        widget=forms.HiddenInput())
+    is_done = forms.BooleanField(
+        widget=forms.HiddenInput(), required=True)
+
+    class Meta:
+        model = Reminder
+        fields = (
+            'is_done', 'done_datetime', 'after_description',
+        )
+
+

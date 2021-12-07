@@ -63,7 +63,6 @@
       </div>
     </div>
 
-
     {% for comment in parent_comments %}
     {% if forloop.first %}
     <div class="card">
@@ -165,6 +164,43 @@
         </p>
     </div>
   </div>
+
+  {% for item in reminder_list %}
+  {% if forloop.first %}
+  <div class="card">
+    <h5 class="card-header">リマインダー</h5>
+    <div class="card-body">
+      <table border>
+        <tr><th>状態</th><th>種類</th><th>期限日</th><th>詳細</th><th>完了日時</th><th>完了時メモ</th><th>操作</th></tr>
+        {% endif %}
+        <tr>
+          <td>{{item.state}}</td>
+          <td>{{item.reminder_type.name}}</td>
+          <td>{{item.due_date|date:"Y/m/d(D)"}}</td>
+          <td>{{item.description}}</td>
+          <td>{{item.done_datetime|date:"Y/m/d(D) H:i"}}</td>
+          <td>{{item.after_description}}</td>
+          <td><a href="{% url 'ptop:reminder_update' item.id %}" class="btn btn-primary">編集</a>
+        </td></tr>
+  {% if forloop.last %}
+      </table>
+    <div class="text-right">
+        <a href="{% url 'ptop:reminder_create'%}?group={{object.id}}" class="btn btn-info">新規リマインダー作成</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  {% empty %}
+  <div class="card">
+    <h5 class="card-header">リマインダー</h5>
+    <div class="card-body">
+      <div class="text-left">
+        <a href="{% url 'ptop:reminder_create'%}?group={{object.id}}" class="btn btn-info">新規リマインダー作成</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
   <div class="container">
     <div class="row">
       <div class="col-sm-4 text-left">
