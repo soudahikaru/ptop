@@ -96,7 +96,7 @@
         </div>
     {% if forloop.last %}
         <div class="text-right">
-          <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_comment_create' object.pk %}?parent={{comment.id}}', 'subwin','width=500,height=500');" class="btn btn-info">新規コメント作成</a>
+          <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_comment_create' object.pk %}', 'subwin','width=500,height=500');" class="btn btn-info">新規コメント作成</a>
         </div>
       </div>
     </div>
