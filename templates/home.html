@@ -83,6 +83,7 @@
           </tr>
           {% endfor %}
         </table>
+        <div style="text-align:right"><a href="{% url 'ptop:reminder_list' %}?status=期限前&status=発動中&status=処理済">リマインダー一覧</a></div>
       </div>
     </div>
   </div>
@@ -202,5 +203,16 @@
     </div>
   </div>
 
+  {% if not reminder_list %}
+  <div class="container">
+    <div class="col-sm-12">
+      <div class="card">
+        <h2 class="card-header">リマインダー</h2>
+        <div style="text-align:left">期限が到来したリマインダーはありません。</div>
+        <div style="text-align:right"><a href="{% url 'ptop:reminder_list' %}?status=期限前&status=発動中&status=処理済">リマインダー一覧</a></div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
 {% endblock content %}

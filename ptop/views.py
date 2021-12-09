@@ -1965,6 +1965,61 @@ class SupplyRecordUpdateView(LoginRequiredMixin, UpdateView):
         return context
 
 
+class ReminderListView(ListView):
+    """リマインダーList画面"""
+    template_name = 'reminder_list.html'
+    model = Reminder
+    paginate_by = 10
+    form_class = forms.ReminderListForm
+
+    def get_queryset(self):
+        q_word = self.request.GET.get('query')
+        if q_word:
+            object_list = Reminder.objects.filter(
+                Q(group__title__icontains=q_word)
+                | Q(group__device__device_id__icontains=q_word)
+                | Q(group__device__name__icontains=q_word)
+            ).order_by('-id')
+        else:
+            object_list = Reminder.objects.all().order_by('-id')
+
+        reminder_type = self.request.GET.get('reminder_type')
+        if reminder_type:
+            object_list = object_list.filter(reminder_type=reminder_type)
+        status_list = self.request.GET.getlist("status")
+        if status_list:
+            if not ('期限前' in status_list):
+                object_list = object_list.exclude(due_date__gt=timezone.localdate())
+            if not ('発動中' in status_list):
+                object_list = object_list.exclude(due_date__lte=timezone.localdate(), is_done=False)
+            if not ('処理済' in status_list):
+                object_list = object_list.exclude(is_done=True)
+        return object_list.order_by('due_date')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.GET.get('reminder_type'):
+            reminder_type = get_object_or_404(ReminderType, pk=self.request.GET.get('reminder_type'))
+        else:
+            reminder_type = None
+        if self.request.GET.getlist('status'):
+            status_list = self.request.GET.getlist('status')
+        else:
+            status_list = []
+        if self.request.GET.get('query'):
+            query = self.request.GET.get('query')
+        else:
+            query = ''
+
+        context['form'] = forms.ReminderListForm(initial={
+            'reminder_type': reminder_type,
+            'status': status_list,
+            'query': query,
+
+        })
+        return context
+
+
 class ReminderCreateView(LoginRequiredMixin, CreateView):
     """Reminder作成画面"""
     template_name = 'reminder_create.html'

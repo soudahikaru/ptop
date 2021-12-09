@@ -806,7 +806,7 @@ class Reminder(models.Model):
         if (self.due_date <= timezone.localdate()) and (self.is_done is True):
             return '処理済'
         elif (self.due_date <= timezone.localdate()) and (self.is_done is False):
-            return '要確認'
+            return '発動中'
         elif (self.due_date > timezone.localdate()):
             return '期限前'
 

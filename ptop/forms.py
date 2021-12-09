@@ -725,6 +725,32 @@ class SupplyRecordCreateForm(forms.ModelForm):
         )
 
 
+class ReminderListForm(forms.ModelForm):
+    """Reminderの検索Form"""
+    CHOICE_ITEM_STATUS = (
+        ('期限前', '期限前'),
+        ('発動中', '発動中'),
+        ('処理済', '処理済'),
+    )
+
+    reminder_type = forms.ModelChoiceField(
+        ReminderType.objects.all(),
+        label='リマインダー種類', help_text='', required=False,
+    )
+    status = forms.MultipleChoiceField(
+        choices=CHOICE_ITEM_STATUS,
+        label='状態', help_text='', required=False,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'operator_checkbox'})
+    )
+    query = forms.CharField(label='フリーワード', max_length=100, required=False, help_text='トラブル類型名称 or デバイスID')
+
+    class Meta:
+        model = Reminder
+        fields = (
+            'reminder_type',
+        )
+
+
 class ReminderCreateForm(forms.ModelForm):
     group = forms.ModelChoiceField(
         TroubleGroup.objects.all(),
@@ -740,7 +766,7 @@ class ReminderCreateForm(forms.ModelForm):
         label='期限日', required=True
     )
     description = forms.CharField(
-        widget=forms.Textarea(attrs={'rows': 6, 'cols': 60}), label='内容', required=False)
+        widget=forms.Textarea(attrs={'rows': 4, 'cols': 80}), label='内容', required=False)
 
     class Meta:
         model = Reminder

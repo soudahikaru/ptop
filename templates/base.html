@@ -86,6 +86,11 @@
             <a class="nav-link" href="{% url 'ptop:advanced_search' %}">トラブル類型の詳細検索</a>
           </li>
         </ul>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:reminder_list' %}?status=期限前&status=発動中&status=処理済">リマインダー一覧</a>
+          </li>
+        </ul>
         <div class="dropdown-divider"></div>
         <ul class="navbar-nav">
           <li class="nav-item">
@@ -105,6 +110,12 @@
           </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'ptop:create_operation' %}">過去のオペレーションの入力</a>
+          </li>
+        </ul>
+        <div class="dropdown-divider"></div>
+        <ul class="navbar-nav">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ptop:supply_item_list' %}?supplytype={{type.id}}&status=未納品&status=使用前&status=使用中&status=使用済">消耗品一覧</a>
           </li>
         </ul>
         <div class="dropdown-divider"></div>

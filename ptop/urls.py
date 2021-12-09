@@ -77,6 +77,7 @@ urlpatterns = [
     path('reminder_update/<int:pk>/', views.ReminderUpdateView.as_view(), name='reminder_update'),
     path('reminder_extend/<int:pk>/', views.ReminderExtendView.as_view(), name='reminder_extend'),
     path('reminder_done/<int:pk>/', views.ReminderDoneView.as_view(), name='reminder_done'),
+    path('reminder_list/', views.ReminderListView.as_view(), name='reminder_list'),
     path('statistics_create/', views.statistics_create_view, name='statistics_create'),
     path('trouble_statistics_create/', views.trouble_statistics_create_view, name='trouble_statistics_create'),
     path('error_autocomplete/', views.ErrorAutoComplete.as_view(), name='error_autocomplete'),
