@@ -44,8 +44,9 @@ td {text-align:right}
     <h4>結果</h4>
     {% if df is not None %}
         <table border>
-        <tr><th>期間</th><th>運転時間[h]</th><th>治療時間[h]</th><th>治療ポート数</th><th>QAポート数</th><th>トラブル件数</th><th>故障時間[m]</th><th>治療遅延時間[m]</th><th>全体装置稼働率</th><th>治療時装置稼働率</th></tr>
-        {% for index, row in df.iterrows %}
+            <tr><th></th><th></th><th></th><th colspan="3">治療ポート数</th><th colspan="3">QAポート数</th><th></th><th></th><th></th><th></th><th></th></tr>
+            <tr><th>期間</th><th>運転時間[h]</th><th>治療時間[h]</th><th>HC1</th><th>GC2</th><th>合計</th><th>HC1</th><th>GC2</th><th>合計</th><th>トラブル件数</th><th>故障時間[m]</th><th>治療遅延時間[m]</th><th>全体装置稼働率</th><th>治療時装置稼働率</th></tr>
+            {% for index, row in df.iterrows %}
             {% if forloop.last%}
                 <tr style="font-weight:bold">
             {% else %}
@@ -64,7 +65,11 @@ td {text-align:right}
                 {% endif %}
                 <td>{{ row.subtotal_operation_time|divide:60|floatformat:1 }}</td>
                 <td>{{ row.subtotal_treatment_time|divide:60|floatformat:1 }}</td>
+                <td>{{ row.subtotal_num_treat_hc1|floatformat:0 }}</td>
+                <td>{{ row.subtotal_num_treat_gc2|floatformat:0 }}</td>
                 <td>{{ row.subtotal_num_treat_all|floatformat:0 }}</td>
+                <td>{{ row.subtotal_num_qa_hc1|floatformat:0 }}</td>
+                <td>{{ row.subtotal_num_qa_gc2|floatformat:0 }}</td>
                 <td>{{ row.subtotal_num_qa_all|floatformat:0 }}</td>
                 <td>{{ row.num_event|floatformat:0 }}</td>
                 <td>{{ row.subtotal_downtime|floatformat:0 }}</td>
