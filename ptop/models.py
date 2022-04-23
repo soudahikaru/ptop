@@ -319,7 +319,7 @@ class Operation(models.Model):
     comment = models.TextField('コメント', null=True, blank=True)
 
     def __str__(self):
-        return self.start_time.strftime('%Y%m%m-%H%M%S') + '_' + self.operation_type.name
+        return self.start_time.strftime('%Y%m%d-%H%M%S') + '_' + self.operation_type.name
 
 
 class TroubleGroup(models.Model):
