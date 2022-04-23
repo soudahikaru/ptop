@@ -2478,7 +2478,7 @@ def statistics_create_view(request):
                 for course in qs_course:
                     param_dict = {f'num_{ope_code}_{course.course_id}_{field_code}': Sum('num_'+field_code, filter=Q(beam_course=course)&Q(operation_type__name=ope_str))}
                     statistics_operation_result = statistics_operation_result.annotate(**param_dict)
-                param_dict = {f'num_{ope_code}_all_{field_code}': Sum('num_'+field_code, filter=Q(operation__operation_type__name=ope_str))}
+                param_dict = {f'num_{ope_code}_all_{field_code}': Sum('num_'+field_code, filter=Q(operation_type__name=ope_str))}
                 statistics_operation_result = statistics_operation_result.annotate(**param_dict)
         statistics_operation_result = statistics_operation_result.order_by('index')
         print(statistics_operation_result)
