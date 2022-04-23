@@ -19,8 +19,8 @@ class Command(BaseCommand):
             print(options['commit'])
             is_committed = options['commit']
             queryset = Operation.objects.all()
-            operation_treat_id = Operation.objects.filter(name__iexact='治療')[0]
-            operation_pqa_id = Operation.objects.filter(name__iexact='患者QA')[0]
+            operation_treat_id = Operation.objects.filter(operation_type__name__iexact='治療')[0]
+            operation_pqa_id = Operation.objects.filter(operation_type__name__iexact='患者QA')[0]
             for item in queryset:
                 print(item.operation_type)
                 course_hc1 = BeamCourse.objects.filter(course_id__iexact='HC1')
