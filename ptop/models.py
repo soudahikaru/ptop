@@ -860,7 +860,7 @@ class BeamCourse(models.Model):
 class OperationResult(models.Model):
     """運転結果モデル"""
     operation = models.ForeignKey(Operation, verbose_name='運転記録', null=False, blank=False, on_delete=models.CASCADE)
-    operation_type = models.ForeignKey(OperationType, verbose_name='運転タイプ', null=False, blank=False, on_delete=models.CASCADE)
+    operation_type = models.ForeignKey(OperationType, verbose_name='運転タイプ', null=True, blank=False, on_delete=models.CASCADE)
     beam_course = models.ForeignKey(BeamCourse, verbose_name='コース', null=False, blank=False, on_delete=models.CASCADE)
     num_complete = models.IntegerField('完遂数', null=False, blank=False, default=0)
     num_canceled_by_patient = models.IntegerField('患者都合中止数', null=False, blank=False, default=0)
