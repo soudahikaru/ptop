@@ -463,6 +463,11 @@ class OperationResultCreateForm(forms.ModelForm):
         label='Operation', help_text='', required=True,
         widget=forms.HiddenInput(),
     )
+    operation = forms.ModelChoiceField(
+        OperationType.objects.all(),
+        label='運転タイプ', help_text='', required=True,
+        widget=forms.HiddenInput(),
+    )
     beam_course = forms.ModelChoiceField(
         BeamCourse.objects.all(),
         label='コース', help_text='', required=True,
@@ -488,7 +493,7 @@ class OperationResultCreateForm(forms.ModelForm):
     class Meta:
         model = OperationResult
         fields = (
-            'operation', 'beam_course', 'num_complete',
+            'operation', 'operation_type', 'beam_course', 'num_complete',
             'num_canceled_by_patient', 'num_canceled_by_machine'
         )
 
@@ -558,7 +563,7 @@ class OperationResultUpdateForm(forms.ModelForm):
     class Meta:
         model = OperationResult
         fields = (
-            'operation', 'beam_course', 'num_complete',
+            'operation', 'operation_type', 'beam_course', 'num_complete',
             'num_canceled_by_patient', 'num_canceled_by_machine'
         )
 

@@ -50,7 +50,7 @@ class Command(BaseCommand):
                         operation=item,
                         operation_type=operation_treat_id,
                         beam_course=course_gc2[0],
-                        num_complete=item.num_treat_hc1,
+                        num_complete=item.num_treat_gc2,
                     )
                     convert_count += 1
                     print(result)
@@ -82,7 +82,7 @@ class Command(BaseCommand):
                         operation=item,
                         operation_type=operation_pqa_id,
                         beam_course=course_gc2[0],
-                        num_complete=item.num_qa_hc1,
+                        num_complete=item.num_qa_gc2,
                     )
                     convert_count += 1
                     print(result)

@@ -1581,6 +1581,7 @@ def change_operation_generalized(request):
                 treat_flag = True
                 formset = OperationResultCreateFormSet(queryset=models.OperationResult.objects.none(), initial=[{
                     'operation': current_operation,
+                    'operation_type': current_operation.operation_type,
                     'beam_course': course,
                     'beam_course_name': course.course_id,
                 } for course in BeamCourse.objects.filter(is_clinical=True)])
@@ -1588,6 +1589,7 @@ def change_operation_generalized(request):
                 pqa_flag = True
                 formset = OperationResultCreateFormSet(queryset=models.OperationResult.objects.none(),initial=[{
                     'operation': current_operation,
+                    'operation_type': current_operation.operation_type,
                     'beam_course': course,
                     'beam_course_name': course.course_id,
                 } for course in BeamCourse.objects.filter(is_clinical=True)])
