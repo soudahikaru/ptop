@@ -7,7 +7,7 @@ from import_export import resources
 from import_export.admin import ImportExportModelAdmin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import TroubleEvent
+from .models import BeamCourse, BeamDirection, IrradiationTechnique, OperationResult, TreatmentRoom, TroubleEvent
 from .models import TroubleGroup
 from .models import Attachment
 from .models import User
@@ -308,3 +308,9 @@ admin.site.register(SupplyItem)
 admin.site.register(SupplyRecord, SupplyRecordAdmin)
 admin.site.register(Reminder)
 admin.site.register(ReminderType)
+admin.site.register(TreatmentRoom)
+admin.site.register(BeamCourse)
+admin.site.register(BeamDirection)
+admin.site.register(IrradiationTechnique)
+admin.site.register(OperationResult)
+

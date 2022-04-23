@@ -2,6 +2,7 @@ from django import template
 from datetime import datetime, timedelta
 import numpy as np
 import math
+
 register = template.Library()
 
 @register.filter(name="multiply")
@@ -38,3 +39,8 @@ def url_replace(request, field, value):
     url_dict = request.GET.copy()
     url_dict[field] = str(value)  # Django2.1の一部対策。通常はvalueだけでOK
     return url_dict.urlencode()
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key)

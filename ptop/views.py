@@ -7,6 +7,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.views.generic.edit import FormMixin
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from django.forms import modelformset_factory
 # from django.utils.translation import gettext_lazy as _
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage
@@ -36,6 +37,7 @@ from reportlab.platypus import Table
 from reportlab.platypus import TableStyle
 from reportlab.platypus import Paragraph
 from reportlab.platypus import SimpleDocTemplate
+from reportlab.platypus.flowables import KeepTogether
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_RIGHT
@@ -50,7 +52,9 @@ import matplotlib.pyplot as plt
 # from django.shortcuts import get_list_or_404
 from dal import autocomplete
 from ptop import forms
-from .forms import AttachmentForm
+from ptop import models
+from .forms import AttachmentForm, OperationResultCreateForm, OperationResultQACreateForm
+from .forms import OperationResultUpdateForm
 from .forms import EventCreateForm
 from .forms import GroupCreateForm
 from .forms import GroupSearchForm
@@ -73,8 +77,9 @@ from .forms import SupplyItemExchangeForm
 from .forms import ReminderCreateForm
 from .forms import ReminderUpdateForm
 from .forms import ReminderDoneForm
+
 # from .models import User
-from .models import Device, Error, Section
+from .models import Device, Error, OperationResult, Section
 from .models import TroubleEvent, TroubleGroup
 from .models import TroubleCommunicationSheet
 from .models import Attachment
@@ -82,6 +87,7 @@ from .models import Comment
 from .models import Operation
 from .models import Announcement
 from .models import EmailAddress
+from .models import BeamCourse
 from .models import SupplyType, SupplyItem, SupplyRecord
 from .models import Reminder, ReminderType
 
@@ -1406,9 +1412,10 @@ class EventAdvancedSearchView(ListView):
         object_list = queryset.order_by(sort_by, '-start_time')
         return object_list
 
-    def export_csv(request):
+    def export_csv(self):
+        print(self)
 
-        queryset = EventAdvancedSearchView.get_queryset()
+        queryset = self.get_queryset()
         df = read_frame(queryset)
 
         response = HttpResponse(content_type='text/csv; charset=cp932')
@@ -1439,6 +1446,12 @@ class OperationListView(ListView):
         else:
             object_list = Operation.objects.all().order_by('start_time').reverse()
         return object_list
+
+
+class OperationDetailView(DetailView):
+    """Operation詳細画面"""
+    template_name = 'operation_detail.html'
+    model = Operation
 
 
 class OperationBaseMixin(LoginRequiredMixin, object):
@@ -1513,6 +1526,91 @@ def change_operation(request):
         )
 
 
+@login_required
+def change_operation_generalized(request):
+    """Operation変更画面(コースDB対応)"""
+    current_operation = Operation.objects.order_by('start_time').last()
+    treat_flag = False
+    pqa_flag = False
+    num_form = BeamCourse.objects.filter(is_clinical=True).count()
+    OperationResultCreateFormSet = modelformset_factory(models.OperationResult, form=forms.OperationResultCreateForm, extra=num_form, max_num=2)
+    # OperationResultQACreateFormSet = modelformset_factory(models.OperationResult, form=forms.OperationResultQACreateForm, extra=num_form, max_num=2)
+    if request.method == 'POST':
+        # POSTの場合はOperation変更実行処理を行う
+        formset = OperationResultCreateFormSet(request.POST)
+        if formset.is_valid():
+            # Formsetがあれば最初にFormsetの処理を実施(Formsetがない->is_valid=false)
+            instances = formset.save(commit=False)
+            for operation_result in instances:
+                print(operation_result)
+                if operation_result.num_complete > 0 or operation_result.num_canceled_by_patient > 0 or operation_result.num_canceled_by_machine > 0:
+                    # 実績が0でない場合はDBに登録する
+                    operation_result.save()
+                else:
+                    # 実績が0でない場合はDBに登録しない
+                    pass
+
+        # print(form)
+        # print(form.errors)
+        # print(formset)
+        # print(formset.errors)
+        # print(request.POST)
+        # Formset処理を行わなくてもFormは処理
+        form = ChangeOperationForm(data=request.POST)
+        form.full_clean()
+        if current_operation:
+            current_operation.end_time = form.cleaned_data.get('change_time')
+            current_operation.operation_time = (current_operation.end_time - current_operation.start_time).total_seconds() / 60.0
+            (current_operation.comment, ) = form.cleaned_data.get('comment'),
+            current_operation.save()
+            new_operation = Operation.objects.create(
+                operation_type=form.cleaned_data.get('operation_type'),
+                start_time=form.cleaned_data.get('change_time'),
+            )
+        else:
+            current_operation = Operation.objects.create(
+                operation_type=form.cleaned_data.get('operation_type'),
+                start_time=form.cleaned_data.get('change_time'),
+            )
+        return HttpResponseRedirect("/change_operation_generalized/")
+    else:
+        # GETの場合
+        if current_operation:
+            formset = None
+            if current_operation.operation_type.name == '治療':
+                treat_flag = True
+                formset = OperationResultCreateFormSet(queryset=models.OperationResult.objects.none(), initial=[{
+                    'operation': current_operation,
+                    'beam_course': course,
+                    'beam_course_name': course.course_id,
+                } for course in BeamCourse.objects.filter(is_clinical=True)])
+            elif current_operation.operation_type.name == '患者QA':
+                pqa_flag = True
+                formset = OperationResultCreateFormSet(queryset=models.OperationResult.objects.none(),initial=[{
+                    'operation': current_operation,
+                    'beam_course': course,
+                    'beam_course_name': course.course_id,
+                } for course in BeamCourse.objects.filter(is_clinical=True)])
+
+            return render(
+                request,
+                'change_operation_generalized.html',
+                {
+                    'current_operation': current_operation,
+                    'change_form': ChangeOperationForm,
+                    'result_formset': formset,
+                    'treat_flag': treat_flag,
+                    'pqa_flag': pqa_flag,
+                }
+            )
+        else:
+            return render(
+                request,
+                'change_operation_generalized.html',
+                {'current_operation': None, 'change_form': ChangeOperationForm}
+            )
+
+
 def change_operation_execute(request):
     """Operation変更実行"""
     form = ChangeOperationForm(data=request.POST)
@@ -1549,6 +1647,39 @@ def change_operation_execute(request):
             start_time=form.cleaned_data.get('change_time'),
         )
     return HttpResponseRedirect("/change_operation/")
+
+
+class OperationResultBaseMixin(LoginRequiredMixin, object):
+    """OperationResultの作成/編集ベース"""
+    template_name = 'operation_result_create.html'
+    model = OperationResult
+
+    def get_success_url(self):
+        return reverse_lazy('ptop:operation_detail', kwargs={'pk': self.object.operation.id})
+
+
+class OperationResultUpdateView(OperationResultBaseMixin, UpdateView):
+    """過去のOperationResultの編集"""
+    template_name = 'operation_result_create.html'
+    model = OperationResult
+    form_class = OperationResultUpdateForm
+
+
+class OperationResultCreateView(OperationResultBaseMixin, CreateView):
+    """過去のOperationの作成"""
+    template_name = 'operation_result_create.html'
+    model = OperationResult
+    form_class = OperationResultUpdateForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        default_data = {
+            'operation': self.request.GET.get('operation'),
+        }
+        print(default_data)
+        context['form'] = OperationResultUpdateForm(initial=default_data)
+        return context
 
 
 class AnnouncementListView(ListView):
@@ -2083,6 +2214,7 @@ class ReminderExtendView(LoginRequiredMixin, UpdateView):
         obj.save()
         return HttpResponseRedirect(reverse_lazy('ptop:group_detail', kwargs={'pk': obj.group.pk}))
 
+
 class ReminderDoneView(LoginRequiredMixin, UpdateView):
     """Reminder完了入力画面"""
     template_name = 'reminder_create.html'
@@ -2253,6 +2385,9 @@ def statistics_create_view(request):
                 ~Q(operation_type__name__iexact='装置停止')
                 & Q(start_time__gt=start_t) & Q(end_time__lt=end_t)
             ).order_by('start_time')
+            operation_results = OperationResult.objects.filter(
+                Q(operation__start_time__gt=start_t) & Q(operation__end_time__lt=end_t)
+            ).order_by('operation__start_time')
         else:
             events = TroubleEvent.objects.all()
             operations = Operation.objects.all()
@@ -2331,8 +2466,29 @@ def statistics_create_view(request):
         df_operation = make_dataframe(statistics_operation, start_localized, end_localized, subtotal_frequency)
         df_operation['subtotal_num_treat_all'] = df_operation['subtotal_num_treat_hc1'] + df_operation['subtotal_num_treat_gc2']
         df_operation['subtotal_num_qa_all'] = df_operation['subtotal_num_qa_hc1'] + df_operation['subtotal_num_qa_gc2']
+        
+        statistics_operation_result = operation_results.annotate(index=Trunc('operation__start_time', kind=subtotal_frequency)) \
+            .values('index')
+#        print(statistics_operation_result)
+        qs_course = BeamCourse.objects.filter(is_clinical=True).order_by('display_order')
+        for ope_code, ope_str in [('treat', '治療'), ('pqa', '患者QA'), ('pcal', '新患測定')]:
+            for field_code in ['complete', 'canceled_by_patient', 'canceled_by_machine']:
+                for course in qs_course:
+                    param_dict = {f'num_{ope_code}_{course.course_id}_{field_code}': Sum('num_'+field_code, filter=Q(beam_course=course)&Q(operation__operation_type__name=ope_str))}
+                    statistics_operation_result = statistics_operation_result.annotate(**param_dict)
+                param_dict = {f'num_{ope_code}_all_{field_code}': Sum('num_'+field_code, filter=Q(operation__operation_type__name=ope_str))}
+                statistics_operation_result = statistics_operation_result.annotate(**param_dict)
+        statistics_operation_result = statistics_operation_result.order_by('index')
+        print(statistics_operation_result)
+        df_operation_result = make_dataframe(statistics_operation_result, start_localized, end_localized, subtotal_frequency)
+        # df_operation_result['comment'] = ''
+        # df_operation_result.loc[df_operation_result['num_treat_all_canceled_by_patient'] > 0,'comment'] = df_operation_result['comment'] + f"患者都合中止:{df_operation_result['num_treat_all_canceled_by_patient']}"
+
+
+        print('result=', df_operation_result)
 
         df = pd.merge(df_operation, df_event, left_index=True, right_index=True, how='outer').fillna(0)
+        df = pd.merge(df_operation_result, df, left_index=True, right_index=True, how='outer').fillna(0)
 #        df['subtotal_operation_time'] = df['subtotal_operation_time'] / 60000000
 #        df['subtotal_treatment_time'] = df['subtotal_treatment_time'] / 60000000
         s_summary = df.sum()
@@ -2354,7 +2510,15 @@ def statistics_create_view(request):
         print(df)
 
         graph_avail = draw_availability(df, subtotal_frequency)
-
+        course_column_list = [cs for cs in BeamCourse.objects.all().values_list('course_id', flat=True)]
+        course_column_list.append('合計')
+        treat_course_list = [f'num_treat_{cs}_complete' for cs in BeamCourse.objects.all().values_list('course_id', flat=True)]
+        treat_course_list.append('num_treat_all_complete')
+        print(treat_course_list)
+        pqa_course_list = [f'num_pqa_{cs}_complete' for cs in BeamCourse.objects.all().values_list('course_id', flat=True)]
+        pqa_course_list.append('num_pqa_all_complete')
+        pcal_course_list = [f'num_pcal_{cs}_complete' for cs in BeamCourse.objects.all().values_list('course_id', flat=True)]
+        pcal_course_list.append('num_pcal_all_complete')
         if request.POST.get('next', '') == 'CSV出力':
             response = HttpResponse(content_type='text/csv; charset=cp932')
             filename = 'stat%s.csv' % (datetime.today().strftime('%Y%m%d-%H%M'))
@@ -2371,6 +2535,10 @@ def statistics_create_view(request):
                     'form': form,
                     'subtotal_frequency': subtotal_frequency,
                     'df': df,
+                    'course_column_list': course_column_list,
+                    'treat_course_list': treat_course_list,
+                    'pqa_course_list': pqa_course_list,
+                    'pcal_course_list': pcal_course_list,
                     's_summary': s_summary,
                     'graph_ss': graph_ss,
                     'graph_avail': graph_avail,

@@ -366,7 +366,7 @@ class TroubleGroup(models.Model):
 #    causetype = models.CharField('原因の類型', choices=CAUSETYPES, max_length=20, null=True, blank=True)
     causetype = models.ForeignKey(
         CauseType, verbose_name='原因の類型', null=True, blank=True, on_delete=models.SET_NULL)
-    errors = models.ManyToManyField(Error, verbose_name='エラーメッセージ', null=True, blank=True)
+    errors = models.ManyToManyField(Error, verbose_name='エラーメッセージ', blank=True)
     classify_operator = models.ForeignKey(
         User, verbose_name='分類作成者', null=True, blank=True,
         on_delete=models.SET_NULL, related_name='%(class)s_classified')
@@ -462,7 +462,7 @@ class TroubleEvent(models.Model):
     cause = models.TextField('原因と状況', null=True, blank=True)
     temporary_action = models.TextField('応急処置内容', null=True, blank=True)
     # error_message = models.CharField('エラーメッセージ',max_length=100, blank=True)
-    errors = models.ManyToManyField(Error, verbose_name='エラーメッセージ', null=True, blank=True)
+    errors = models.ManyToManyField(Error, verbose_name='エラーメッセージ', blank=True)
     start_time = models.DateTimeField('発生時刻', null=True)
     end_time = models.DateTimeField('運転再開時刻', null=True, blank=True)
     complete_time = models.DateTimeField('復旧完了時刻', null=True, blank=True)
@@ -812,3 +812,61 @@ class Reminder(models.Model):
 
     def __str__(self):
         return f"{self.group.title}_{self.reminder_type}_{self.due_date.strftime('%Y/%m/%d')}"
+
+
+class TreatmentRoom(models.Model):
+    """治療室モデル"""
+    room_id = models.CharField('治療室ID', max_length=100, null=False, blank=False)
+    name = models.CharField('名称', max_length=100, null=False, blank=False)
+    display_order = models.IntegerField(default=0, null=False, blank=False)
+
+    def __str__(self):
+        return self.name
+
+
+class IrradiationTechnique(models.Model):
+    """照射方式モデル"""
+    name = models.CharField('名称', max_length=100, null=False, blank=False)
+    display_order = models.IntegerField(default=0, null=False, blank=False)
+
+    def __str__(self):
+        return self.name
+
+
+class BeamDirection(models.Model):
+    """ビーム方向モデル"""
+    name = models.CharField('名称', max_length=100, null=False, blank=False)
+    display_order = models.IntegerField(default=0, null=False, blank=False)
+
+    def __str__(self):
+        return self.name
+
+
+class BeamCourse(models.Model):
+    """ビームコースモデル"""
+    treatment_room = models.ForeignKey(TreatmentRoom, verbose_name='治療室', null=False, blank=False, on_delete=models.CASCADE)
+    course_id = models.CharField('コースID', max_length=100, null=False, blank=False)
+    name = models.CharField('名称', max_length=100, null=False, blank=False)
+    beam_direction = models.ForeignKey(BeamDirection, verbose_name='ビーム方向', null=True, on_delete=models.SET_NULL)
+    irradiation_technique = models.ForeignKey(IrradiationTechnique, verbose_name='照射方式', null=True, on_delete=models.SET_NULL)
+    is_clinical = models.BooleanField('治療可', default=True)
+
+    display_order = models.IntegerField(default=0, null=False, blank=False)
+
+    def __str__(self):
+        return self.course_id
+
+
+class OperationResult(models.Model):
+    """運転結果モデル"""
+    operation = models.ForeignKey(Operation, verbose_name='運転内容', null=False, blank=False, on_delete=models.CASCADE)
+    beam_course = models.ForeignKey(BeamCourse, verbose_name='コース', null=False, blank=False, on_delete=models.CASCADE)
+    num_complete = models.IntegerField('完遂数', null=False, blank=False, default=0)
+    num_canceled_by_patient = models.IntegerField('患者都合中止数', null=False, blank=False, default=0)
+    num_canceled_by_machine = models.IntegerField('装置都合中止数', null=False, blank=False, default=0)
+
+    def __str__(self):
+        if self.operation.operation_type.name == '患者QA' or self.operation.operation_type.name == '新患測定':
+            return f'{self.operation.start_time.strftime("%Y/%m/%d")}_{self.beam_course}_{self.operation.operation_type.name}_正常完了{self.num_complete}/結果不良再測定{self.num_canceled_by_patient}/トラブル起因再測定{self.num_canceled_by_machine}'
+        else:
+            return f'{self.operation.start_time.strftime("%Y/%m/%d")}_{self.beam_course}_{self.operation.operation_type.name}_完遂{self.num_complete}/患者都合中止{self.num_canceled_by_patient}/装置都合中止{self.num_canceled_by_machine}'

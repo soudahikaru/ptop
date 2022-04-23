@@ -44,7 +44,7 @@
 
       <ul class="navbar-nav justify-content-center mr-auto ml-auto">
         <li class="nav-item">
-          <a href="{% url 'ptop:operation_list' %}">運転状況</a>: {{ current_operation.operation_type.name }} ({{current_operation.start_time|date:'Y-m-d G:i'}}-) <a href="{% url 'ptop:change_operation' %}" class="btn btn-primary btn-sm">変更</a>
+          <a href="{% url 'ptop:operation_list' %}">運転状況</a>: {{ current_operation.operation_type.name }} ({{current_operation.start_time|date:'Y-m-d G:i'}}-) <a href="{% url 'ptop:change_operation' %}" class="btn btn-primary btn-sm">変更</a><a href="{% url 'ptop:change_operation_generalized' %}" class="btn btn-primary btn-sm">変更(コースDB)</a>
         </li>
       </ul>
 

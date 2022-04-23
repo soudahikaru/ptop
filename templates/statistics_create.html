@@ -45,7 +45,16 @@ td {text-align:right}
     {% if df is not None %}
         <table border>
             <tr><th></th><th></th><th></th><th colspan="3">治療ポート数</th><th colspan="3">QAポート数</th><th></th><th></th><th></th><th></th><th></th></tr>
-            <tr><th>期間</th><th>運転時間[h]</th><th>治療時間[h]</th><th>HC1</th><th>GC2</th><th>合計</th><th>HC1</th><th>GC2</th><th>合計</th><th>トラブル件数</th><th>故障時間[m]</th><th>治療遅延時間[m]</th><th>全体装置稼働率</th><th>治療時装置稼働率</th></tr>
+            <tr><th>期間</th><th>運転時間[h]</th><th>治療時間[h]</th>
+            <!-- treat -->
+            {% for column in course_column_list %} 
+                <th>{{ column }}</th>
+            {% endfor %}
+            <!-- pqa -->
+            {% for column in course_column_list %}
+                <th>{{ column }}</th>
+            {% endfor %}
+            <th>トラブル件数</th><th>故障時間[m]</th><th>治療遅延時間[m]</th><th>全体装置稼働率</th><th>治療時装置稼働率</th><th>備考</th></tr>
             {% for index, row in df.iterrows %}
             {% if forloop.last%}
                 <tr style="font-weight:bold">
@@ -65,17 +74,21 @@ td {text-align:right}
                 {% endif %}
                 <td>{{ row.subtotal_operation_time|divide:60|floatformat:1 }}</td>
                 <td>{{ row.subtotal_treatment_time|divide:60|floatformat:1 }}</td>
-                <td>{{ row.subtotal_num_treat_hc1|floatformat:0 }}</td>
-                <td>{{ row.subtotal_num_treat_gc2|floatformat:0 }}</td>
-                <td>{{ row.subtotal_num_treat_all|floatformat:0 }}</td>
-                <td>{{ row.subtotal_num_qa_hc1|floatformat:0 }}</td>
-                <td>{{ row.subtotal_num_qa_gc2|floatformat:0 }}</td>
-                <td>{{ row.subtotal_num_qa_all|floatformat:0 }}</td>
+                {% for column in treat_course_list %}
+                <td>{{ row|get_item:column|floatformat:0 }}</td>
+                {% endfor %}
+                {% for column in pqa_course_list %}
+                <td>{{ row|get_item:column|floatformat:0 }}</td>
+                {% endfor %}
                 <td>{{ row.num_event|floatformat:0 }}</td>
                 <td>{{ row.subtotal_downtime|floatformat:0 }}</td>
                 <td>{{ row.subtotal_delaytime|floatformat:0 }}</td>
                 <td>{{ row.total_availability|percent:1 }}</td>
                 <td>{{ row.treatment_availability|percent:1 }}</td>
+                <td>
+                    {% if row.num_treat_all_canceled_by_patient %}患者都合中止{{ row.num_treat_all_canceled_by_patient|floatformat:0 }}{% endif %}
+                    {% if row.num_treat_all_canceled_by_machine %}装置都合中止{{ row.num_treat_all_canceled_by_machine|floatformat:0 }}{% endif %}
+                </td>
             </tr>
         {% endfor %}
         </table>

@@ -77,9 +77,13 @@
 
   <div class="container">
     <h2>検索結果</h2>
-    <div style="text-align: right;">
-    {{ search_form.sort_by.label_tag }}{{ search_form.sort_by }}
-    {{ search_form.paginate_by.label_tag }}{{ search_form.paginate_by }}
+    <div class="row">
+      <div class="col-sm-4 text-left">
+        該当件数: {{object_list|length}}
+      </div>
+      <div class="col-sm-8 text-right">
+        {{ search_form.sort_by.label_tag }}{{ search_form.sort_by }} {{ search_form.paginate_by.label_tag }}{{ search_form.paginate_by }}
+      </div>
     </div>
     <table border>
       <tr><th>ID</th><th>発生日時</th><th class="bg-event">題名</th><th>デバイスID</th><th>故障時間</th><th class="bg-group">トラブル類型</th></tr>

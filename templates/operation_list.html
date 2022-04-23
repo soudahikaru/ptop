@@ -22,7 +22,7 @@
       {% for item in object_list %}
       <tr>
         <td>{{item.pk}}</td>
-        <td>{{item.operation_type}}</td>
+        <td><a href="{% url 'ptop:operation_detail' item.pk %}">{{item.operation_type}}</a></td>
         <td>{{item.start_time|date:"Y/m/d H:i"}}</td>
         <td>{{item.end_time|date:"Y/m/d H:i"}}</td>
         <td>{{item.comment|truncatechars:20}}</td>

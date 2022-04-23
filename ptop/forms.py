@@ -8,7 +8,7 @@ from django.core import validators
 from django import forms
 # from django.urls import reverse_lazy
 # from django.utils import timezone
-from .models import TroubleCommunicationSheet, TroubleEvent, Device, Error
+from .models import BeamCourse, OperationResult, TroubleCommunicationSheet, TroubleEvent, Device, Error
 from .models import TroubleGroup
 from .models import User
 from .models import Attachment
@@ -16,7 +16,6 @@ from .models import Announcement
 from .models import Comment, CommentType
 from .models import RequireType
 from .models import Storage
-from .models import Reminder
 from .models import Operation, OperationType
 from .models import CauseType, VendorStatusType, HandlingStatusType
 from .models import EffectScope, TreatmentStatusType, Urgency
@@ -458,6 +457,112 @@ class OperationCreateForm(forms.ModelForm):
             'num_treat_hc1', 'num_treat_gc2', 'num_qa_hc1', 'num_qa_gc2', 'comment')
 
 
+class OperationResultCreateForm(forms.ModelForm):
+    operation = forms.ModelChoiceField(
+        Operation.objects.all(),
+        label='Operation', help_text='', required=True,
+        widget=forms.HiddenInput(),
+    )
+    beam_course = forms.ModelChoiceField(
+        BeamCourse.objects.all(),
+        label='コース', help_text='', required=True,
+        widget=forms.HiddenInput(),
+    )
+    num_complete = forms.IntegerField(
+        initial=0, label='完遂ポート数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+
+    num_canceled_by_patient = forms.IntegerField(
+        initial=0, label='患者都合中止数/測定結果不良再測定数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+
+    num_canceled_by_machine = forms.IntegerField(
+        initial=0, label='装置都合中止数/トラブル起因再測定数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+
+    beam_course_name = forms.CharField(required=False, widget=forms.HiddenInput())
+
+    class Meta:
+        model = OperationResult
+        fields = (
+            'operation', 'beam_course', 'num_complete',
+            'num_canceled_by_patient', 'num_canceled_by_machine'
+        )
+
+
+class OperationResultQACreateForm(forms.ModelForm):
+    operation = forms.ModelChoiceField(
+        Operation.objects.all(),
+        label='Operation', help_text='', required=True,
+        widget=forms.HiddenInput(),
+    )
+    beam_course = forms.ModelChoiceField(
+        BeamCourse.objects.all(),
+        label='コース', help_text='', required=True,
+        widget=forms.HiddenInput(),
+    )
+    num_complete = forms.IntegerField(
+        initial=0, label='完遂ポート数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+
+    num_canceled_by_patient = forms.IntegerField(
+        initial=0, label='患者都合中止数',
+        widget=forms.HiddenInput(),
+        validators=[validators.MinValueValidator(0)], required=False)
+
+    num_canceled_by_machine = forms.IntegerField(
+        initial=0, label='装置都合中止数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+
+    beam_course_name = forms.CharField(required=False, widget=forms.HiddenInput())
+
+    class Meta:
+        model = OperationResult
+        fields = (
+            'operation', 'beam_course', 'num_complete',
+            'num_canceled_by_patient', 'num_canceled_by_machine'
+        )
+
+
+class OperationResultUpdateForm(forms.ModelForm):
+    operation = forms.ModelChoiceField(
+        Operation.objects.all(),
+        label='Operation', help_text='', required=True,
+        widget=forms.Select(attrs={'style': 'pointer-events: none;', 'tabindex': '-1'}),
+    )
+    beam_course = forms.ModelChoiceField(
+        BeamCourse.objects.all(),
+        label='コース', help_text='', required=True,
+        widget=forms.Select(),
+    )
+    num_complete = forms.IntegerField(
+        initial=0, label='完遂ポート数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+
+    num_canceled_by_patient = forms.IntegerField(
+        initial=0, label='患者都合中止数/測定結果不良再測定数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+
+    num_canceled_by_machine = forms.IntegerField(
+        initial=0, label='装置都合中止数/トラブル起因再測定数',
+        widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
+        validators=[validators.MinValueValidator(0)], required=False)
+
+    class Meta:
+        model = OperationResult
+        fields = (
+            'operation', 'beam_course', 'num_complete',
+            'num_canceled_by_patient', 'num_canceled_by_machine'
+        )
+
+
 class ChangeOperationForm(forms.Form):
     operation_type = forms.ModelChoiceField(queryset=OperationType.objects.all().order_by('id'), label='次のオペレーション', required=True)
     change_time = forms.DateTimeField(
@@ -755,7 +860,7 @@ class ReminderCreateForm(forms.ModelForm):
     group = forms.ModelChoiceField(
         TroubleGroup.objects.all(),
         label='トラブル類型', help_text='', required=True,
-        widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
+        widget=forms.Select(attrs={'style': 'pointer-events: none;', 'tabindex': '-1'}),
     )
     reminder_type = forms.ModelChoiceField(
         ReminderType.objects.all().order_by('display_order'),

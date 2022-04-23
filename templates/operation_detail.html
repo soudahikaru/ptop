@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block header %}
+{% endblock header %}
+
+{% block content %}
+<div class="container">
+  <div class="card">
+    <h5 class="card-header">Operation詳細</h5>
+    <div class="card-body">
+      <table border>
+        <tr><td>運転タイプ</td><td>{{object.operation_type.name}}</td></tr>
+        <tr><td>開始日時</td><td>{{object.start_time|date:'Y/n/j G:i'}}</td></tr>
+        <tr><td>終了日時</td><td>{{object.end_time|date:'Y/n/j G:i'}}</td></tr>
+        <tr><td>運転時間</td><td>{{object.operation_time}}分</td></tr>
+        <tr><td>実績</td><td>
+          {% for item in object.operationresult_set.all %}
+           <a href="{% url 'ptop:operation_result_update' item.id %}">{{ item }}</a> <br>
+          {% endfor %}
+          <a href="{% url 'ptop:operation_result_create' %}?operation={{object.id}}" class="btn btn-primary">新規作成</a>
+          </td></tr>
+        <tr><td>コメント</td><td>{{object.comment}}</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-sm-4 text-left">
+      <a href="#" onclick="window.history.back(); return false;" class="btn btn-secondary">戻る</a>
+    </div>
+  <div class="col-sm-4 text-center">
+    <a href="{% url 'ptop:supply_item_printout' object.id %}" class="btn btn-info">帳票出力</a>
+  </div>
+  <div class="col-sm-4 text-right">
+    <a href="{% url 'ptop:supply_item_update' object.id %}" class="btn btn-primary">編集</a>
+  </div>
+</div>
+{% endblock content %}
