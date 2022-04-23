@@ -463,7 +463,7 @@ class OperationResultCreateForm(forms.ModelForm):
         label='Operation', help_text='', required=True,
         widget=forms.HiddenInput(),
     )
-    operation = forms.ModelChoiceField(
+    operation_type = forms.ModelChoiceField(
         OperationType.objects.all(),
         label='運転タイプ', help_text='', required=True,
         widget=forms.HiddenInput(),

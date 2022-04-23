@@ -42,7 +42,7 @@
                 <tr><th>コース</th><td>治療完遂ポート数</td><td>患者都合中止数</td><td>装置都合中止数</td></th></tr>
               {% endif %}
               {% for result_form in result_formset %}
-                <tr><th>{{ result_form.beam_course_name.value }}{{ result_form.operation }}{{ result_form.beam_course }}{{ result_form.beam_course_name }}</th><td>{{ result_form.num_complete }}</td><td>{{ result_form.num_canceled_by_patient }}</td><td>{{ result_form.num_canceled_by_machine }}</td></th></tr>
+                <tr><th>{{ result_form.beam_course_name.value }}{{ result_form.operation }}{{ result_form.operation_type }}{{ result_form.beam_course }}{{ result_form.beam_course_name }}</th><td>{{ result_form.num_complete }}</td><td>{{ result_form.num_canceled_by_patient }}</td><td>{{ result_form.num_canceled_by_machine }}</td></th></tr>
               {% endfor %}
             </table>
             {% if pqa_flag %}
