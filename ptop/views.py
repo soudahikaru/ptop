@@ -2476,7 +2476,7 @@ def statistics_create_view(request):
         for ope_code, ope_str in [('treat', '治療'), ('pqa', '患者QA'), ('pcal', '新患測定')]:
             for field_code in ['complete', 'canceled_by_patient', 'canceled_by_machine']:
                 for course in qs_course:
-                    param_dict = {f'num_{ope_code}_{course.course_id}_{field_code}': Sum('num_'+field_code, filter=Q(beam_course=course)&Q(operation__operation_type__name=ope_str))}
+                    param_dict = {f'num_{ope_code}_{course.course_id}_{field_code}': Sum('num_'+field_code, filter=Q(beam_course=course)&Q(operation_type__name=ope_str))}
                     statistics_operation_result = statistics_operation_result.annotate(**param_dict)
                 param_dict = {f'num_{ope_code}_all_{field_code}': Sum('num_'+field_code, filter=Q(operation__operation_type__name=ope_str))}
                 statistics_operation_result = statistics_operation_result.annotate(**param_dict)
