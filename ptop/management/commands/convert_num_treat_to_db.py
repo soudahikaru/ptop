@@ -19,6 +19,8 @@ class Command(BaseCommand):
             print(options['commit'])
             is_committed = options['commit']
             queryset = Operation.objects.all()
+            operation_treat_id = Operation.objects.filter(name__iexact='治療')[0]
+            operation_pqa_id = Operation.objects.filter(name__iexact='患者QA')[0]
             for item in queryset:
                 print(item.operation_type)
                 course_hc1 = BeamCourse.objects.filter(course_id__iexact='HC1')
@@ -30,6 +32,7 @@ class Command(BaseCommand):
                         error_count += 1
                     result = OperationResult(
                         operation=item,
+                        operation_type=operation_treat_id,
                         beam_course=course_hc1[0],
                         num_complete=item.num_treat_hc1,
                     )
@@ -45,6 +48,7 @@ class Command(BaseCommand):
                         error_count += 1
                     result = OperationResult(
                         operation=item,
+                        operation_type=operation_treat_id,
                         beam_course=course_gc2[0],
                         num_complete=item.num_treat_hc1,
                     )
@@ -60,6 +64,7 @@ class Command(BaseCommand):
                         error_count += 1
                     result = OperationResult(
                         operation=item,
+                        operation_type=operation_pqa_id,
                         beam_course=course_hc1[0],
                         num_complete=item.num_qa_hc1,
                     )
@@ -75,6 +80,7 @@ class Command(BaseCommand):
                         error_count += 1
                     result = OperationResult(
                         operation=item,
+                        operation_type=operation_pqa_id,
                         beam_course=course_gc2[0],
                         num_complete=item.num_qa_hc1,
                     )

@@ -859,7 +859,8 @@ class BeamCourse(models.Model):
 
 class OperationResult(models.Model):
     """運転結果モデル"""
-    operation = models.ForeignKey(Operation, verbose_name='運転内容', null=False, blank=False, on_delete=models.CASCADE)
+    operation = models.ForeignKey(Operation, verbose_name='運転記録', null=False, blank=False, on_delete=models.CASCADE)
+    operation_type = models.ForeignKey(OperationType, verbose_name='運転タイプ', null=False, blank=False, on_delete=models.CASCADE)
     beam_course = models.ForeignKey(BeamCourse, verbose_name='コース', null=False, blank=False, on_delete=models.CASCADE)
     num_complete = models.IntegerField('完遂数', null=False, blank=False, default=0)
     num_canceled_by_patient = models.IntegerField('患者都合中止数', null=False, blank=False, default=0)
@@ -867,6 +868,6 @@ class OperationResult(models.Model):
 
     def __str__(self):
         if self.operation.operation_type.name == '患者QA' or self.operation.operation_type.name == '新患測定':
-            return f'{self.operation.start_time.strftime("%Y/%m/%d")}_{self.beam_course}_{self.operation.operation_type.name}_正常完了{self.num_complete}/結果不良再測定{self.num_canceled_by_patient}/トラブル起因再測定{self.num_canceled_by_machine}'
+            return f'{self.operation.start_time.strftime("%Y/%m/%d")}_{self.beam_course}_{self.operation_type.name}_正常完了{self.num_complete}/結果不良再測定{self.num_canceled_by_patient}/トラブル起因再測定{self.num_canceled_by_machine}'
         else:
-            return f'{self.operation.start_time.strftime("%Y/%m/%d")}_{self.beam_course}_{self.operation.operation_type.name}_完遂{self.num_complete}/患者都合中止{self.num_canceled_by_patient}/装置都合中止{self.num_canceled_by_machine}'
+            return f'{self.operation.start_time.strftime("%Y/%m/%d")}_{self.beam_course}_{self.operation_type.name}_完遂{self.num_complete}/患者都合中止{self.num_canceled_by_patient}/装置都合中止{self.num_canceled_by_machine}'
