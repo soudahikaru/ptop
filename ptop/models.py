@@ -867,7 +867,10 @@ class OperationResult(models.Model):
     num_canceled_by_machine = models.IntegerField('装置都合中止数', null=False, blank=False, default=0)
 
     def __str__(self):
-        if self.operation.operation_type.name == '患者QA' or self.operation.operation_type.name == '新患測定':
-            return f'{self.operation.start_time.strftime("%Y/%m/%d")}_{self.beam_course}_{self.operation_type.name}_正常完了{self.num_complete}/結果不良再測定{self.num_canceled_by_patient}/トラブル起因再測定{self.num_canceled_by_machine}'
+        if self.operation_type:
+            if self.operation_type.name == '患者QA' or self.operation_type.name == '新患測定':
+                return f'{self.operation.start_time.strftime("%Y/%m/%d")}_{self.beam_course}_{self.operation_type.name}_正常完了{self.num_complete}/結果不良再測定{self.num_canceled_by_patient}/トラブル起因再測定{self.num_canceled_by_machine}'
+            else:
+                return f'{self.operation.start_time.strftime("%Y/%m/%d")}_{self.beam_course}_{self.operation_type.name}_完遂{self.num_complete}/患者都合中止{self.num_canceled_by_patient}/装置都合中止{self.num_canceled_by_machine}'
         else:
-            return f'{self.operation.start_time.strftime("%Y/%m/%d")}_{self.beam_course}_{self.operation_type.name}_完遂{self.num_complete}/患者都合中止{self.num_canceled_by_patient}/装置都合中止{self.num_canceled_by_machine}'
+            return f'{self.operation.start_time.strftime("%Y/%m/%d")}_{self.beam_course}_None_完遂{self.num_complete}/患者都合中止{self.num_canceled_by_patient}/装置都合中止{self.num_canceled_by_machine}'
