@@ -24,6 +24,7 @@
   <div class="row">
     <div class="card">
       <form action="" method="POST">
+        {{ result_formset.management_form }}
         <h5 class="card-header">現在の切替前オペレーション</h5>
         <div class="card-body">
           <table border>
@@ -51,7 +52,6 @@
               <li>トラブル起因再測定数：装置トラブルで測定が正常に完了しなかった場合。または、オペミスのため再測定を行った場合。パターン起因でインターロックが発生し再測定となった場合もこちらに含む。</li>
             </ul>
             {% endif %}
-            {{ result_formset.management_form }}
             {% endif %}
           <table border>
             <tr><th>{% if change_form.comment.field.required %}<span class="required">*</span>{% endif %}{{ change_form.comment.label_tag }}</th><td>{{ change_form.comment }}
