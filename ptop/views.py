@@ -1537,24 +1537,25 @@ def change_operation_generalized(request):
     # OperationResultQACreateFormSet = modelformset_factory(models.OperationResult, form=forms.OperationResultQACreateForm, extra=num_form, max_num=2)
     if request.method == 'POST':
         # POSTの場合はOperation変更実行処理を行う
-        # initialはPOSTの場合でも必要とのこと(公式doc)
-        formset = OperationResultCreateFormSet(request.POST, initial=[{
-                    'operation': current_operation,
-                    'operation_type': current_operation.operation_type,
-                    'beam_course': course,
-                    'beam_course_name': course.course_id,
-                } for course in BeamCourse.objects.filter(is_clinical=True)])
-        if formset.is_valid():
-            # Formsetがあれば最初にFormsetの処理を実施(Formsetがない->is_valid=false)
-            instances = formset.save(commit=False)
-            for operation_result in instances:
-                print(operation_result)
-                if operation_result.num_complete > 0 or operation_result.num_canceled_by_patient > 0 or operation_result.num_canceled_by_machine > 0:
-                    # 実績が0でない場合はDBに登録する
-                    operation_result.save()
-                else:
-                    # 実績が0でない場合はDBに登録しない
-                    pass
+        # formsetがある場合はその処理 ない場合は何もしない
+        if (current_operation.operation_type.name == '治療') or (current_operation.operation_type.name == '患者QA') or (current_operation.operation_type.name == '新患測定'):
+            formset = OperationResultCreateFormSet(request.POST, initial=[{
+                        'operation': current_operation,
+                        'operation_type': current_operation.operation_type,
+                        'beam_course': course,
+                        'beam_course_name': course.course_id,
+                    } for course in BeamCourse.objects.filter(is_clinical=True)])
+            if formset.is_valid():
+                # Formsetがあれば最初にFormsetの処理を実施(Formsetがない->is_valid=false)
+                instances = formset.save(commit=False)
+                for operation_result in instances:
+                    print(operation_result)
+                    if operation_result.num_complete > 0 or operation_result.num_canceled_by_patient > 0 or operation_result.num_canceled_by_machine > 0:
+                        # 実績が0でない場合はDBに登録する
+                        operation_result.save()
+                    else:
+                        # 実績が0でない場合はDBに登録しない
+                        pass
 
         # print(form)
         # print(form.errors)
