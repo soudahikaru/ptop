@@ -1537,7 +1537,13 @@ def change_operation_generalized(request):
     # OperationResultQACreateFormSet = modelformset_factory(models.OperationResult, form=forms.OperationResultQACreateForm, extra=num_form, max_num=2)
     if request.method == 'POST':
         # POSTの場合はOperation変更実行処理を行う
-        formset = OperationResultCreateFormSet(request.POST)
+        # initialはPOSTの場合でも必要とのこと(公式doc)
+        formset = OperationResultCreateFormSet(request.POST, initial=[{
+                    'operation': current_operation,
+                    'operation_type': current_operation.operation_type,
+                    'beam_course': course,
+                    'beam_course_name': course.course_id,
+                } for course in BeamCourse.objects.filter(is_clinical=True)])
         if formset.is_valid():
             # Formsetがあれば最初にFormsetの処理を実施(Formsetがない->is_valid=false)
             instances = formset.save(commit=False)
