@@ -245,6 +245,21 @@ class EventCreateForm(forms.ModelForm):
         widget=forms.Textarea(attrs={'rows': 4, 'cols': 120}), label='原因や状況', required=False)
     temporary_action = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 8, 'cols': 120}), label='応急処置', required=False)
+    irradiation_number = forms.IntegerField(
+        label='照射番号',
+        widget=forms.NumberInput(attrs={'style': 'width:12ch', 'min': 0, }),
+        validators=[validators.MinValueValidator(0)],
+        help_text='照射系が無関係の場合は空欄または0としてください。', required=False)
+    energy_id = forms.IntegerField(
+        label='EID',
+        widget=forms.NumberInput(attrs={'style': 'width:8ch', 'min': 0, }),
+        validators=[validators.MinValueValidator(0)],
+        help_text='エネルギーが無関係の場合は空欄または0としてください。', required=False)
+    intensity_id = forms.IntegerField(
+        label='IID',
+        widget=forms.NumberInput(attrs={'style': 'width:8ch', 'min': 0, }),
+        validators=[validators.MinValueValidator(0)],
+        help_text='IIDが無関係の場合は空欄または0としてください。', required=False)
 
     group = forms.ModelChoiceField(
         TroubleGroup.objects.all(),
@@ -307,7 +322,7 @@ class EventCreateForm(forms.ModelForm):
     attachments = forms.ModelMultipleChoiceField(
         Attachment.objects.all(), label='添付ファイル', required=False,
         widget=forms.SelectMultiple(attrs={'style': 'display:none;'}),
-        help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます。チェックを解除して作成／更新すると添付ファイル登録解除できます。')
+        help_text='このウィンドウにファイルをDrag and Dropしてもアップロードできます。チェックを解除して作成・更新すると添付ファイル登録解除できます。')
     handling_operators = forms.ModelMultipleChoiceField(
         User.objects.filter(display_order__gte=0).order_by('display_order'), label='対応者', required=False,
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'operator_checkbox'}))
@@ -343,7 +358,8 @@ class EventCreateForm(forms.ModelForm):
         model = TroubleEvent
         fields = (
             'title', 'group', 'device',
-            'description', 'trigger', 'cause', 'temporary_action', 'errors',
+            'irradiation_number', 'energy_id', 'intensity_id',
+            'description', 'trigger', 'cause', 'causetype', 'temporary_action', 'errors',
             'start_time', 'operation_type', 'end_time', 'complete_time', 'downtime', 'delay_flag', 'delaytime',
             'effect_scope', 'treatment_status', 'urgency',
             'input_operator', 'handling_operators', 'reported_physicist', 'attachments')

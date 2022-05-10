@@ -60,8 +60,8 @@ table {background-color:#fff0f0}
 <!--          <a href="{% url 'ptop:trouble_communication_sheet' object.pk %}" class="btn btn-danger">不具合連絡票発行</a>-->
         </div>
         <div class="col-sm-4 text-right">
-          <a href="{% url 'ptop:update_event' object.pk %}" class="btn btn-primary">編集</a>
           <a href="{% url 'ptop:recurrent_event_create_from_event' object.pk %}" class="btn btn-warning">再発入力</a>
+          <a href="{% url 'ptop:update_event' object.pk %}" class="btn btn-primary">編集</a>
         </div>
       </div>
     </div>

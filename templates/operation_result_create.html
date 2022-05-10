@@ -40,16 +40,26 @@
         {% endfor %}
         </table>
 
+      
+    </div>
+  </div>
+  <div class="container">
+    <div class="row">
+      <div class="col-sm-4 text-left">
+        <a href="#" onclick="window.history.back(); return false;" class="btn btn-secondary">戻る</a>
+      </div>
+      <div class="col-sm-4 text-center">
+      </div>
+      <div class="col-sm-4 text-right">
         {% if 'update' in request.path %}
         <input class="btn btn-primary" type="submit" value="入力した内容で更新する">
         {% else %}
         <input class="btn btn-primary" type="submit" value="運転実績を作成する">
         {% endif %}
-      </form>
-      
+        </form>
+      </div>
     </div>
   </div>
-  <a href="{% url 'ptop:home' %}" class="btn btn-secondary">戻る</a>
 
 </div>
 

@@ -460,6 +460,11 @@ class TroubleEvent(models.Model):
     description = models.TextField('内容', null=True)
     trigger = models.TextField('発生時の操作', null=True, blank=True)
     cause = models.TextField('原因と状況', null=True, blank=True)
+    causetype = models.ForeignKey(
+        CauseType, verbose_name='原因の類型', null=True, blank=True, on_delete=models.SET_NULL)
+    irradiation_number = models.PositiveIntegerField('照射番号', null=True, blank=True)
+    energy_id = models.PositiveIntegerField('EID', null=True, blank=True)
+    intensity_id = models.PositiveIntegerField('IID', null=True, blank=True)
     temporary_action = models.TextField('応急処置内容', null=True, blank=True)
     # error_message = models.CharField('エラーメッセージ',max_length=100, blank=True)
     errors = models.ManyToManyField(Error, verbose_name='エラーメッセージ', blank=True)

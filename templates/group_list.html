@@ -39,10 +39,20 @@
       {% include 'pagination.html' %}
     </div>
 
-    <a href="{% url 'ptop:home' %}" class="btn btn-primary">戻る</a>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-4 text-left">
+          <a href="#" onclick="window.history.back(); return false;" class="btn btn-secondary">戻る</a>
+        </div>
+        <div class="col-sm-4 text-center">
+        </div>
+        <div class="col-sm-4 text-right">
+        </div>
+      </div>
+    </div>
   </div>
 
-  </div>
+</div>
 
 {% endblock content %}
 

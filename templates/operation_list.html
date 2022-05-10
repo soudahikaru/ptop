@@ -18,13 +18,20 @@
     </div>
 
     <table border>
-      <tr><th>内部ID</th><th>内容</th><th>開始日時</th><th>終了日時</th><th>コメント</th><th></th></tr>
+      <tr><th>ID</th><th>内容</th><th>開始日時</th><th>終了日時</th><th>実績</th><th>コメント</th><th></th></tr>
       {% for item in object_list %}
       <tr>
         <td>{{item.pk}}</td>
         <td><a href="{% url 'ptop:operation_detail' item.pk %}">{{item.operation_type}}</a></td>
         <td>{{item.start_time|date:"Y/m/d H:i"}}</td>
         <td>{{item.end_time|date:"Y/m/d H:i"}}</td>
+        <td>{% for result in item.operationresult_set.all %}
+          <a href="{% url 'ptop:operation_result_update' result.pk %}">{{result.beam_course}}
+          完遂{{result.num_complete}}
+          {% if result.num_canceled_by_patient %} {% if result.operation.operation_type.name == '治療' %}患者都合中止{% else %}結果不良再測定{% endif %}{{result.num_canceled_by_patient}}{% endif %}
+          {% if result.num_canceled_by_machine %} {% if result.operation.operation_type.name == '治療' %}装置都合中止{% else %}トラブル再測定{% endif %}{{result.num_canceled_by_machine}}{% endif %}
+          </a><br>
+        {% endfor %}</td>
         <td>{{item.comment|truncatechars:20}}</td>
         
         <td><a href="{% url 'ptop:update_operation' item.pk %}" class="btn btn-primary">編集</a></td>
