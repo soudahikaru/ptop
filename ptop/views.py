@@ -348,13 +348,34 @@ class GroupDetailView(FormMixin, DetailView):
         context['frequency_month_3'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=90), timezone.now() - timezone.timedelta(days=60))).count()
         context['frequency_month_4'] = context['events'].filter(start_time__range=(timezone.now() - timezone.timedelta(days=120), timezone.now() - timezone.timedelta(days=90))).count()
 
+        num_skipped = 0
+        get_copy = self.request.GET.copy()
+        get_copy.setdefault('max_num', '100')
+        form = GroupDetailForm(data=get_copy)  # 検索フォーム
+        # print(form)
+        # print(form.is_valid())
+        if form.is_valid():
+            # print("valid")
+            start_date = form.cleaned_data.get('start_date')
+            if start_date:
+                context['events'] = context['events'].filter(start_time__gte=start_date).order_by('-start_time')
+            end_date = form.cleaned_data.get('end_date')
+            if end_date:
+                end_date = end_date + timedelta(days=1)
+                context['events'] = context['events'].filter(start_time__lte=end_date).order_by('-start_time')
+            max_num = form.cleaned_data.get('max_num')
+            if max_num:
+                num_skipped = context['events'].count() - int(max_num)
+                if num_skipped < 0:
+                    num_skipped = 0
+                context['events'] = context['events'].order_by('-start_time')[:int(max_num)]
+
+        # print(form.errors)
+
         context['reminder_list'] = context.get('object').reminder_set.all()
 
-        default_data = {
-            'display_range': self.request.GET.get('display_range'),
-        }
-        form = GroupDetailForm(initial=default_data)  # 検索フォーム
         context['form'] = form
+        context['num_skipped']=num_skipped
         # print(context['frequency_week_3'])
         return context
 
@@ -1278,6 +1299,7 @@ class AdvancedSearchView(ListView):
                 date3e = form.cleaned_data.get('date3e')
                 if not date3e:
                     date3e = timezone.now()
+                date3e = date3e + timedelta(days=1)
                 queryset = queryset.filter(Q(start_time__range=(date3s, date3e)))
             causetype = form.cleaned_data.get('causetype')
             if causetype:
@@ -1395,6 +1417,7 @@ class EventAdvancedSearchView(ListView):
                 date3e = form.cleaned_data.get('date3e')
                 if not date3e:
                     date3e = timezone.now()
+                date3e = date3e + timedelta(days=1)
                 queryset = queryset.filter(Q(start_time__range=(date3s, date3e)))
             print(form.cleaned_data)
             if form.cleaned_data.get('downtime_low'):

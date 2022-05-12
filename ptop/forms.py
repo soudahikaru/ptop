@@ -430,21 +430,29 @@ class GroupCreateForm(forms.ModelForm):
 
 class GroupDetailForm(forms.Form):
 
+    start_date = forms.DateTimeField(
+        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        label='これ以降に発生', required=False)
+
+    end_date = forms.DateTimeField(
+        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        label='これ以降に発生', required=False)
+
+    CHOICE_NUM = (
+        ('3', '3'),
+        ('10', '10'),
+        ('50', '50'),
+        ('100', '100'),
+        ('0', '無制限'),
+    )
+    max_num = forms.ChoiceField(choices=CHOICE_NUM, initial='100', label='最大表示数', required=False)
+
     CHOICE_RANGE = (
         ('all', '関連する全ての事象'),
         ('myself_and_child', '自分とその下位類型に属する事象'),
         ('only_myself', '自分の類型に属する事象のみ'),
     )
     display_range = forms.ChoiceField(choices=CHOICE_RANGE, label='表示範囲', required=False)
-
-    CHOICE_PAGE = (
-        ('10', '10'),
-        ('20', '20'),
-        ('30', '30'),
-        ('50', '50'),
-        ('100', '100'),
-    )
-    paginate_by = forms.ChoiceField(choices=CHOICE_PAGE, label='1ページの件数', required=False)
 
 
 class OperationCreateForm(forms.ModelForm):

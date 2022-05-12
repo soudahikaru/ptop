@@ -8,6 +8,7 @@
   .comment_info {text-align: right;}
   .comment {background-color:#fffff0; border: solid 1px; margin: 0.5em 0.5em;}
   .anchor {padding-top: 80px; margin-top:-80px;}  
+  .input-inline { display: inline-block; width: 150px; }
 </style>
 {% load static %}
 <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
@@ -135,7 +136,11 @@
       <div class="card-body">
         <div style="text-align: right;">
           <form action="" method="get" id="id_form">
-            {{ form.display_range}}
+            {{ form.media }}
+            {{ form.display_range }}
+            最大表示数: {{ form.max_num }}
+            発生日: <div class="input-inline">{{ form.start_date }}</div>～<div class="input-inline">{{ form.end_date }}</div>
+            <input class="btn btn-primary" type="submit" value="表示変更">
           </form>
         </div>
         <b>発生回数</b>
@@ -149,12 +154,12 @@
 {% if events %}
         <p>
         <table border class="bg-event">
-          <tr><th>事象ID</th><th>分類ID</th><th>発生日時</th><th>題名</th></tr>
+          <tr><th>事象ID</th><th>分類ID</th><th>発生日時</th><th>題名</th><th>照射番号</th><th>EID</th><th>IID</th></tr>
 {% for event in events %}
   {% if event.group.classify_id == object.classify_id %}
-          <tr><td><b>{{event.id}}</b></td><td><b>{{event.group.classify_id}}</b></td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td></tr>
+          <tr><td><b>{{event.id}}</b></td><td><b>{{event.group.classify_id}}</b></td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td><td>{{event.irradiation_number|default:"-"}}</td><td>{{event.energy_id|default:"-"}}</td><td>{{event.intensity_id|default:"-"}}</td></tr>
   {% else %}
-          <tr><td>{{event.id}}</td><td>{{event.group.classify_id}}</td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td></tr>
+          <tr><td>{{event.id}}</td><td>{{event.group.classify_id}}</td><td>{{event.start_time|date:"Y/m/d H:i"}}</td><td><a href="{%url 'ptop:event_detail' event.pk%}">{{event.title}}</a></td><td>{{event.irradiation_number|default:"-"}}</td><td>{{event.energy_id|default:"-"}}</td><td>{{event.intensity_id|default:"-"}}</td></tr>
   {% endif %}
 {% endfor %}
 {% else %}
@@ -162,6 +167,9 @@
 {% endif %}
 {% endspaceless %}
         </table>
+        {% if num_skipped %}
+        他{{ num_skipped }}件
+        {% endif %}
         </p>
     </div>
   </div>
@@ -227,6 +235,18 @@
 
 $(function(){
   $("#id_display_range").change(function(){
+    $("#id_form").submit();
+  });
+});
+
+$(function(){
+  $("#id_max_num").change(function(){
+    $("#id_form").submit();
+  });
+});
+
+$(function(){
+  $("#id_start_date").on("dp_change", function(){
     $("#id_form").submit();
   });
 });

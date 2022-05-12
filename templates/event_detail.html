@@ -15,6 +15,9 @@ table {background-color:#fff0f0}
       <tr><td>事象ID</td><td>{{object.id}}</td></tr>
       <tr><td>トラブル類型</td><td>{% if object.group %}<a href="{%url 'ptop:group_detail' object.group.pk%}">{{object.group.title}}</a> <a href="{%url 'ptop:event_classify' object.pk%}" class="btn btn-info btn-sm">割当変更</a>{% else %}<a href="{%url 'ptop:event_classify' object.pk%}">未選択</a>{% endif %}</td></tr>
       <tr><td>デバイスID</td><td>{{object.device.device_id}}({{object.device.name}})</td></tr>
+      <tr><td>照射番号</td><td>{{object.irradiation_number | default:'なし'}}</td></tr>
+      <tr><td>EID</td><td>{{object.energy_id | default:'なし'}}</td></tr>
+      <tr><td>IID</td><td>{{object.intensity_id | default:'なし'}}</td></tr>
       <tr><td>事象</td><td>{{object.description | linebreaksbr }}</td></tr>
       <tr><td>エラーメッセージ</td><td>{% for error in object.errors.all %}
 {{ error.error_code }}{% if forloop.last %}{% else %},{% endif %}
