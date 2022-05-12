@@ -31,7 +31,7 @@ ul.operator_checkbox{list-style-type: none; padding-left: 0;}
         <table border>
           {% for field in form %}
           {% spaceless %}
-          <tr><th>{% if field.field.required %}<span class="required">*</span>{% endif %}{{ field.label_tag }}</th><td>{{ field }}
+          <tr><th style="width: 12em; text-align: right;">{% if field.field.required %}<span class="required">*</span>{% endif %}{{ field.label_tag }}</th><td>{{ field }}
             {% if "device" in field.id_for_label %}
               <a href="javascript:void(0);" onclick="window.open('{% url 'ptop:popup_device_create' %}', 'subwin','width=500,height=500');" class="btn btn-info btn-sm">追加</a>
             {% elif "error" in field.id_for_label %}
