@@ -1,6 +1,5 @@
 """PTOP Model Module"""
 
-from asyncio.windows_events import NULL
 import datetime
 import numpy as np
 
