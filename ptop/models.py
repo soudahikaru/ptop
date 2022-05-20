@@ -139,10 +139,6 @@ class SiteDetail(models.Model):
         return self.title
 
 
-def create_default_site_detail(sender, **kwargs):
-    site = Site.objects.get(pk=settings.SITE_ID)
-    SiteDetail.objects.get_or_create(site=site)
-
 #   メールの送信に関するメソッド
 #   def email_user(self, subject, message, from_email=None, **kwargs):
 #       send_mail(subject, message, from_email, [self.email], **kwargs)
