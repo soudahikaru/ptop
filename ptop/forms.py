@@ -246,21 +246,6 @@ class EventCreateForm(forms.ModelForm):
         widget=forms.Textarea(attrs={'rows': 4, 'cols': 120}), label='原因や状況', required=False)
     temporary_action = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 8, 'cols': 120}), label='応急処置', required=False)
-    irradiation_number = forms.IntegerField(
-        label=Site.objects.get_current().sitedetail.irr_num_name,
-        widget=forms.NumberInput(attrs={'style': 'width:12ch', 'min': 0, }),
-        validators=[validators.MinValueValidator(0)],
-        help_text='照射系が無関係の場合は空欄または0としてください。', required=False)
-    energy_id = forms.IntegerField(
-        label=Site.objects.get_current().sitedetail.eid_name,
-        widget=forms.NumberInput(attrs={'style': 'width:8ch', 'min': 0, }),
-        validators=[validators.MinValueValidator(0)],
-        help_text='エネルギーが無関係の場合は空欄または0としてください。', required=False)
-    intensity_id = forms.IntegerField(
-        label=Site.objects.get_current().sitedetail.iid_name,
-        widget=forms.NumberInput(attrs={'style': 'width:8ch', 'min': 0, }),
-        validators=[validators.MinValueValidator(0)],
-        help_text='IIDが無関係の場合は空欄または0としてください。', required=False)
 
     group = forms.ModelChoiceField(
         TroubleGroup.objects.all(),
