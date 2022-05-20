@@ -34,6 +34,8 @@ from .models import EmailAddress
 from .models import Room, Storage
 from .models import SupplyType, SupplyItem, SupplyRecord
 from .models import Reminder, ReminderType
+from django.contrib.sites.models import Site
+from .models import SiteDetail
 
 # @admin.register(User)
 
@@ -276,6 +278,16 @@ class SupplyRecordAdmin(ImportExportModelAdmin):
     resource_class = SupplyRecordResource
 
 
+class SiteDetailInline(admin.StackedInline):
+    """サイト詳細情報のインライン"""
+    model = SiteDetail
+
+
+class SiteAdmin(admin.ModelAdmin):
+    """Siteモデルを、管理画面でSiteDetailもインラインで表示できるように"""
+    inlines = [SiteDetailInline]
+
+
 # Register your models here.
 admin.site.register(User, AdminUserAdmin)
 admin.site.register(Attachment)
@@ -313,4 +325,7 @@ admin.site.register(BeamCourse)
 admin.site.register(BeamDirection)
 admin.site.register(IrradiationTechnique)
 admin.site.register(OperationResult)
+
+admin.site.unregister(Site)
+admin.site.register(Site, SiteAdmin)
 

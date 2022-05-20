@@ -8,6 +8,7 @@ from django.core import validators
 from django import forms
 # from django.urls import reverse_lazy
 # from django.utils import timezone
+from django.contrib.sites.models import Site
 from .models import BeamCourse, OperationResult, TroubleCommunicationSheet, TroubleEvent, Device, Error
 from .models import TroubleGroup
 from .models import User
@@ -246,17 +247,17 @@ class EventCreateForm(forms.ModelForm):
     temporary_action = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 8, 'cols': 120}), label='応急処置', required=False)
     irradiation_number = forms.IntegerField(
-        label='照射番号',
+        label=Site.objects.get_current().sitedetail.irr_num_name,
         widget=forms.NumberInput(attrs={'style': 'width:12ch', 'min': 0, }),
         validators=[validators.MinValueValidator(0)],
         help_text='照射系が無関係の場合は空欄または0としてください。', required=False)
     energy_id = forms.IntegerField(
-        label='EID',
+        label=Site.objects.get_current().sitedetail.eid_name,
         widget=forms.NumberInput(attrs={'style': 'width:8ch', 'min': 0, }),
         validators=[validators.MinValueValidator(0)],
         help_text='エネルギーが無関係の場合は空欄または0としてください。', required=False)
     intensity_id = forms.IntegerField(
-        label='IID',
+        label=Site.objects.get_current().sitedetail.iid_name,
         widget=forms.NumberInput(attrs={'style': 'width:8ch', 'min': 0, }),
         validators=[validators.MinValueValidator(0)],
         help_text='IIDが無関係の場合は空欄または0としてください。', required=False)

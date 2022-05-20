@@ -1,11 +1,14 @@
 """PTOP Model Module"""
 
+from asyncio.windows_events import NULL
 import datetime
 import numpy as np
 
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
+from django.conf import settings
+from django.contrib.sites.models import Site
 from django.contrib.auth.models import PermissionsMixin, UserManager
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.core.validators import EmailValidator
@@ -118,6 +121,28 @@ class User(AbstractBaseUser, PermissionsMixin):
     def fullname(self):
         return '%s %s' % (self.last_name, self.first_name)
 
+
+class SiteDetail(models.Model):
+    """Siteと1対1で紐づくサイト詳細情報"""
+    site = models.OneToOneField(Site, verbose_name='Site', on_delete=models.PROTECT)
+    title = models.CharField('タイトル', max_length=255, default='Particle Therapy Database of Operation and Maintenance')
+    description = models.TextField('サイトの説明', max_length=255, default='粒子線治療装置の運転・維持管理用のデータベース')
+    keywords = models.CharField('サイトのキーワード', max_length=255, default='Database, Trouble, Operation')
+    administrator = models.ForeignKey(User, verbose_name='管理者', max_length=255, null=True, blank=True, on_delete=models.SET_NULL)
+    facility = models.CharField('施設名', max_length=255, default='')
+    machine = models.CharField('装置名', max_length=255, default='重粒子線治療装置')
+    database = models.CharField('データベース名', max_length=255, default='運転・維持管理データベース')
+    irr_num_name = models.CharField('照射番号名称', max_length=255, default='照射番号')
+    eid_name = models.CharField('EID名称', max_length=255, default='EID')
+    iid_name = models.CharField('IID名称', max_length=255, default='EID')
+
+    def __str__(self):
+        return self.title
+
+
+def create_default_site_detail(sender, **kwargs):
+    site = Site.objects.get(pk=settings.SITE_ID)
+    SiteDetail.objects.get_or_create(site=site)
 
 #   メールの送信に関するメソッド
 #   def email_user(self, subject, message, from_email=None, **kwargs):
