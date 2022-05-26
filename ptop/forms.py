@@ -2,7 +2,8 @@
 
 # from datetime import datetime
 # from django.contrib.admin.widgets import FilteredSelectMultiple
-import bootstrap_datepicker_plus as datetimepicker
+#import bootstrap_datepicker_plus as datetimepicker
+from bootstrap_datepicker_plus.widgets import DateTimePickerInput, DatePickerInput
 from dal import autocomplete
 from django.core import validators
 from django import forms
@@ -34,12 +35,12 @@ class AttachmentForm(forms.ModelForm):
 class StatisticsForm(forms.Form):
     """統計算出Form"""
     date_s = forms.DateField(
-        widget=datetimepicker.DatePickerInput(
+        widget=DatePickerInput(
             format='%Y-%m-%d',
             options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}
         ).start_of('期間'), required=False)
     date_e = forms.DateField(
-        widget=datetimepicker.DatePickerInput(
+        widget=DatePickerInput(
             format='%Y-%m-%d',
             options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}
         ).end_of('期間'), required=False)
@@ -99,19 +100,19 @@ class EventAdvancedSearchForm(forms.Form):
         widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
     date2 = forms.DateField(
-        widget=datetimepicker.DatePickerInput(
+        widget=DatePickerInput(
             format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         required=False)
     date_delta2 = forms.IntegerField(
         widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
     date3s = forms.DateField(
-        widget=datetimepicker.DatePickerInput(
+        widget=DatePickerInput(
             format='%Y-%m-%d',
             options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}
         ).start_of('期間'), required=False)
     date3e = forms.DateField(
-        widget=datetimepicker.DatePickerInput(
+        widget=DatePickerInput(
             format='%Y-%m-%d',
             options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}
         ).end_of('期間'), required=False)
@@ -193,19 +194,19 @@ class AdvancedSearchForm(forms.Form):
         widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
     date2 = forms.DateField(
-        widget=datetimepicker.DatePickerInput(
+        widget=DatePickerInput(
             format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         required=False)
     date_delta2 = forms.IntegerField(
         widget=forms.NumberInput(attrs={'style': 'width:6ch', 'min': 0, }),
         validators=[validators.MinValueValidator(0)], required=False)
     date3s = forms.DateField(
-        widget=datetimepicker.DatePickerInput(
+        widget=DatePickerInput(
             format='%Y-%m-%d',
             options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}
         ).start_of('期間'), required=False)
     date3e = forms.DateField(
-        widget=datetimepicker.DatePickerInput(
+        widget=DatePickerInput(
             format='%Y-%m-%d',
             options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}
         ).end_of('期間'), required=False)
@@ -268,17 +269,17 @@ class EventCreateForm(forms.ModelForm):
         label='トラブル類型', help_text='再発事象は自動的に入力されます。新規事象は作成後に分類してください。', required=False)
 
     start_time = forms.DateTimeField(
-        widget=datetimepicker.DateTimePickerInput(
+        widget=DateTimePickerInput(
             options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
         label='発生時刻', required=True)
     end_time = forms.DateTimeField(
-        widget=datetimepicker.DateTimePickerInput(
+        widget=DateTimePickerInput(
             options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
         label='運転再開時刻', help_text='運転を再開した時刻を入力してください(運転に支障がなかった場合は、発生時刻と同一とする)。運転停止時間を入力すると自動的に入力されます。未解決の場合は空欄のままにしてください。',
         required=False)
     # end_time = forms.DateTimeField(label='復旧時刻', help_text='空欄の場合、装置故障時間を入力すると自動的に入力されます。', required=True)
     complete_time = forms.DateTimeField(
-        widget=datetimepicker.DateTimePickerInput(
+        widget=DateTimePickerInput(
             options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
         label='復旧完了時刻', help_text='復旧作業が完了した(または勝手に復旧した)時刻を入力してください。未解決の場合は空欄のままにしてください。',
         required=False)
@@ -391,11 +392,11 @@ class GroupCreateForm(forms.ModelForm):
         required=False)
 
     first_datetime = forms.DateTimeField(
-        widget=datetimepicker.DateTimePickerInput(
+        widget=DateTimePickerInput(
             options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
         label='初発日時', required=False)
     reminder_datetime = forms.DateTimeField(
-        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        widget=DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         label='フォロー期限', required=False)
 
     require_items = forms.ModelMultipleChoiceField(
@@ -432,11 +433,11 @@ class GroupCreateForm(forms.ModelForm):
 class GroupDetailForm(forms.Form):
 
     start_date = forms.DateTimeField(
-        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        widget=DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         label='これ以降に発生', required=False)
 
     end_date = forms.DateTimeField(
-        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        widget=DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         label='これ以降に発生', required=False)
 
     CHOICE_NUM = (
@@ -458,11 +459,11 @@ class GroupDetailForm(forms.Form):
 
 class OperationCreateForm(forms.ModelForm):
     start_time = forms.DateTimeField(
-        widget=datetimepicker.DateTimePickerInput(
+        widget=DateTimePickerInput(
             options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
         label='開始時刻', required=True)
     end_time = forms.DateTimeField(
-        widget=datetimepicker.DateTimePickerInput(
+        widget=DateTimePickerInput(
             options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
         label='終了時刻', required=True)
 
@@ -596,7 +597,7 @@ class OperationResultUpdateForm(forms.ModelForm):
 class ChangeOperationForm(forms.Form):
     operation_type = forms.ModelChoiceField(queryset=OperationType.objects.all().order_by('id'), label='次のオペレーション', required=True)
     change_time = forms.DateTimeField(
-        widget=datetimepicker.DateTimePickerInput(
+        widget=DateTimePickerInput(
             options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
         label='切り替え時刻', required=True)
 
@@ -729,15 +730,15 @@ class SupplyItemCreateForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'size': 80}), label='シリアル番号', required=False
     )
     order_date = forms.DateTimeField(
-        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        widget=DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         label='発注日', required=False
     )
     due_date = forms.DateTimeField(
-        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        widget=DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         label='納品予定日', required=False
     )
 #    stock_date = forms.DateTimeField(
-#        widget=datetimepicker.DatePickerInput(
+#        widget=DatePickerInput(
 #            format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
 #        label='納品日', required=False)
 
@@ -754,15 +755,15 @@ class SupplyItemStockForm(forms.ModelForm):
 #    remain_level = forms.FloatField(
 #        label='残量/寿命指標測定値', required=False)
     order_date = forms.DateTimeField(
-        widget=datetimepicker.DatePickerInput(
+        widget=DatePickerInput(
             format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         label='発注日', required=False)
     due_date = forms.DateTimeField(
-        widget=datetimepicker.DatePickerInput(
+        widget=DatePickerInput(
             format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         label='納品予定日', required=False)
     stock_date = forms.DateTimeField(
-        widget=datetimepicker.DatePickerInput(
+        widget=DatePickerInput(
             format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         label='納品日', required=True)
     storage = forms.ModelChoiceField(
@@ -803,7 +804,7 @@ class SupplyItemExchangeForm(forms.ModelForm):
         # widget=forms.Select(attrs={'style':'pointer-events: none;', 'tabindex':'-1'}),
     )
     uninstall_date = forms.DateTimeField(
-        widget=datetimepicker.DateTimePickerInput(
+        widget=DateTimePickerInput(
             options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
         label='交換日時', required=True
     )
@@ -848,7 +849,7 @@ class SupplyRecordCreateForm(forms.ModelForm):
     level = forms.FloatField(
         label='測定値', required=True)
     date = forms.DateTimeField(
-        widget=datetimepicker.DateTimePickerInput(
+        widget=DateTimePickerInput(
             options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
         label='測定日時', required=True)
 
@@ -897,7 +898,7 @@ class ReminderCreateForm(forms.ModelForm):
         label='リマインダー種類', help_text='', required=False,
     )
     due_date = forms.DateTimeField(
-        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        widget=DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         label='期限日', required=True
     )
     description = forms.CharField(
@@ -912,11 +913,11 @@ class ReminderCreateForm(forms.ModelForm):
 
 class ReminderUpdateForm(forms.ModelForm):
     due_date = forms.DateTimeField(
-        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        widget=DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         label='期限日', required=True
     )
     done_datetime = forms.DateTimeField(
-        widget=datetimepicker.DateTimePickerInput(
+        widget=DateTimePickerInput(
             options={'format': 'YYYY-MM-DD HH:mm', 'sideBySide': True}),
         label='完了日時', required=False
     )
@@ -930,7 +931,7 @@ class ReminderExtendForm(forms.ModelForm):
     description = forms.CharField(
         widget=forms.HiddenInput())
     due_date = forms.DateTimeField(
-        widget=datetimepicker.DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
+        widget=DatePickerInput(format='%Y-%m-%d', options={'locale': 'ja', 'dayViewHeaderFormat': 'YYYY年 MMMM'}),
         label='延長後期限日', required=True
     )
 

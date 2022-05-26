@@ -120,7 +120,7 @@ def api_devices_get(request):
 
 def ajax_search_operation_from_datetime(request):
     """OperationTypeのIDをJSONで返す関数。"""
-    if request.is_ajax and request.method == "GET":
+    if  request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == "GET":
         time = request.GET.get("time", None)
         print(time)
         if time:
