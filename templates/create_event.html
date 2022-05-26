@@ -1,9 +1,10 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
 {% block header %}
 
 {% load static %}
 {% load bootstrap4 %}{% bootstrap_css %}
+{% bootstrap_javascript jquery='full' %}
   
 <style>
 table {background-color:#fff0f0}
@@ -15,11 +16,23 @@ table {background-color:#fff0f0}
 .required {color: red;}
 li {display: inline-block; margin-right: 1em}
 ul.operator_checkbox{list-style-type: none; padding-left: 0;}
+div.operator_checkbox div{display: inline-block; margin-right: 1em; list-style-type: none; padding-left: 0;}
+
 </style>
 
 {% endblock header %}
 
 {% block content %}
+{# JQUERY FILE UPLOAD SCRIPTS #}
+<script src="{% static 'ptop/js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
+<script src="{% static 'ptop/js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
+<script src="{% static 'ptop/js/jquery-file-upload/jquery.fileupload.js' %}"></script>
+
+{# PHOTOS PAGE SCRIPTS #}
+<script src="{% static 'ptop/js/basic-upload.js' %}"></script>
+
+{{form.media}}
+
 <div class="container">
   <div class="card">
 
@@ -95,18 +108,6 @@ ul.operator_checkbox{list-style-type: none; padding-left: 0;}
   </form>
 
 </div>
-
-<script src="{% static 'ptop/js/jquery-3.1.1.min.js' %}"></script>
-<script src="{% static 'ptop/js/bootstrap.min.js' %}"></script>
-{# JQUERY FILE UPLOAD SCRIPTS #}
-<script src="{% static 'ptop/js/jquery-file-upload/vendor/jquery.ui.widget.js' %}"></script>
-<script src="{% static 'ptop/js/jquery-file-upload/jquery.iframe-transport.js' %}"></script>
-<script src="{% static 'ptop/js/jquery-file-upload/jquery.fileupload.js' %}"></script>
-
-{# PHOTOS PAGE SCRIPTS #}
-<script src="{% static 'ptop/js/basic-upload.js' %}"></script>
-
-{{form.media}}
 
 {% endblock content %}
 

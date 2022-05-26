@@ -1561,7 +1561,7 @@ def change_operation_generalized(request):
     treat_flag = False
     pqa_flag = False
     num_form = BeamCourse.objects.filter(is_clinical=True).count()
-    OperationResultCreateFormSet = modelformset_factory(models.OperationResult, form=forms.OperationResultCreateForm, extra=num_form, max_num=2)
+    OperationResultCreateFormSet = modelformset_factory(models.OperationResult, form=forms.OperationResultCreateForm, extra=num_form, max_num=num_form)
     # OperationResultQACreateFormSet = modelformset_factory(models.OperationResult, form=forms.OperationResultQACreateForm, extra=num_form, max_num=2)
     if request.method == 'POST':
         # POSTの場合はOperation変更実行処理を行う
