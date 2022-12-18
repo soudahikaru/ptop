@@ -63,7 +63,7 @@ table {background-color:#fff0f0}
     </div>
 
 {% if not object.approval_operator %}
-  {% if user.is_approvable %}
+  {% if request.user.is_approvable %}
     <div class="container">
       <div class="row">
             <div class="col-sm-12 text-left"  style="background-color:yellow">
