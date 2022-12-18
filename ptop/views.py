@@ -195,13 +195,15 @@ class TroubleGroupListView(ListView):
 
     def get(self, request, *args, **kwargs):
         q_word = request.GET.get('query')
-        p = re.compile('^(#|ID:|Id:|id:)(\d+)')
-        m = p.match(q_word)
-        if m:
-            return redirect(f'../group_detail/{m.group(2)}/')
+        if q_word:
+            p = re.compile('^(#|ID:|Id:|id:)(\d+)')
+            m = p.match(q_word)
+            if m:
+                return redirect(f'../group_detail/{m.group(2)}/')
+            else:
+                return super().get(request, **kwargs)
         else:
             return super().get(request, **kwargs)
-
 
 class DeviceCreate(CreateView):
     """新規Deviceの作成"""
@@ -379,6 +381,11 @@ class GroupDetailView(FormMixin, DetailView):
         # print(context['frequency_week_3'])
         return context
 
+
+class EventDetailView(DetailView):
+    """TroubleEvent詳細画面"""
+    template_name = 'event_detail.html'
+    model = TroubleEvent
 
 class EventDetailView(DetailView):
     """TroubleEvent詳細画面"""
@@ -2329,6 +2336,12 @@ def event_classify_execute(request):
     else:
         return HttpResponseRedirect(reverse_lazy('ptop:home'))
 
+def event_approve(request, pk_):
+    """イベント承認実行"""
+    event = TroubleEvent.objects.get(pk=pk_)
+    event.approval_operator = request.user
+    event.save()
+    return HttpResponseRedirect(reverse_lazy('ptop:event_detail', kwargs={'pk': pk_}))
 
 def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     print(start_datetime, end_datetime)

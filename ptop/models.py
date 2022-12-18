@@ -104,6 +104,14 @@ class User(AbstractBaseUser, PermissionsMixin):
             Unselect this instead of deleting accounts.'
     )
 
+    # ユーザーが承認権限者かどうか判断するメソッド
+    def is_approvable(self):
+        if self.groups.filter(name='Physicist').exists():
+            return True
+        else:
+            return False
+    
+
     # 不具合連絡票送信先かどうかのフラグ
     is_tcs_destination = models.BooleanField(
         default=False,

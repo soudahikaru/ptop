@@ -7,10 +7,18 @@ table {background-color:#fff0f0}
 {% endblock header %}
 
 {% block content %}
-  <div class="container">
+
+
+<div class="container">
     <div class="card">
       <h5 class="card-header">{{object.title}}</h5>
       <div class="card-body">
+      {% if not object.approval_operator %}
+        <div class="row"  style="color:red; background-color: yellow; margin-bottom: 1em;">
+          物理未承認のトラブル事象です。
+        </div>
+      {% endif %}
+    
       <table border>
       <tr><td>事象ID</td><td>{{object.id}}</td></tr>
       <tr><td>トラブル類型</td><td>{% if object.group %}<a href="{%url 'ptop:group_detail' object.group.pk%}">{{object.group.title}}</a> <a href="{%url 'ptop:event_classify' object.pk%}" class="btn btn-info btn-sm">割当変更</a>{% else %}<a href="{%url 'ptop:event_classify' object.pk%}">未選択</a>{% endif %}</td></tr>
@@ -53,6 +61,36 @@ table {background-color:#fff0f0}
 
       </table>
     </div>
+
+{% if not object.approval_operator %}
+  {% if user.is_approvable %}
+    <div class="container">
+      <div class="row">
+            <div class="col-sm-12 text-left"  style="background-color:yellow">
+          <div class="row"  style="color:red">
+            物理未承認のトラブル事象です。「承認」ボタンを押すと以下の内容で承認します。
+          </div>
+          <ul>
+          <li>装置故障時間: {% if object.downtime is not None %}{{object.downtime}} 分{% else %}未復旧{% endif %}</li>
+          <li>治療遅延時間: {% if object.delaytime is not None %}{{object.delaytime}} 分{% else %}未定{% endif %}</li>
+          <li>承認者: {{ user }}</li>
+          <div class="container">
+            <div class="row">
+              <div class="col-sm-4 text-left">
+              </div>
+              <div class="col-sm-4 text-center">
+              </div>
+              <div class="col-sm-4 text-right">
+                <a href="{% url 'ptop:event_approve' object.pk %}" class="btn btn-primary">承認</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+
     <div class="container">
       <div class="row">
         <div class="col-sm-4 text-left">
