@@ -17,7 +17,7 @@
 {% block content %}
 <div class="container">
     <p class="database-name">Particle Therapy Database of Operation and Maintenance</p>
-    <p class="database-name">山形大学医学部東日本重粒子センター 重粒子線照射装置 運転・維持管理データベース</p>
+    <p class="database-name">{{request.site.sitedetail.facility}} {{request.site.sitedetail.machine}} {{request.site.sitedetail.database}}</p>
 </div>
 
 <h1>ログイン</h1>
