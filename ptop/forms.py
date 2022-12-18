@@ -128,6 +128,7 @@ class EventAdvancedSearchForm(forms.Form):
     delaytime_high = forms.IntegerField(
         widget=forms.NumberInput(attrs={'min': 0, 'style': 'width:6ch', }),
         validators=[validators.MinValueValidator(0)], required=False)
+    is_not_approved = forms.BooleanField(label='未承認のみ', required=False)
     CHOICE_SORT = (
         ('-start_time', '発生日時が新しい順'),
         ('start_time', '発生日時が古い順'),

@@ -1360,6 +1360,7 @@ class EventAdvancedSearchView(ListView):
             'downtime_high': self.request.GET.get('downtime_high'),
             'delaytime_low': self.request.GET.get('delaytime_low'),
             'delaytime_high': self.request.GET.get('delaytime_high'),
+            'is_not_approved': self.request.GET.get('is_not_approved'),
             'sort_by': self.request.GET.get('sort_by'),
             'paginate_by': self.request.GET.get('paginate_by'),
         }
@@ -1442,6 +1443,8 @@ class EventAdvancedSearchView(ListView):
                 queryset = queryset.filter(Q(delaytime__gte=int(form.cleaned_data.get('delaytime_low'))))
             if form.cleaned_data.get('delaytime_high'):
                 queryset = queryset.filter(Q(delaytime__lte=int(form.cleaned_data.get('delaytime_high'))))
+            if form.cleaned_data.get('is_not_approved'):
+                queryset = queryset.filter(Q(approval_operator__isnull=True))
 
         sort_by = self.request.GET.get('sort_by', default='-start_time')
         object_list = queryset.order_by(sort_by, '-start_time')
