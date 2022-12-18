@@ -106,7 +106,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     # ユーザーが承認権限者かどうか判断するメソッド
     def is_approvable(self):
-        print(self)
+#        print(self)
         print(self.groups.all())
         if self.groups.filter(name='Physicist').exists():
             return True
