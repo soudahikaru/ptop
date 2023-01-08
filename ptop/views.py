@@ -2465,6 +2465,7 @@ def statistics_create_view(request):
                     's_summary': None,
                     'graph_ss': None,
                     'graph_avail': None,
+                    'is_error': True,
                 }
             )
 
