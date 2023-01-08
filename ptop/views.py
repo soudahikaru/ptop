@@ -2570,14 +2570,14 @@ def statistics_create_view(request):
         print(df)
 
         graph_avail = draw_availability(df, subtotal_frequency)
-        course_column_list = [cs for cs in BeamCourse.objects.all().values_list('course_id', flat=True)]
+        course_column_list = [cs for cs in BeamCourse.objects.filter(is_clinical=True).values_list('course_id', flat=True)]
         course_column_list.append('合計')
-        treat_course_list = [f'num_treat_{cs}_complete' for cs in BeamCourse.objects.all().values_list('course_id', flat=True)]
+        treat_course_list = [f'num_treat_{cs}_complete' for cs in BeamCourse.objects.filter(is_clinical=True).values_list('course_id', flat=True)]
         treat_course_list.append('num_treat_all_complete')
         print(treat_course_list)
-        pqa_course_list = [f'num_pqa_{cs}_complete' for cs in BeamCourse.objects.all().values_list('course_id', flat=True)]
+        pqa_course_list = [f'num_pqa_{cs}_complete' for cs in BeamCourse.objects.filter(is_clinical=True).values_list('course_id', flat=True)]
         pqa_course_list.append('num_pqa_all_complete')
-        pcal_course_list = [f'num_pcal_{cs}_complete' for cs in BeamCourse.objects.all().values_list('course_id', flat=True)]
+        pcal_course_list = [f'num_pcal_{cs}_complete' for cs in BeamCourse.objects.filter(is_clinical=True).values_list('course_id', flat=True)]
         pcal_course_list.append('num_pcal_all_complete')
         if request.POST.get('next', '') == 'CSV出力':
             response = HttpResponse(content_type='text/csv; charset=cp932')

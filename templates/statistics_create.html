@@ -44,7 +44,7 @@ td {text-align:right}
     <h4>結果</h4>
     {% if df is not None %}
         <table border>
-            <tr><th></th><th></th><th></th><th colspan="3">治療ポート数</th>{% if df.num_pcal_all_complete.sum %}<th colspan="3">新患ポート数</th>{% endif %}</th><th colspan="3">QAポート数</th><th></th><th></th><th></th><th></th><th></th></tr>
+            <tr><th></th><th></th><th></th><th colspan="{{ treat_course_list|length }}">治療ポート数</th>{% if df.num_pcal_all_complete.sum %}<th colspan="{{ pcal_course_list|length }}">新患ポート数</th>{% endif %}</th><th colspan="{{ pqa_course_list|length }}">QAポート数</th><th></th><th></th><th></th><th></th><th></th></tr>
             <tr><th>期間</th><th>運転時間[h]</th><th>治療時間[h]</th>
             <!-- treat -->
             {% for column in course_column_list %} 
