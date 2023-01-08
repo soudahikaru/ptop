@@ -479,9 +479,7 @@ class OperationCreateForm(forms.ModelForm):
 
     class Meta:
         model = Operation
-        fields = (
-            'operation_type', 'start_time', 'end_time',
-            'num_treat_hc1', 'num_treat_gc2', 'num_qa_hc1', 'num_qa_gc2', 'comment')
+        fields = ('operation_type', 'start_time', 'end_time', 'comment')
 
 
 class OperationResultCreateForm(forms.ModelForm):

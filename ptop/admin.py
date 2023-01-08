@@ -81,6 +81,28 @@ class ErrorAdmin(ImportExportModelAdmin):
     """ Admin for Error model """
     resource_class = ErrorResource
 
+class TroubleEventResource(resources.ModelResource):
+    """ Resource for TroubleEvent model """
+    class Meta:
+        model = TroubleEvent
+        skip_unchanged = True
+        report_skipped = False
+
+class TroubleEventAdmin(ImportExportModelAdmin, SimpleHistoryAdmin):
+    """ Admin for TroubleEvent model """
+    resource_class = TroubleEventResource
+
+
+class TroubleGroupResource(resources.ModelResource):
+    """ Resource for TroubleGroup model """
+    class Meta:
+        model = TroubleGroup
+        skip_unchanged = True
+        report_skipped = False
+
+class TroubleGroupAdmin(ImportExportModelAdmin, SimpleHistoryAdmin):
+    """ Admin for TroubleGroup model """
+    resource_class = TroubleGroupResource
 
 class OperationTypeResource(resources.ModelResource):
     """ Resource for Operation Type """
@@ -292,8 +314,8 @@ class SiteAdmin(admin.ModelAdmin):
 admin.site.register(User, AdminUserAdmin)
 admin.site.register(Attachment)
 admin.site.register(Announcement)
-admin.site.register(TroubleGroup, SimpleHistoryAdmin)
-admin.site.register(TroubleEvent, SimpleHistoryAdmin)
+admin.site.register(TroubleGroup, TroubleGroupAdmin)
+admin.site.register(TroubleEvent, TroubleEventAdmin)
 admin.site.register(Device, DeviceAdmin)
 admin.site.register(Error, ErrorAdmin)
 admin.site.register(EmailAddress)

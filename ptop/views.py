@@ -1546,6 +1546,8 @@ def change_operation(request):
             treat_flag = True
         elif current_operation.operation_type.name == '患者QA':
             pqa_flag = True
+        elif current_operation.operation_type.name == '新患測定':
+            pqa_flag = True
         return render(
             request,
             'change_operation.html',
