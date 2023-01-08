@@ -2449,6 +2449,26 @@ def statistics_create_view(request):
             events = TroubleEvent.objects.all()
             operations = Operation.objects.all()
 
+        # Operationが存在しない場合はエラーを吐く
+        if not operations.exists():
+            return render(
+                request,
+                'statistics_create.html',
+                {
+                    'form': form,
+                    'subtotal_frequency': subtotal_frequency,
+                    'df': None,
+                    'course_column_list': None,
+                    'treat_course_list': None,
+                    'pqa_course_list': None,
+                    'pcal_course_list': None,
+                    's_summary': None,
+                    'graph_ss': None,
+                    'graph_avail': None,
+                }
+            )
+
+
         tz_jp = pytz.timezone('Asia/Tokyo')
         start_datetime = timezone.datetime.strptime(start, '%Y-%m-%d')
         start_localized = tz_jp.localize(start_datetime)
