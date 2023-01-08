@@ -2351,6 +2351,7 @@ def event_approve(request, pk_):
 def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     print(start_datetime, end_datetime)
     df = read_frame(query_set, index_col='index')
+    df.index=df.index.tz_convert('Asia/Tokyo')
     print(df)
     tz_jp = pytz.timezone('Asia/Tokyo')
     freq_str = 'D'
@@ -2548,7 +2549,11 @@ def statistics_create_view(request):
 #        df['subtotal_treatment_time'] = df['subtotal_treatment_time'] / 60000000
         s_summary = df.sum()
         s_summary.name = '合計'
-        print(s_summary)
+#        s_summary.name = datetime.now()
+#        s_summary['start_datetime'] = s_summary['start_datetime'].dt.tz_convert('Asia/Tokyo')
+#        s_summary.name = s_summary.index.dt.tz_convert('Asia/Tokyo')
+        print(df)
+#        return
         df = df.append(s_summary)
 
         df['total_availability'] = 1.0 - (df['subtotal_downtime'].divide(df['subtotal_operation_time']))
