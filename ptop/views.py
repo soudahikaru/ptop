@@ -1632,7 +1632,7 @@ def change_operation_generalized(request):
                     'beam_course': course,
                     'beam_course_name': course.course_id,
                 } for course in BeamCourse.objects.filter(is_clinical=True)])
-            elif current_operation.operation_type.name == '患者QA':
+            elif (current_operation.operation_type.name == '患者QA') or (current_operation.operation_type.name == '新患測定'):
                 pqa_flag = True
                 formset = OperationResultCreateFormSet(queryset=models.OperationResult.objects.none(),initial=[{
                     'operation': current_operation,
