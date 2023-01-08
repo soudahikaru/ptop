@@ -2351,7 +2351,8 @@ def event_approve(request, pk_):
 def make_dataframe(query_set, start_datetime, end_datetime, interval='day'):
     print(start_datetime, end_datetime)
     df = read_frame(query_set, index_col='index')
-    df.index=df.index.tz_convert('Asia/Tokyo')
+    if type(df.index) == pd.core.indexes.datetimes.DatetimeIndex:
+        df.index = df.index.tz_convert('Asia/Tokyo')
     print(df)
     tz_jp = pytz.timezone('Asia/Tokyo')
     freq_str = 'D'
