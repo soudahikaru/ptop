@@ -91,8 +91,7 @@
     <tr>
       <td>{{item.pk}}</td>
       <td>{{item.start_time|date:"Y/m/d(D) H:i"}}</td>
-      <td class="bg-event"><b><a href="{% url 'ptop:event_detail' item.pk %}">{{item.title|truncatechars:30}}</a></b></td>
-      <td>{{item.device.device_id}}</td>
+      <td {% if item.approval_operator %}class="bg-event"{% else %}style="background-color:yellow"{% endif %}><a href="{% url 'ptop:event_detail' item.pk %}"><b>{{item.title|truncatechars:30}}</b>{% if not item.approval_operator %} (未承認){% endif %}</a></td>      <td>{{item.device.device_id}}</td>
       <td>{{item.downtime}}{% if item.delaytime %}<span class="delaytime"> ({{item.delaytime}})</span>{% endif %}</td>
       <td class="bg-group">{% if item.group is not None %}
         <a href="{% url 'ptop:group_detail' item.group.pk %}">{{item.group.title|truncatechars:10}}</a>
